@@ -31,10 +31,8 @@ export function Header({ userRole = "admin", userName = "Admin User" }: HeaderPr
         <SidebarTrigger className="lg:hidden" />
         
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-            dMRV
-          </div>
-          <span className="font-semibold text-lg hidden sm:inline-block">Biochar Platform</span>
+          <img src="/logo.png" alt="Tech Greenerth" className="h-8 w-8 object-contain" />
+          <span className="font-semibold text-lg hidden sm:inline-block">Tech Greenerth</span>
         </div>
 
         <div className="ml-auto flex items-center gap-2">

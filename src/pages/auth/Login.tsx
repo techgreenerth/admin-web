@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Leaf } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -26,12 +26,12 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
       <Card className="w-full max-w-md shadow-card-hover">
         <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-primary flex items-center justify-center">
-            <Leaf className="h-10 w-10 text-primary-foreground" />
+          <div className="mx-auto mb-4 h-16 w-16 flex items-center justify-center">
+            <img src="/logo.png" alt="Tech Greenerth" className="h-full w-full object-contain" />
           </div>
           <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
           <CardDescription>
-            Sign in to your dMRV Biochar Platform account
+            Sign in to your Tech Greenerth account
           </CardDescription>
         </CardHeader>
         <CardContent>

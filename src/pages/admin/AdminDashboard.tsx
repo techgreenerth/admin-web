@@ -10,7 +10,7 @@ export default function AdminDashboard() {
     <AppLayout userRole="admin" userName="Admin User">
       <PageHeader
         title="Admin Dashboard"
-        description="Overview of dMRV Biochar Platform"
+        description="Overview of Tech Greenerth"
         breadcrumbs={[
           { label: "Dashboard", href: "/admin/dashboard" },
         ]}
