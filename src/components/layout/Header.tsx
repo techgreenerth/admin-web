@@ -61,7 +61,7 @@ export function Header({ userRole = "admin", userName = "Admin User" }: HeaderPr
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/admin/settings")}>
+              <DropdownMenuItem onClick={() => navigate("/settings")}>
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />

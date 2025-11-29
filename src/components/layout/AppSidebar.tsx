@@ -11,6 +11,7 @@ import {
   Weight,
   Settings,
   HelpCircle,
+  Shield,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -30,15 +31,15 @@ interface AppSidebarProps {
 
 export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
   return (
-    <Sidebar className="border-r bg-[#295F58] text-white">
-      <SidebarContent className="py-4">
+    <Sidebar className="border-r bg-[#295F58] text-white !h-full !min-h-full" collapsible="none" style={{ height: '100vh' }}>
+      <SidebarContent className="py-4 flex flex-col !h-full overflow-y-auto">
         {/* Dashboard */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/dashboard" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <Home className="h-5 w-5" />
                     <span>Dashboard</span>
                   </NavLink>
@@ -55,7 +56,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/biomass-sourcing" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/biomass-sourcing" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <Leaf className="h-5 w-5" />
                     <span>Biomass Sourcing</span>
                   </NavLink>
@@ -63,7 +64,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/biochar-production" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/biochar-production" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <Factory className="h-5 w-5" />
                     <span>Biochar Production</span>
                   </NavLink>
@@ -71,7 +72,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/biochar-activation" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/biochar-activation" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <FlaskConical className="h-5 w-5" />
                     <span>Biochar Activation</span>
                   </NavLink>
@@ -79,7 +80,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/biochar-sampling" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/biochar-sampling" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <TestTube className="h-5 w-5" />
                     <span>Biochar Sampling</span>
                   </NavLink>
@@ -87,7 +88,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/bulk-density" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/bulk-density" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <Weight className="h-5 w-5" />
                     <span>Bulk Density</span>
                   </NavLink>
@@ -104,7 +105,15 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/users" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/admins" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                    <Shield className="h-5 w-5" />
+                    <span>Admins</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/users" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <Users className="h-5 w-5" />
                     <span>Users</span>
                   </NavLink>
@@ -112,7 +121,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/sites" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/sites" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <MapPin className="h-5 w-5" />
                     <span>Artisan Pro Sites</span>
                   </NavLink>
@@ -120,7 +129,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/kontikis" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/kontikis" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <Flame className="h-5 w-5" />
                     <span>Kontikis</span>
                   </NavLink>
@@ -128,7 +137,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/shifts" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/shifts" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <Clock className="h-5 w-5" />
                     <span>Production Shifts</span>
                   </NavLink>
@@ -144,7 +153,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admin/settings" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <NavLink to="/settings" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <Settings className="h-5 w-5" />
                     <span>Settings</span>
                   </NavLink>
