@@ -1,4 +1,4 @@
-import { Bell, User } from "lucide-react";
+import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 
@@ -26,34 +25,32 @@ export function Header({ userRole = "admin", userName = "Admin User" }: HeaderPr
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
-      <div className="flex h-16 items-center px-4 gap-4">
+    <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
+      <div className="flex h-16 items-center px-6 gap-4">
         <SidebarTrigger className="lg:hidden" />
-        
+
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Tech Greenerth" className="h-8 w-8 object-contain" />
-          <span className="font-semibold text-lg hidden sm:inline-block">Tech Greenerth</span>
+          <img src="/logo.png" alt="Tech Greenerth" className="h-9 w-9 object-contain" />
+          <div className="hidden sm:block">
+            <h1 className="font-bold text-lg text-[#295F58]">Tech Greenerth</h1>
+            <p className="text-xs text-muted-foreground">Admin Portal</p>
+          </div>
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive"></span>
-          </Button>
-
+        <div className="ml-auto flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
+              <Button variant="ghost" className="gap-2 hover:bg-[#E1EFEE]/50">
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-[#295F58] text-white font-semibold">
                     {userName.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="hidden md:flex flex-col items-start text-sm">
-                  <span className="font-medium">{userName}</span>
-                  <Badge variant="secondary" className="text-xs mt-0.5">
+                <div className="hidden md:flex flex-col items-start">
+                  <span className="font-medium text-sm">{userName}</span>
+                  <span className="text-xs text-muted-foreground">
                     {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
-                  </Badge>
+                  </span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -64,11 +61,11 @@ export function Header({ userRole = "admin", userName = "Admin User" }: HeaderPr
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/settings")}>
+              <DropdownMenuItem onClick={() => navigate("/admin/settings")}>
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
