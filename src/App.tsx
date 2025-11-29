@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Auth pages
 import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -31,20 +30,22 @@ const App = () => (
         <Routes>
           {/* Redirect root to login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
-          
+
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
+
           {/* Admin routes */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/verification/pending-batches" element={<BatchVerification />} />
+          <Route
+            path="/admin/verification/pending-batches"
+            element={<BatchVerification />}
+          />
           <Route path="/admin/carbon-ledger" element={<CarbonLedger />} />
-          
+
           {/* Partner routes */}
           <Route path="/partner/dashboard" element={<PartnerDashboard />} />
           <Route path="/partner/sites" element={<Sites />} />
-          
+
           {/* 404 catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
