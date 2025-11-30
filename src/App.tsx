@@ -18,6 +18,8 @@ import Shifts from "./pages/admin/Shifts";
 import BiomassSourcing from "./pages/admin/BiomassSourcing";
 import BiocharProduction from "./pages/admin/BiocharProduction";
 import BiocharActivation from "./pages/admin/BiocharActivation";
+import BiocharSampling from "./pages/admin/BiocharSampling";
+import BulkDensity from "./pages/admin/BulkDensity";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +47,8 @@ const App = () => (
                 <Route path="biomass-sourcing" element={<BiomassSourcing />} />
                 <Route path="biochar-production" element={<BiocharProduction />} />
                 <Route path="biochar-activation" element={<BiocharActivation />} />
+                <Route path="biochar-sampling" element={<BiocharSampling />} />
+                <Route path="bulk-density" element={<BulkDensity />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>
