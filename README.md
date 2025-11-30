@@ -1,10 +1,10 @@
-# dMRV Biochar Platform - Admin & Partner Portal
+# Tech Greenerth - Admin & Partner Portal
 
-**dMRV Admin & Partner Portal** is a comprehensive React-based web application that provides powerful management, verification, and analytics tools for the dMRV biochar carbon credit platform. Built with modern web technologies, it offers real-time monitoring, batch verification, partner management, and compliance oversight features for Carbon Standards International (CSI) Global C-Sink Standards.
+**Tech Greenerth Admin & Partner Portal** is a comprehensive React-based web application that provides powerful management, verification, and analytics tools for the biochar carbon credit platform. Built with modern web technologies, it offers real-time monitoring, batch verification, partner management, and compliance oversight features for Carbon Standards International (CSI) Global C-Sink Standards.
 
 ## 🚀 Project Overview
 
-This is the **unified web portal** for the **dMRV Biochar Platform** ecosystem which serves:
+This is the **unified web portal** for the **Tech Greenerth Biochar Platform** ecosystem which serves:
 
 - **Admin Dashboard** - Complete platform management, verification, and oversight
 - **Partner Portal** - Multi-site management, training, and production tracking
@@ -367,7 +367,7 @@ This is the **unified web portal** for the **dMRV Biochar Platform** ecosystem w
 
 ```bash
 git clone <repository-url>
-cd dmrv-biochar-platform/web-portal
+cd tech-greenerth/admin-web
 ```
 
 ### 2. Install Dependencies
@@ -411,7 +411,7 @@ VITE_CSI_STAG_URL="https://stag.carbon-standards.com"
 VITE_CSI_PROD_URL="https://prod.carbon-standards.com"
 
 # AWS S3 Configuration (for media access)
-VITE_AWS_S3_BUCKET_URL="https://dmrv-biochar-media.s3.amazonaws.com"
+VITE_AWS_S3_BUCKET_URL="https://tech-greenerth-media.s3.amazonaws.com"
 
 # Analytics
 VITE_GOOGLE_ANALYTICS_ID="your-ga-id"
@@ -1029,7 +1029,7 @@ We welcome contributions! Please follow these steps:
 
 - **Technical Issues** : Create an issue in the repository
 - **CSI Compliance Questions** : contact@carbonstandardsinternational.org
-- **General Inquiries** : support@dmrv-biochar.com
+- **General Inquiries** : support@techgreenerth.com
 - **Documentation** : Check README.md and inline code comments
 
 ## 🎯 Roadmap
@@ -1077,4 +1077,4 @@ This project is proprietary and confidential. All rights reserved. Unauthorized 
 
 ---
 
-**Built with ❤️ for carbon removal and climate action**
+**Tech Greenerth - Built with ❤️ for carbon removal and climate action**
