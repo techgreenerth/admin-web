@@ -17,6 +17,7 @@ import Kontikis from "./pages/admin/Kontikis";
 import Shifts from "./pages/admin/Shifts";
 import BiomassSourcing from "./pages/admin/BiomassSourcing";
 import BiocharProduction from "./pages/admin/BiocharProduction";
+import BiocharActivation from "./pages/admin/BiocharActivation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
                 <Route path="shifts" element={<Shifts />} />
                 <Route path="biomass-sourcing" element={<BiomassSourcing />} />
                 <Route path="biochar-production" element={<BiocharProduction />} />
+                <Route path="biochar-activation" element={<BiocharActivation />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>
