@@ -12,6 +12,11 @@ import Login from "./pages/auth/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Users from "./pages/admin/Users";
 import Admins from "./pages/admin/Admins";
+import Sites from "./pages/admin/Sites";
+import Kontikis from "./pages/admin/Kontikis";
+import Shifts from "./pages/admin/Shifts";
+import BiomassSourcing from "./pages/admin/BiomassSourcing";
+import BiocharProduction from "./pages/admin/BiocharProduction";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +38,11 @@ const App = () => (
                 <Route path="/" element={<AdminDashboard />} />
                 <Route path="users" element={<Users />} />
                 <Route path="admins" element={<Admins />} />
+                <Route path="sites" element={<Sites />} />
+                <Route path="kontikis" element={<Kontikis />} />
+                <Route path="shifts" element={<Shifts />} />
+                <Route path="biomass-sourcing" element={<BiomassSourcing />} />
+                <Route path="biochar-production" element={<BiocharProduction />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppLayout>
