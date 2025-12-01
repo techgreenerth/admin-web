@@ -26,7 +26,7 @@ export default function Login() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Implement authentication logic
-    navigate("/admin/dashboard");
+    navigate("/");
   };
 
   return (
