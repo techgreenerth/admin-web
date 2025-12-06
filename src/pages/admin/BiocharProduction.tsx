@@ -61,6 +61,25 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 
+interface KontikiData {
+  kontikiId: string;
+  kontikiName: string;
+  moisturePercent?: string;
+  moisturePhoto?: string;
+  startPhoto?: string;
+  middlePhoto?: string;
+  endPhoto?: string;
+  finalPhoto?: string;
+  aiVolumeEstimate?: string;
+  aiConfidenceScore?: string;
+  aiModelVersion?: string;
+  status: string; // SUBMITTED, VERIFIED, REJECTED
+  verifiedAt?: string;
+  verifiedById?: string;
+  verifiedByName?: string;
+  rejectionNote?: string;
+}
+
 interface BiocharProductionRecord {
   id: string;
   userId: string;
@@ -77,28 +96,12 @@ interface BiocharProductionRecord {
   shiftId: string;
   shiftName: string;
   shiftNumber: number;
-  kontikiIds: string[];
-  kontikiNames: string[];
-  productionStep: number;
-  productionStepName: string;
-  moisturePercent?: string;
-  moisturePhoto?: string;
-  startPhoto?: string;
-  middlePhoto?: string;
-  endPhoto?: string;
-  finalPhoto?: string;
-  aiVolumeEstimate?: string;
-  aiConfidenceScore?: string;
-  aiModelVersion?: string;
+  kontikis: KontikiData[];
   capturedAt: string;
   deviceInfo?: string;
   appVersion?: string;
-  status: string;
+  status: string; // Overall status: SUBMITTED, VERIFIED (all kontikis verified), PARTIALLY_VERIFIED, REJECTED
   submittedAt: string;
-  verifiedAt?: string;
-  verifiedById?: string;
-  verifiedByName?: string;
-  rejectionNote?: string;
 }
 
 export default function BiocharProduction() {
@@ -119,6 +122,7 @@ export default function BiocharProduction() {
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BiocharProductionRecord | null>(null);
+  const [selectedKontiki, setSelectedKontiki] = useState<KontikiData | null>(null);
   const [rejectionNote, setRejectionNote] = useState("");
 
   // Mock data for filters
@@ -150,27 +154,47 @@ export default function BiocharProduction() {
       shiftId: "1",
       shiftName: "Shift 1",
       shiftNumber: 1,
-      kontikiIds: ["1", "2"],
-      kontikiNames: ["Kon-tiki 1", "Kon-tiki 2"],
-      productionStep: 5,
-      productionStepName: "Final biochar production",
-      moisturePercent: "12.5",
-      moisturePhoto: "https://via.placeholder.com/400x300?text=Moisture+Meter",
-      startPhoto: "https://via.placeholder.com/400x300?text=Start+25%25",
-      middlePhoto: "https://via.placeholder.com/400x300?text=Middle+50%25",
-      endPhoto: "https://via.placeholder.com/400x300?text=End+90%25",
-      finalPhoto: "https://via.placeholder.com/400x300?text=Final+Biochar",
-      aiVolumeEstimate: "450 liters",
-      aiConfidenceScore: "0.94",
-      aiModelVersion: "v2.1.0",
+      kontikis: [
+        {
+          kontikiId: "1",
+          kontikiName: "Kon-tiki 1",
+          moisturePercent: "12.5",
+          moisturePhoto: "https://via.placeholder.com/400x300?text=K1+Moisture+Meter",
+          startPhoto: "https://via.placeholder.com/400x300?text=K1+Start+25%25",
+          middlePhoto: "https://via.placeholder.com/400x300?text=K1+Middle+50%25",
+          endPhoto: "https://via.placeholder.com/400x300?text=K1+End+90%25",
+          finalPhoto: "https://via.placeholder.com/400x300?text=K1+Final+Biochar",
+          aiVolumeEstimate: "450 liters",
+          aiConfidenceScore: "0.94",
+          aiModelVersion: "v2.1.0",
+          status: "VERIFIED",
+          verifiedAt: "2024-01-15T16:20:00Z",
+          verifiedById: "admin1",
+          verifiedByName: "Admin User",
+        },
+        {
+          kontikiId: "2",
+          kontikiName: "Kon-tiki 2",
+          moisturePercent: "11.8",
+          moisturePhoto: "https://via.placeholder.com/400x300?text=K2+Moisture+Meter",
+          startPhoto: "https://via.placeholder.com/400x300?text=K2+Start+25%25",
+          middlePhoto: "https://via.placeholder.com/400x300?text=K2+Middle+50%25",
+          endPhoto: "https://via.placeholder.com/400x300?text=K2+End+90%25",
+          finalPhoto: "https://via.placeholder.com/400x300?text=K2+Final+Biochar",
+          aiVolumeEstimate: "420 liters",
+          aiConfidenceScore: "0.91",
+          aiModelVersion: "v2.1.0",
+          status: "VERIFIED",
+          verifiedAt: "2024-01-15T16:22:00Z",
+          verifiedById: "admin1",
+          verifiedByName: "Admin User",
+        },
+      ],
       capturedAt: "2024-01-15T14:30:00Z",
       deviceInfo: "Samsung Galaxy A52",
       appVersion: "1.2.0",
       status: "VERIFIED",
       submittedAt: "2024-01-15T14:35:00Z",
-      verifiedAt: "2024-01-15T16:20:00Z",
-      verifiedById: "admin1",
-      verifiedByName: "Admin User",
     },
     {
       id: "2",
@@ -188,14 +212,22 @@ export default function BiocharProduction() {
       shiftId: "2",
       shiftName: "Shift 2",
       shiftNumber: 2,
-      kontikiIds: ["3"],
-      kontikiNames: ["Kon-tiki 3"],
-      productionStep: 3,
-      productionStepName: "Middle of production",
-      moisturePercent: "11.8",
-      moisturePhoto: "https://via.placeholder.com/400x300?text=Moisture+Meter",
-      startPhoto: "https://via.placeholder.com/400x300?text=Start+25%25",
-      middlePhoto: "https://via.placeholder.com/400x300?text=Middle+50%25",
+      kontikis: [
+        {
+          kontikiId: "3",
+          kontikiName: "Kon-tiki 3",
+          moisturePercent: "11.8",
+          moisturePhoto: "https://via.placeholder.com/400x300?text=K3+Moisture+Meter",
+          startPhoto: "https://via.placeholder.com/400x300?text=K3+Start+25%25",
+          middlePhoto: "https://via.placeholder.com/400x300?text=K3+Middle+50%25",
+          endPhoto: "https://via.placeholder.com/400x300?text=K3+End+90%25",
+          finalPhoto: "https://via.placeholder.com/400x300?text=K3+Final+Biochar",
+          aiVolumeEstimate: "380 liters",
+          aiConfidenceScore: "0.89",
+          aiModelVersion: "v2.1.0",
+          status: "SUBMITTED",
+        },
+      ],
       capturedAt: "2024-01-16T10:15:00Z",
       deviceInfo: "Xiaomi Redmi Note 10",
       appVersion: "1.2.0",
@@ -218,18 +250,25 @@ export default function BiocharProduction() {
       shiftId: "1",
       shiftName: "Shift 1",
       shiftNumber: 1,
-      kontikiIds: ["1"],
-      kontikiNames: ["Kon-tiki 1"],
-      productionStep: 1,
-      productionStepName: "Moisture Reading",
-      moisturePercent: "13.2",
-      moisturePhoto: "https://via.placeholder.com/400x300?text=Moisture+Meter",
+      kontikis: [
+        {
+          kontikiId: "1",
+          kontikiName: "Kon-tiki 1",
+          moisturePercent: "13.2",
+          moisturePhoto: "https://via.placeholder.com/400x300?text=K1+Moisture+Meter",
+          startPhoto: "https://via.placeholder.com/400x300?text=K1+Start+25%25",
+          middlePhoto: "https://via.placeholder.com/400x300?text=K1+Middle+50%25",
+          endPhoto: "https://via.placeholder.com/400x300?text=K1+End+90%25",
+          finalPhoto: "https://via.placeholder.com/400x300?text=K1+Final+Biochar",
+          status: "REJECTED",
+          rejectionNote: "Moisture reading too high. Please dry the biomass further before production.",
+        },
+      ],
       capturedAt: "2024-01-14T09:00:00Z",
       deviceInfo: "Samsung Galaxy A52",
       appVersion: "1.2.0",
       status: "REJECTED",
       submittedAt: "2024-01-14T09:05:00Z",
-      rejectionNote: "Moisture reading too high. Please dry the biomass further before production.",
     },
   ];
 
@@ -243,6 +282,8 @@ export default function BiocharProduction() {
         return "bg-green-100 text-green-800";
       case "REJECTED":
         return "bg-red-100 text-red-800";
+      case "PARTIALLY_VERIFIED":
+        return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -265,11 +306,10 @@ export default function BiocharProduction() {
       record.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.kontikiNames.some(name => name.toLowerCase().includes(searchQuery.toLowerCase()));
+      record.kontikis.some(k => k.kontikiName.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesStatus = statusFilter === "all" || record.status === statusFilter;
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
-    const matchesStep = stepFilter === "all" || record.productionStep.toString() === stepFilter;
 
     // Date range filter
     let matchesDateRange = true;
@@ -278,7 +318,7 @@ export default function BiocharProduction() {
       matchesDateRange = recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
     }
 
-    return matchesSearch && matchesStatus && matchesSite && matchesUser && matchesStep && matchesDateRange;
+    return matchesSearch && matchesStatus && matchesSite && matchesUser && matchesDateRange;
   });
 
   // Pagination
@@ -293,27 +333,31 @@ export default function BiocharProduction() {
     setIsViewDialogOpen(true);
   };
 
-  const handleVerifyRecord = (record: BiocharProductionRecord) => {
+  const handleVerifyKontiki = (record: BiocharProductionRecord, kontiki: KontikiData) => {
     setSelectedRecord(record);
+    setSelectedKontiki(kontiki);
     setIsVerifyDialogOpen(true);
   };
 
-  const handleRejectRecord = (record: BiocharProductionRecord) => {
+  const handleRejectKontiki = (record: BiocharProductionRecord, kontiki: KontikiData) => {
     setSelectedRecord(record);
+    setSelectedKontiki(kontiki);
     setRejectionNote("");
     setIsRejectDialogOpen(true);
   };
 
   const handleConfirmVerify = () => {
-    // TODO: Add API call to verify record
-    console.log("Verifying record:", selectedRecord?.id);
+    // TODO: Add API call to verify kontiki
+    console.log("Verifying kontiki:", selectedKontiki?.kontikiName, "in record:", selectedRecord?.id);
     setIsVerifyDialogOpen(false);
+    setSelectedKontiki(null);
   };
 
   const handleConfirmReject = () => {
-    // TODO: Add API call to reject record
-    console.log("Rejecting record:", selectedRecord?.id, "Note:", rejectionNote);
+    // TODO: Add API call to reject kontiki
+    console.log("Rejecting kontiki:", selectedKontiki?.kontikiName, "in record:", selectedRecord?.id, "Note:", rejectionNote);
     setIsRejectDialogOpen(false);
+    setSelectedKontiki(null);
   };
 
   return (
@@ -332,7 +376,7 @@ export default function BiocharProduction() {
           <div className="flex flex-col gap-4">
             <CardTitle className="text-lg">All Records</CardTitle>
             <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -348,9 +392,9 @@ export default function BiocharProduction() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="DRAFT">Draft</SelectItem>
                     <SelectItem value="SUBMITTED">Submitted</SelectItem>
                     <SelectItem value="VERIFIED">Verified</SelectItem>
+                    <SelectItem value="PARTIALLY_VERIFIED">Partially Verified</SelectItem>
                     <SelectItem value="REJECTED">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
@@ -378,19 +422,6 @@ export default function BiocharProduction() {
                         {user.code}
                       </SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-                <Select value={stepFilter} onValueChange={setStepFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Production Step" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Steps</SelectItem>
-                    <SelectItem value="1">Step 1: Moisture</SelectItem>
-                    <SelectItem value="2">Step 2: Start (25%)</SelectItem>
-                    <SelectItem value="3">Step 3: Middle (50%)</SelectItem>
-                    <SelectItem value="4">Step 4: End (90%)</SelectItem>
-                    <SelectItem value="5">Step 5: Final</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -426,7 +457,6 @@ export default function BiocharProduction() {
                 <TableHead>Record Info</TableHead>
                 <TableHead>Site & User</TableHead>
                 <TableHead>Shift & Kontikis</TableHead>
-                <TableHead>Production Step</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -434,7 +464,7 @@ export default function BiocharProduction() {
             <TableBody>
               {paginatedRecords.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No records found
                   </TableCell>
                 </TableRow>
@@ -466,16 +496,8 @@ export default function BiocharProduction() {
                           Shift {record.shiftNumber}
                         </Badge>
                         <div className="text-sm text-muted-foreground">
-                          {record.kontikiNames.join(", ")}
+                          {record.kontikis.map(k => k.kontikiName).join(", ")}
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStepColor(record.productionStep)}>
-                        Step {record.productionStep}
-                      </Badge>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {record.productionStepName}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -484,37 +506,14 @@ export default function BiocharProduction() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewRecord(record)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          {record.status === "SUBMITTED" && (
-                            <>
-                              <DropdownMenuItem
-                                onClick={() => handleVerifyRecord(record)}
-                                className="text-green-600"
-                              >
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Verify
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleRejectRecord(record)}
-                                className="text-orange-600"
-                              >
-                                <XCircle className="h-4 w-4 mr-2" />
-                                Reject
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewRecord(record)}
+                        className="hover:bg-[#295F58]/10"
+                      >
+                        <Eye className="h-4 w-4 text-[#295F58]" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -571,240 +570,205 @@ export default function BiocharProduction() {
 
       {/* View Details Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Biochar Production Details</DialogTitle>
-            <DialogDescription>
-              Complete information about this production record
-            </DialogDescription>
           </DialogHeader>
           {selectedRecord && (
             <div className="space-y-6 py-4">
-              {/* Status Banner */}
-              {selectedRecord.status === "VERIFIED" && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-green-800">
-                    <CheckCircle className="h-5 w-5" />
-                    <div>
-                      <div className="font-medium">Verified</div>
-                      <div className="text-sm">
-                        Verified by {selectedRecord.verifiedByName} on{" "}
-                        {new Date(selectedRecord.verifiedAt!).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {selectedRecord.status === "REJECTED" && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-start gap-2 text-red-800">
-                    <XCircle className="h-5 w-5 mt-0.5" />
-                    <div className="flex-1">
-                      <div className="font-medium">Rejected</div>
-                      <div className="text-sm mt-1">{selectedRecord.rejectionNote}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Record Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Date & Time</Label>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <div className="font-medium">
-                      {selectedRecord.recordDate} at {selectedRecord.recordTime}
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Status</Label>
-                  <div>
-                    <Badge className={getStatusColor(selectedRecord.status)}>
-                      {selectedRecord.status}
-                    </Badge>
-                  </div>
+              {/* Record Submitted Status */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <CheckCircle className="h-5 w-5" />
+                  <div className="font-medium">Record Submitted</div>
                 </div>
               </div>
 
-              {/* Site & User Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Site</Label>
-                  <div className="font-medium">
-                    {selectedRecord.siteCode} - {selectedRecord.siteName}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">User</Label>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div className="font-medium">
-                      {selectedRecord.userCode} - {selectedRecord.userName}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Shift & Kontikis */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Shift</Label>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStepColor(selectedRecord.shiftNumber)}>
-                      Shift {selectedRecord.shiftNumber}
-                    </Badge>
-                    <span className="text-sm">{selectedRecord.shiftName}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Kontikis Used</Label>
-                  <div className="flex items-center gap-2">
-                    <Flame className="h-4 w-4 text-muted-foreground" />
-                    <div className="font-medium">{selectedRecord.kontikiNames.join(", ")}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Production Step */}
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Production Step</Label>
-                <div className="flex items-center gap-2">
-                  <Badge className={getStepColor(selectedRecord.productionStep)}>
-                    Step {selectedRecord.productionStep}
-                  </Badge>
-                  <span className="font-medium">{selectedRecord.productionStepName}</span>
-                </div>
-              </div>
-
-              {/* GPS Location */}
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">GPS Location</Label>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div className="font-mono text-sm">
-                    {selectedRecord.latitude}, {selectedRecord.longitude}
-                    {selectedRecord.gpsAccuracy && (
-                      <span className="text-muted-foreground ml-2">
-                        (±{selectedRecord.gpsAccuracy})
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Step-specific Data */}
-              {selectedRecord.moisturePercent && (
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Moisture Reading</Label>
-                  <div className="flex items-center gap-2">
-                    <Droplets className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium">{selectedRecord.moisturePercent}%</span>
-                  </div>
-                </div>
-              )}
-
-              {/* AI Estimates (Step 5 only) */}
-              {selectedRecord.productionStep === 5 && selectedRecord.aiVolumeEstimate && (
-                <div className="grid grid-cols-3 gap-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <div className="space-y-1">
-                    <Label className="text-muted-foreground text-xs">AI Volume Estimate</Label>
-                    <div className="font-medium">{selectedRecord.aiVolumeEstimate}</div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-muted-foreground text-xs">Confidence Score</Label>
-                    <div className="font-medium">{selectedRecord.aiConfidenceScore}</div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-muted-foreground text-xs">Model Version</Label>
-                    <div className="font-medium">{selectedRecord.aiModelVersion}</div>
-                  </div>
-                </div>
-              )}
-
-              {/* Photos */}
-              <div className="space-y-3">
-                <Label className="text-muted-foreground">Production Photos</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  {selectedRecord.moisturePhoto && (
-                    <div className="space-y-2">
-                      <Label className="text-sm">Moisture Reading</Label>
-                      <div className="border rounded-lg overflow-hidden">
-                        <img
-                          src={selectedRecord.moisturePhoto}
-                          alt="Moisture meter reading"
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {selectedRecord.startPhoto && (
-                    <div className="space-y-2">
-                      <Label className="text-sm">Start (25% fill)</Label>
-                      <div className="border rounded-lg overflow-hidden">
-                        <img
-                          src={selectedRecord.startPhoto}
-                          alt="Start of production"
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {selectedRecord.middlePhoto && (
-                    <div className="space-y-2">
-                      <Label className="text-sm">Middle (50% fill)</Label>
-                      <div className="border rounded-lg overflow-hidden">
-                        <img
-                          src={selectedRecord.middlePhoto}
-                          alt="Middle of production"
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {selectedRecord.endPhoto && (
-                    <div className="space-y-2">
-                      <Label className="text-sm">End (90% fill)</Label>
-                      <div className="border rounded-lg overflow-hidden">
-                        <img
-                          src={selectedRecord.endPhoto}
-                          alt="End of production"
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {selectedRecord.finalPhoto && (
-                    <div className="space-y-2">
-                      <Label className="text-sm">Final Biochar (Post-quenching)</Label>
-                      <div className="border rounded-lg overflow-hidden">
-                        <img
-                          src={selectedRecord.finalPhoto}
-                          alt="Final biochar"
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Metadata */}
+              {/* General Record Information */}
               <div className="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4">
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Captured At</Label>
-                  <div className="text-sm">{new Date(selectedRecord.capturedAt).toLocaleString()}</div>
+                  <Label className="text-muted-foreground text-xs">Date</Label>
+                  <div className="text-sm font-medium">{selectedRecord.recordDate}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Time</Label>
+                  <div className="text-sm font-medium">{selectedRecord.recordTime}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Site</Label>
+                  <div className="text-sm font-medium">{selectedRecord.siteCode} - {selectedRecord.siteName}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">User</Label>
+                  <div className="text-sm font-medium">{selectedRecord.userCode} - {selectedRecord.userName}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Location</Label>
+                  <div className="text-sm font-mono">{selectedRecord.latitude}, {selectedRecord.longitude}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Shift No.</Label>
+                  <div className="text-sm font-medium">Shift {selectedRecord.shiftNumber}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Ken tiki used</Label>
+                  <div className="text-sm font-medium">{selectedRecord.kontikis.map(k => k.kontikiName).join(", ")}</div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Device</Label>
-                  <div className="text-sm">{selectedRecord.deviceInfo || "N/A"}</div>
+                  <div className="text-sm font-medium">{selectedRecord.deviceInfo || "N/A"}</div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">App Version</Label>
-                  <div className="text-sm">{selectedRecord.appVersion || "N/A"}</div>
+                  <div className="text-sm font-medium">{selectedRecord.appVersion || "N/A"}</div>
                 </div>
               </div>
+
+              {/* Kontiki Sections */}
+              {selectedRecord.kontikis.map((kontiki, index) => (
+                <div key={kontiki.kontikiId} className="border border-gray-200 rounded-lg p-6 space-y-6">
+                  {/* Kontiki Header with Accept/Reject Buttons */}
+                  <div className="flex items-center justify-between pb-4 border-b">
+                    <h3 className="text-lg font-semibold text-[#295F58]">{kontiki.kontikiName}</h3>
+                    {kontiki.status === "SUBMITTED" && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleVerifyKontiki(selectedRecord, kontiki)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRejectKontiki(selectedRecord, kontiki)}
+                          className="border-orange-600 text-orange-600 hover:bg-orange-50"
+                        >
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Reject
+                        </Button>
+                      </div>
+                    )}
+                    {kontiki.status === "VERIFIED" && (
+                      <Badge className="bg-green-100 text-green-800">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Accepted
+                      </Badge>
+                    )}
+                    {kontiki.status === "REJECTED" && (
+                      <Badge className="bg-red-100 text-red-800">
+                        <XCircle className="h-3 w-3 mr-1" />
+                        Rejected
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Rejection Note */}
+                  {kontiki.status === "REJECTED" && kontiki.rejectionNote && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <Label className="text-xs text-red-800 font-medium">Rejection Note:</Label>
+                      <p className="text-sm text-red-700 mt-1">{kontiki.rejectionNote}</p>
+                    </div>
+                  )}
+
+                  {/* Kontiki Production Process */}
+                  <div className="space-y-4">
+                    {/* 1. Moisture Photo & Percentage */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">1</span>
+                          <Label className="text-sm font-medium">Moisture Photo</Label>
+                        </div>
+                        {kontiki.moisturePhoto && (
+                          <div className="border rounded-lg overflow-hidden">
+                            <img src={kontiki.moisturePhoto} alt="Moisture meter" className="w-full h-auto" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Moisture Percentage</Label>
+                        {kontiki.moisturePercent && (
+                          <div className="flex items-center gap-2 mt-8">
+                            <Droplets className="h-5 w-5 text-blue-600" />
+                            <span className="text-lg font-semibold">{kontiki.moisturePercent}%</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 2. Start (25%) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">2</span>
+                        <Label className="text-sm font-medium">Start (25% fill)</Label>
+                      </div>
+                      {kontiki.startPhoto && (
+                        <div className="border rounded-lg overflow-hidden max-w-md">
+                          <img src={kontiki.startPhoto} alt="Start phase" className="w-full h-auto" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 3. Middle (50%) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">3</span>
+                        <Label className="text-sm font-medium">Middle (50% fill)</Label>
+                      </div>
+                      {kontiki.middlePhoto && (
+                        <div className="border rounded-lg overflow-hidden max-w-md">
+                          <img src={kontiki.middlePhoto} alt="Middle phase" className="w-full h-auto" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 4. End (90%) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">4</span>
+                        <Label className="text-sm font-medium">End (90% fill)</Label>
+                      </div>
+                      {kontiki.endPhoto && (
+                        <div className="border rounded-lg overflow-hidden max-w-md">
+                          <img src={kontiki.endPhoto} alt="End phase" className="w-full h-auto" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 5. Final Biochar with AI Estimate */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">5</span>
+                        <Label className="text-sm font-medium">Final Biochar</Label>
+                      </div>
+                      {kontiki.finalPhoto && (
+                        <div className="border rounded-lg overflow-hidden max-w-md">
+                          <img src={kontiki.finalPhoto} alt="Final biochar" className="w-full h-auto" />
+                        </div>
+                      )}
+                      {kontiki.aiVolumeEstimate && (
+                        <div className="grid grid-cols-3 gap-4 bg-purple-50 border border-purple-200 rounded-lg p-3 max-w-2xl">
+                          <div className="space-y-1">
+                            <Label className="text-muted-foreground text-xs">AI Volume Estimate</Label>
+                            <div className="font-medium text-sm">{kontiki.aiVolumeEstimate}</div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-muted-foreground text-xs">Confidence</Label>
+                            <div className="font-medium text-sm">{kontiki.aiConfidenceScore}</div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-muted-foreground text-xs">Model Version</Label>
+                            <div className="font-medium text-sm">{kontiki.aiModelVersion}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </DialogContent>
@@ -814,10 +778,10 @@ export default function BiocharProduction() {
       <AlertDialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Verify Production Record</AlertDialogTitle>
+            <AlertDialogTitle>Accept Kon-tiki</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to verify this biochar production record? This action will mark
-              the record as verified.
+              Are you sure you want to accept {selectedKontiki?.kontikiName}? This action will mark
+              this Kon-tiki as verified.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -827,7 +791,7 @@ export default function BiocharProduction() {
               className="bg-green-600 hover:bg-green-700"
             >
               <CheckCircle className="h-4 w-4 mr-2" />
-              Verify Record
+              Accept
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -837,9 +801,9 @@ export default function BiocharProduction() {
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Production Record</DialogTitle>
+            <DialogTitle>Reject Kon-tiki</DialogTitle>
             <DialogDescription>
-              Provide a reason for rejecting this record
+              Provide a reason for rejecting {selectedKontiki?.kontikiName}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -849,7 +813,7 @@ export default function BiocharProduction() {
                 id="rejectionNote"
                 value={rejectionNote}
                 onChange={(e) => setRejectionNote(e.target.value)}
-                placeholder="Explain why this record is being rejected..."
+                placeholder="Explain why this Kon-tiki is being rejected..."
                 rows={4}
               />
             </div>
@@ -864,7 +828,7 @@ export default function BiocharProduction() {
               disabled={!rejectionNote.trim()}
             >
               <XCircle className="h-4 w-4 mr-2" />
-              Reject Record
+              Reject
             </Button>
           </DialogFooter>
         </DialogContent>
