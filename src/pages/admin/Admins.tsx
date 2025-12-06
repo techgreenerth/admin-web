@@ -423,7 +423,7 @@ export default function Admins() {
           <DialogHeader>
             <DialogTitle>Create New Admin</DialogTitle>
             <DialogDescription>
-              Add a new administrator to the Tech Greenerth platform
+              Add a new administrator to the Greenerth platform
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">

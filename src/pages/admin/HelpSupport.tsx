@@ -30,7 +30,7 @@ export default function HelpSupport() {
       <div>
         <h1 className="text-3xl font-bold text-[#295F58]">Help & Support</h1>
         <p className="text-muted-foreground mt-1">
-          Get assistance with the Tech Greenerth dMRV Platform
+          Get assistance with the Greenerth dMRV Platform
         </p>
       </div>
 

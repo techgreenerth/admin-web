@@ -19,7 +19,7 @@ body,
 @layer base {
   :root {
     /* Brand Colors */
-    --background: 48 100% 97%; /* #FFFDF0 - Warm cream background */
+    --background: 0 0% 98%; /* Light grey background */
     --foreground: 171 36% 25%; /* #295F58 - Deep teal for text */
 
     --card: 0 0% 100%;
@@ -31,17 +31,17 @@ body,
     --primary: 171 36% 25%; /* #295F58 - Primary teal */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 167 42% 91%; /* #E1EFEE - Light mint */
+    --secondary: 0 0% 96%; /* Light grey */
     --secondary-foreground: 171 36% 25%;
 
-    --muted: 167 42% 91%;
-    --muted-foreground: 171 18% 45%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 74 69% 66%; /* #D0F07B - Lime green accent */
-    --accent-foreground: 171 36% 25%;
+    --accent: 171 36% 25%; /* Use primary teal for accent */
+    --accent-foreground: 0 0% 100%;
 
-    --success: 74 69% 66%; /* #D0F07B */
-    --success-foreground: 171 36% 25%;
+    --success: 142 71% 45%; /* Green for success */
+    --success-foreground: 0 0% 100%;
 
     --warning: 45 100% 51%;
     --warning-foreground: 0 0% 100%;
@@ -49,8 +49,8 @@ body,
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 167 30% 85%;
-    --input: 167 30% 85%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
     --ring: 171 36% 25%;
 
     --radius: 0.5rem;
@@ -58,12 +58,12 @@ body,
     /* Sidebar */
     --sidebar-background: 171 36% 25%; /* #295F58 - Primary teal */
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 74 69% 66%; /* #D0F07B - Lime accent */
+    --sidebar-primary: 0 0% 90%; /* Light grey */
     --sidebar-primary-foreground: 171 36% 25%;
     --sidebar-accent: 171 36% 30%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 171 36% 30%;
-    --sidebar-ring: 74 69% 66%;
+    --sidebar-ring: 0 0% 90%;
 
     /* Custom shadows */
     --shadow-sm: 0 1px 2px 0 hsl(171 36% 25% / 0.05);

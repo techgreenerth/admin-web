@@ -20,7 +20,7 @@ export default function Profile() {
     phone: "+91 123 456 7890",
     role: "SUPER_ADMIN",
     status: "ACTIVE",
-    organization: "Tech Greenerth",
+    organization: "Greenerth",
     joinedDate: "2024-01-15",
   });
 

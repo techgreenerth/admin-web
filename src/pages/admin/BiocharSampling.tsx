@@ -361,12 +361,14 @@ export default function BiocharSampling() {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   placeholder="Start Date"
+                  className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
                 />
                 <Input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   placeholder="End Date"
+                  className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
                 />
               </div>
             </div>

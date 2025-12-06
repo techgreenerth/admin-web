@@ -30,9 +30,9 @@ export function Header({ userRole = "admin", userName = "Admin User" }: HeaderPr
         <SidebarTrigger className="lg:hidden" />
 
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Tech Greenerth" className="h-9 w-9 object-contain" />
+          <img src="/logo.png" alt="Greenerth" className="h-9 w-9 object-contain" />
           <div className="hidden sm:block">
-            <h1 className="font-bold text-lg text-[#295F58]">Tech Greenerth</h1>
+            <h1 className="font-bold text-lg text-[#295F58]">Greenerth</h1>
             <p className="text-xs text-muted-foreground">Admin Portal</p>
           </div>
         </div>

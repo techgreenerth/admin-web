@@ -408,7 +408,7 @@ export default function Users() {
           <DialogHeader>
             <DialogTitle>Create New User</DialogTitle>
             <DialogDescription>
-              Add a new field worker to the Tech Greenerth platform
+              Add a new field worker to the Greenerth platform
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">

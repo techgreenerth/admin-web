@@ -30,15 +30,15 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E1EFEE] via-[#FFFDF0] to-[#D6E5AB]/20 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo and Title Section */}
         <div className="text-center space-y-4">
           <div className="mx-auto h-20 w-20 flex items-center justify-center bg-white rounded-2xl shadow-lg p-3">
-            <img src="/logo.png" alt="Tech Greenerth" className="h-full w-full object-contain" />
+            <img src="/logo.png" alt="Greenerth" className="h-full w-full object-contain" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-[#295F58]">Tech Greenerth</h1>
+            <h1 className="text-3xl font-bold text-[#295F58]">Greenerth</h1>
             <p className="text-sm text-muted-foreground">
               Admin Portal
             </p>
@@ -138,7 +138,7 @@ export default function Login() {
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground">
-          © 2024 Tech Greenerth. All rights reserved.
+          © 2024 Greenerth. All rights reserved.
         </p>
 
         {/* Forgot Password Dialog */}
