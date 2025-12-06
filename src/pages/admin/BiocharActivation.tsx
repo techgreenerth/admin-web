@@ -1,13 +1,9 @@
 import { useState } from "react";
 import {
   Search,
-  MoreVertical,
   Eye,
   ChevronLeft,
   ChevronRight,
-  CheckCircle,
-  XCircle,
-  Trash2,
   FlaskConical,
   MapPin,
   User,
@@ -28,39 +24,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 interface BiocharActivationRecord {
   id: string;
@@ -94,7 +72,6 @@ interface BiocharActivationRecord {
 
 export default function BiocharActivation() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
   const [startDate, setStartDate] = useState("");
@@ -106,11 +83,8 @@ export default function BiocharActivation() {
 
   // Dialog states
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<BiocharActivationRecord | null>(null);
-  const [rejectionNote, setRejectionNote] = useState("");
+  const [selectedRecord, setSelectedRecord] =
+    useState<BiocharActivationRecord | null>(null);
 
   // Mock data for filters
   const sites = [
@@ -202,7 +176,8 @@ export default function BiocharActivation() {
       appVersion: "1.2.0",
       status: "REJECTED",
       submittedAt: "2024-01-14T14:05:00Z",
-      rejectionNote: "Mixing video quality is poor. Please record again with better lighting.",
+      rejectionNote:
+        "Mixing video quality is poor. Please record again with better lighting.",
     },
   ];
 
@@ -223,11 +198,11 @@ export default function BiocharActivation() {
 
   const getShiftColor = (shiftNumber: number) => {
     const colors = [
-      "bg-blue-100 text-blue-800",      // Shift 1
-      "bg-purple-100 text-purple-800",  // Shift 2
-      "bg-orange-100 text-orange-800",  // Shift 3
-      "bg-pink-100 text-pink-800",      // Shift 4
-      "bg-cyan-100 text-cyan-800",      // Shift 5
+      "bg-blue-100 text-blue-800", // Shift 1
+      "bg-purple-100 text-purple-800", // Shift 2
+      "bg-orange-100 text-orange-800", // Shift 3
+      "bg-pink-100 text-pink-800", // Shift 4
+      "bg-cyan-100 text-cyan-800", // Shift 5
     ];
     return colors[shiftNumber - 1] || "bg-gray-100 text-gray-800";
   };
@@ -239,7 +214,6 @@ export default function BiocharActivation() {
       record.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.mixingAgent.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || record.status === statusFilter;
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
@@ -247,10 +221,11 @@ export default function BiocharActivation() {
     let matchesDateRange = true;
     if (startDate && endDate) {
       const recordDate = new Date(record.recordDate);
-      matchesDateRange = recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
+      matchesDateRange =
+        recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
     }
 
-    return matchesSearch && matchesStatus && matchesSite && matchesUser && matchesDateRange;
+    return matchesSearch && matchesSite && matchesUser && matchesDateRange;
   });
 
   // Pagination
@@ -265,45 +240,13 @@ export default function BiocharActivation() {
     setIsViewDialogOpen(true);
   };
 
-  const handleVerifyRecord = (record: BiocharActivationRecord) => {
-    setSelectedRecord(record);
-    setIsVerifyDialogOpen(true);
-  };
-
-  const handleRejectRecord = (record: BiocharActivationRecord) => {
-    setSelectedRecord(record);
-    setRejectionNote("");
-    setIsRejectDialogOpen(true);
-  };
-
-  const handleDeleteRecord = (record: BiocharActivationRecord) => {
-    setSelectedRecord(record);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleConfirmVerify = () => {
-    // TODO: Add API call to verify record
-    console.log("Verifying record:", selectedRecord?.id);
-    setIsVerifyDialogOpen(false);
-  };
-
-  const handleConfirmReject = () => {
-    // TODO: Add API call to reject record
-    console.log("Rejecting record:", selectedRecord?.id, "Note:", rejectionNote);
-    setIsRejectDialogOpen(false);
-  };
-
-  const handleConfirmDelete = () => {
-    // TODO: Add API call to delete record
-    console.log("Deleting record:", selectedRecord?.id);
-    setIsDeleteDialogOpen(false);
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#295F58]">Biochar Activation</h1>
+          <h1 className="text-3xl font-bold text-[#295F58]">
+            Biochar Activation
+          </h1>
           <p className="text-muted-foreground mt-1">
             Track and verify biochar mixing and activation records
           </p>
@@ -315,7 +258,7 @@ export default function BiocharActivation() {
           <div className="flex flex-col gap-4">
             <CardTitle className="text-lg">All Records</CardTitle>
             <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -325,18 +268,6 @@ export default function BiocharActivation() {
                     className="pl-9"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="DRAFT">Draft</SelectItem>
-                    <SelectItem value="SUBMITTED">Submitted</SelectItem>
-                    <SelectItem value="VERIFIED">Verified</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
                 <Select value={siteFilter} onValueChange={setSiteFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Site" />
@@ -365,20 +296,36 @@ export default function BiocharActivation() {
                 </Select>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  placeholder="Start Date"
-                  className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
-                />
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  placeholder="End Date"
-                  className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
-                />
+                <div>
+                  <Label
+                    htmlFor="startDate"
+                    className="text-xs text-muted-foreground mb-1 block"
+                  >
+                    From
+                  </Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <Label
+                    htmlFor="endDate"
+                    className="text-xs text-muted-foreground mb-1 block"
+                  >
+                    To
+                  </Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -391,14 +338,16 @@ export default function BiocharActivation() {
                 <TableHead>Site & User</TableHead>
                 <TableHead>Shift & Agent</TableHead>
                 <TableHead>Media</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedRecords.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell
+                    colSpan={5}
+                    className="text-center text-muted-foreground py-8"
+                  >
                     No records found
                   </TableCell>
                 </TableRow>
@@ -412,16 +361,24 @@ export default function BiocharActivation() {
                             <FlaskConical className="h-4 w-4 text-[#295F58]" />
                           </div>
                           <div>
-                            <div className="font-medium">{record.recordDate}</div>
-                            <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                            <div className="font-medium">
+                              {record.recordDate}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {record.recordTime}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="text-sm font-medium">{record.siteCode}</div>
-                        <div className="text-sm text-muted-foreground">{record.userCode}</div>
+                        <div className="text-sm font-medium">
+                          {record.siteCode}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {record.userCode}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -429,7 +386,9 @@ export default function BiocharActivation() {
                         <Badge className={getShiftColor(record.shiftNumber)}>
                           Shift {record.shiftNumber}
                         </Badge>
-                        <div className="text-sm text-muted-foreground">{record.mixingAgent}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {record.mixingAgent}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -438,50 +397,15 @@ export default function BiocharActivation() {
                         <Video className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(record.status)}>
-                        {record.status}
-                      </Badge>
-                    </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewRecord(record)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          {record.status === "SUBMITTED" && (
-                            <>
-                              <DropdownMenuItem
-                                onClick={() => handleVerifyRecord(record)}
-                                className="text-green-600"
-                              >
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Verify
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleRejectRecord(record)}
-                                className="text-orange-600"
-                              >
-                                <XCircle className="h-4 w-4 mr-2" />
-                                Reject
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteRecord(record)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewRecord(record)}
+                        className="hover:bg-[#295F58]/10"
+                      >
+                        <Eye className="h-4 w-4 text-[#295F58]" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -495,7 +419,8 @@ export default function BiocharActivation() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredRecords.length)} of{" "}
+            Showing {startIndex + 1} to{" "}
+            {Math.min(endIndex, filteredRecords.length)} of{" "}
             {filteredRecords.length} records
           </p>
           <div className="flex items-center gap-2">
@@ -515,9 +440,7 @@ export default function BiocharActivation() {
                 size="sm"
                 onClick={() => setCurrentPage(page)}
                 className={
-                  currentPage === page
-                    ? "bg-[#295F58] hover:bg-[#1e4540]"
-                    : ""
+                  currentPage === page ? "bg-[#295F58] hover:bg-[#1e4540]" : ""
                 }
               >
                 {page}
@@ -548,32 +471,6 @@ export default function BiocharActivation() {
           {selectedRecord && (
             <div className="space-y-6 py-4">
               {/* Status Banner */}
-              {selectedRecord.status === "VERIFIED" && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-green-800">
-                    <CheckCircle className="h-5 w-5" />
-                    <div>
-                      <div className="font-medium">Verified</div>
-                      <div className="text-sm">
-                        Verified by {selectedRecord.verifiedByName} on{" "}
-                        {new Date(selectedRecord.verifiedAt!).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {selectedRecord.status === "REJECTED" && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-start gap-2 text-red-800">
-                    <XCircle className="h-5 w-5 mt-0.5" />
-                    <div className="flex-1">
-                      <div className="font-medium">Rejected</div>
-                      <div className="text-sm mt-1">{selectedRecord.rejectionNote}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Record Information */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -583,14 +480,6 @@ export default function BiocharActivation() {
                     <div className="font-medium">
                       {selectedRecord.recordDate} at {selectedRecord.recordTime}
                     </div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Status</Label>
-                  <div>
-                    <Badge className={getStatusColor(selectedRecord.status)}>
-                      {selectedRecord.status}
-                    </Badge>
                   </div>
                 </div>
               </div>
@@ -620,7 +509,9 @@ export default function BiocharActivation() {
                   <Label className="text-muted-foreground">Shift</Label>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <Badge className={getShiftColor(selectedRecord.shiftNumber)}>
+                    <Badge
+                      className={getShiftColor(selectedRecord.shiftNumber)}
+                    >
                       Shift {selectedRecord.shiftNumber}
                     </Badge>
                     <span className="text-sm">{selectedRecord.shiftName}</span>
@@ -630,7 +521,9 @@ export default function BiocharActivation() {
                   <Label className="text-muted-foreground">Mixing Agent</Label>
                   <div className="flex items-center gap-2">
                     <FlaskConical className="h-4 w-4 text-muted-foreground" />
-                    <div className="font-medium">{selectedRecord.mixingAgent}</div>
+                    <div className="font-medium">
+                      {selectedRecord.mixingAgent}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -691,105 +584,34 @@ export default function BiocharActivation() {
               {/* Metadata */}
               <div className="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4">
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Captured At</Label>
-                  <div className="text-sm">{new Date(selectedRecord.capturedAt).toLocaleString()}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    Captured At
+                  </Label>
+                  <div className="text-sm">
+                    {new Date(selectedRecord.capturedAt).toLocaleString()}
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Device</Label>
-                  <div className="text-sm">{selectedRecord.deviceInfo || "N/A"}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    Device
+                  </Label>
+                  <div className="text-sm">
+                    {selectedRecord.deviceInfo || "N/A"}
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">App Version</Label>
-                  <div className="text-sm">{selectedRecord.appVersion || "N/A"}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    App Version
+                  </Label>
+                  <div className="text-sm">
+                    {selectedRecord.appVersion || "N/A"}
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Verify Dialog */}
-      <AlertDialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Verify Activation Record</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to verify this biochar activation record? This action will mark
-              the record as verified.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmVerify}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Verify Record
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Activation Record</DialogTitle>
-            <DialogDescription>
-              Provide a reason for rejecting this record
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="rejectionNote">Rejection Note *</Label>
-              <Textarea
-                id="rejectionNote"
-                value={rejectionNote}
-                onChange={(e) => setRejectionNote(e.target.value)}
-                placeholder="Explain why this record is being rejected..."
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-orange-600 hover:bg-orange-700"
-              onClick={handleConfirmReject}
-              disabled={!rejectionNote.trim()}
-            >
-              <XCircle className="h-4 w-4 mr-2" />
-              Reject Record
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Activation Record</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this biochar activation record? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Record
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

@@ -1,13 +1,9 @@
 import { useState } from "react";
 import {
   Search,
-  MoreVertical,
   Eye,
   ChevronLeft,
   ChevronRight,
-  CheckCircle,
-  XCircle,
-  Trash2,
   Beaker,
   MapPin,
   User,
@@ -27,39 +23,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Textarea } from "@/components/ui/textarea";
 
 interface BiocharSamplingRecord {
   id: string;
@@ -89,7 +66,6 @@ interface BiocharSamplingRecord {
 
 export default function BiocharSampling() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
   const [startDate, setStartDate] = useState("");
@@ -101,11 +77,7 @@ export default function BiocharSampling() {
 
   // Dialog states
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BiocharSamplingRecord | null>(null);
-  const [rejectionNote, setRejectionNote] = useState("");
 
   // Mock data for filters
   const sites = [
@@ -230,7 +202,6 @@ export default function BiocharSampling() {
       record.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.productionBatches.includes(searchQuery);
-    const matchesStatus = statusFilter === "all" || record.status === statusFilter;
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
@@ -241,7 +212,7 @@ export default function BiocharSampling() {
       matchesDateRange = recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
     }
 
-    return matchesSearch && matchesStatus && matchesSite && matchesUser && matchesDateRange;
+    return matchesSearch && matchesSite && matchesUser && matchesDateRange;
   });
 
   // Pagination
@@ -254,40 +225,6 @@ export default function BiocharSampling() {
   const handleViewRecord = (record: BiocharSamplingRecord) => {
     setSelectedRecord(record);
     setIsViewDialogOpen(true);
-  };
-
-  const handleVerifyRecord = (record: BiocharSamplingRecord) => {
-    setSelectedRecord(record);
-    setIsVerifyDialogOpen(true);
-  };
-
-  const handleRejectRecord = (record: BiocharSamplingRecord) => {
-    setSelectedRecord(record);
-    setRejectionNote("");
-    setIsRejectDialogOpen(true);
-  };
-
-  const handleDeleteRecord = (record: BiocharSamplingRecord) => {
-    setSelectedRecord(record);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleConfirmVerify = () => {
-    // TODO: Add API call to verify record
-    console.log("Verifying record:", selectedRecord?.id);
-    setIsVerifyDialogOpen(false);
-  };
-
-  const handleConfirmReject = () => {
-    // TODO: Add API call to reject record
-    console.log("Rejecting record:", selectedRecord?.id, "Note:", rejectionNote);
-    setIsRejectDialogOpen(false);
-  };
-
-  const handleConfirmDelete = () => {
-    // TODO: Add API call to delete record
-    console.log("Deleting record:", selectedRecord?.id);
-    setIsDeleteDialogOpen(false);
   };
 
   return (
@@ -306,7 +243,7 @@ export default function BiocharSampling() {
           <div className="flex flex-col gap-4">
             <CardTitle className="text-lg">All Records</CardTitle>
             <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -316,18 +253,6 @@ export default function BiocharSampling() {
                     className="pl-9"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="DRAFT">Draft</SelectItem>
-                    <SelectItem value="SUBMITTED">Submitted</SelectItem>
-                    <SelectItem value="VERIFIED">Verified</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
                 <Select value={siteFilter} onValueChange={setSiteFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Site" />
@@ -356,20 +281,26 @@ export default function BiocharSampling() {
                 </Select>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  placeholder="Start Date"
-                  className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
-                />
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  placeholder="End Date"
-                  className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
-                />
+                <div>
+                  <Label htmlFor="startDate" className="text-xs text-muted-foreground mb-1 block">From</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endDate" className="text-xs text-muted-foreground mb-1 block">To</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -382,14 +313,13 @@ export default function BiocharSampling() {
                 <TableHead>Site & User</TableHead>
                 <TableHead>Production Batches</TableHead>
                 <TableHead>Samples</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedRecords.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No records found
                   </TableCell>
                 </TableRow>
@@ -429,50 +359,15 @@ export default function BiocharSampling() {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(record.status)}>
-                        {record.status}
-                      </Badge>
-                    </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewRecord(record)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          {record.status === "SUBMITTED" && (
-                            <>
-                              <DropdownMenuItem
-                                onClick={() => handleVerifyRecord(record)}
-                                className="text-green-600"
-                              >
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Verify
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleRejectRecord(record)}
-                                className="text-orange-600"
-                              >
-                                <XCircle className="h-4 w-4 mr-2" />
-                                Reject
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteRecord(record)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewRecord(record)}
+                        className="hover:bg-[#295F58]/10"
+                      >
+                        <Eye className="h-4 w-4 text-[#295F58]" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -539,32 +434,6 @@ export default function BiocharSampling() {
           {selectedRecord && (
             <div className="space-y-6 py-4">
               {/* Status Banner */}
-              {selectedRecord.status === "VERIFIED" && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-green-800">
-                    <CheckCircle className="h-5 w-5" />
-                    <div>
-                      <div className="font-medium">Verified</div>
-                      <div className="text-sm">
-                        Verified by {selectedRecord.verifiedByName} on{" "}
-                        {new Date(selectedRecord.verifiedAt!).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {selectedRecord.status === "REJECTED" && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-start gap-2 text-red-800">
-                    <XCircle className="h-5 w-5 mt-0.5" />
-                    <div className="flex-1">
-                      <div className="font-medium">Rejected</div>
-                      <div className="text-sm mt-1">{selectedRecord.rejectionNote}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Record Information */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -574,14 +443,6 @@ export default function BiocharSampling() {
                     <div className="font-medium">
                       {selectedRecord.recordDate} at {selectedRecord.recordTime}
                     </div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Status</Label>
-                  <div>
-                    <Badge className={getStatusColor(selectedRecord.status)}>
-                      {selectedRecord.status}
-                    </Badge>
                   </div>
                 </div>
               </div>
@@ -670,89 +531,6 @@ export default function BiocharSampling() {
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Verify Dialog */}
-      <AlertDialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Verify Sampling Record</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to verify this biochar sampling record? This action will mark
-              the record as verified.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmVerify}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Verify Record
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Sampling Record</DialogTitle>
-            <DialogDescription>
-              Provide a reason for rejecting this record
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="rejectionNote">Rejection Note *</Label>
-              <Textarea
-                id="rejectionNote"
-                value={rejectionNote}
-                onChange={(e) => setRejectionNote(e.target.value)}
-                placeholder="Explain why this record is being rejected..."
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-orange-600 hover:bg-orange-700"
-              onClick={handleConfirmReject}
-              disabled={!rejectionNote.trim()}
-            >
-              <XCircle className="h-4 w-4 mr-2" />
-              Reject Record
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Sampling Record</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this biochar sampling record? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Record
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

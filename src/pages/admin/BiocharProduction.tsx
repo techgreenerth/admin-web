@@ -7,7 +7,6 @@ import {
   ChevronRight,
   CheckCircle,
   XCircle,
-  Trash2,
   Factory,
   MapPin,
   User,
@@ -119,7 +118,6 @@ export default function BiocharProduction() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BiocharProductionRecord | null>(null);
   const [rejectionNote, setRejectionNote] = useState("");
 
@@ -306,11 +304,6 @@ export default function BiocharProduction() {
     setIsRejectDialogOpen(true);
   };
 
-  const handleDeleteRecord = (record: BiocharProductionRecord) => {
-    setSelectedRecord(record);
-    setIsDeleteDialogOpen(true);
-  };
-
   const handleConfirmVerify = () => {
     // TODO: Add API call to verify record
     console.log("Verifying record:", selectedRecord?.id);
@@ -321,12 +314,6 @@ export default function BiocharProduction() {
     // TODO: Add API call to reject record
     console.log("Rejecting record:", selectedRecord?.id, "Note:", rejectionNote);
     setIsRejectDialogOpen(false);
-  };
-
-  const handleConfirmDelete = () => {
-    // TODO: Add API call to delete record
-    console.log("Deleting record:", selectedRecord?.id);
-    setIsDeleteDialogOpen(false);
   };
 
   return (
@@ -408,20 +395,26 @@ export default function BiocharProduction() {
                 </Select>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  placeholder="Start Date"
-                  className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
-                />
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  placeholder="End Date"
-                  className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
-                />
+                <div>
+                  <Label htmlFor="startDate" className="text-xs text-muted-foreground mb-1 block">From</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endDate" className="text-xs text-muted-foreground mb-1 block">To</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -520,13 +513,6 @@ export default function BiocharProduction() {
                               </DropdownMenuItem>
                             </>
                           )}
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteRecord(record)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -884,28 +870,6 @@ export default function BiocharProduction() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Production Record</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this biochar production record? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Record
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
