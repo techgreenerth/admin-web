@@ -1,18 +1,12 @@
 import { useState } from "react";
 import {
   Search,
-  MoreVertical,
   Eye,
   ChevronLeft,
   ChevronRight,
-  CheckCircle,
-  XCircle,
-  Trash2,
   Leaf,
   MapPin,
   User,
-  Calendar,
-  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,19 +20,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -48,17 +35,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Textarea } from "@/components/ui/textarea";
 
 interface BiomassSourcingRecord {
   id: string;
@@ -91,7 +67,6 @@ interface BiomassSourcingRecord {
 
 export default function BiomassSourcing() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
   const [startDate, setStartDate] = useState("");
@@ -103,11 +78,7 @@ export default function BiomassSourcing() {
 
   // Dialog states
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BiomassSourcingRecord | null>(null);
-  const [rejectionNote, setRejectionNote] = useState("");
 
   // Mock data - Replace with API call
   const records: BiomassSourcingRecord[] = [
@@ -198,28 +169,12 @@ export default function BiomassSourcing() {
     { id: "u2", name: "Jane Smith", code: "USER-002" },
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "DRAFT":
-        return "bg-gray-100 text-gray-800";
-      case "SUBMITTED":
-        return "bg-blue-100 text-blue-800";
-      case "VERIFIED":
-        return "bg-green-100 text-green-800";
-      case "REJECTED":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   // Filter records
   const filteredRecords = records.filter((record) => {
     const matchesSearch =
       record.farmerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.tripNumber.includes(searchQuery) ||
       record.userName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || record.status === statusFilter;
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
@@ -230,7 +185,7 @@ export default function BiomassSourcing() {
       matchesDateRange = recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
     }
 
-    return matchesSearch && matchesStatus && matchesSite && matchesUser && matchesDateRange;
+    return matchesSearch && matchesSite && matchesUser && matchesDateRange;
   });
 
   // Pagination
@@ -245,47 +200,13 @@ export default function BiomassSourcing() {
     setIsViewDialogOpen(true);
   };
 
-  const handleVerifyRecord = (record: BiomassSourcingRecord) => {
-    setSelectedRecord(record);
-    setIsVerifyDialogOpen(true);
-  };
-
-  const handleRejectRecord = (record: BiomassSourcingRecord) => {
-    setSelectedRecord(record);
-    setRejectionNote("");
-    setIsRejectDialogOpen(true);
-  };
-
-  const handleDeleteRecord = (record: BiomassSourcingRecord) => {
-    setSelectedRecord(record);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleConfirmVerify = () => {
-    // TODO: Add API call to verify record
-    console.log("Verifying record:", selectedRecord?.id);
-    setIsVerifyDialogOpen(false);
-  };
-
-  const handleConfirmReject = () => {
-    // TODO: Add API call to reject record
-    console.log("Rejecting record:", selectedRecord?.id, "Note:", rejectionNote);
-    setIsRejectDialogOpen(false);
-  };
-
-  const handleConfirmDelete = () => {
-    // TODO: Add API call to delete record
-    console.log("Deleting record:", selectedRecord?.id);
-    setIsDeleteDialogOpen(false);
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#295F58]">Biomass Sourcing</h1>
-          <p className="text-muted-foreground mt-1">
-            Track and verify biomass delivery records
+      <div>
+        <h1 className="text-3xl font-bold text-[#295F58]">Biomass Sourcing</h1>
+        <div className="mt-3 inline-block bg-gray-100 px-4 py-2 rounded-lg border border-gray-200">
+          <p className="text-base text-muted-foreground">
+            Total Biomass Sourced: <span className="font-semibold text-[#295F58]">{filteredRecords.length}</span> <span className="text-sm">(trip wise)</span>
           </p>
         </div>
       </div>
@@ -295,7 +216,7 @@ export default function BiomassSourcing() {
           <div className="flex flex-col gap-4">
             <CardTitle className="text-lg">All Records</CardTitle>
             <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -305,18 +226,6 @@ export default function BiomassSourcing() {
                     className="pl-9"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="DRAFT">Draft</SelectItem>
-                    <SelectItem value="SUBMITTED">Submitted</SelectItem>
-                    <SelectItem value="VERIFIED">Verified</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
                 <Select value={siteFilter} onValueChange={setSiteFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Site" />
@@ -345,20 +254,26 @@ export default function BiomassSourcing() {
                 </Select>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  placeholder="Start Date"
-                  className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
-                />
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  placeholder="End Date"
-                  className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
-                />
+                <div>
+                  <Label htmlFor="startDate" className="text-xs text-muted-foreground mb-1 block">From</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endDate" className="text-xs text-muted-foreground mb-1 block">To</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -371,7 +286,6 @@ export default function BiomassSourcing() {
                 <TableHead>Farmer Details</TableHead>
                 <TableHead>Site & User</TableHead>
                 <TableHead>GPS Location</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -416,41 +330,15 @@ export default function BiomassSourcing() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(record.status)}>
-                      {record.status}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewRecord(record)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        {record.status === "SUBMITTED" && (
-                          <>
-                            <DropdownMenuItem onClick={() => handleVerifyRecord(record)} className="text-green-600">
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Verify
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleRejectRecord(record)} className="text-orange-600">
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Reject
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteRecord(record)}>
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleViewRecord(record)}
+                      className="hover:bg-[#295F58]/10"
+                    >
+                      <Eye className="h-4 w-4 text-[#295F58]" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -526,14 +414,6 @@ export default function BiomassSourcing() {
 
               {/* Record Information */}
               <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Status</Label>
-                  <div>
-                    <Badge className={getStatusColor(selectedRecord.status)}>
-                      {selectedRecord.status}
-                    </Badge>
-                  </div>
-                </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Trip Number</Label>
                   <p className="font-medium">Trip {selectedRecord.tripNumber}</p>
@@ -667,122 +547,9 @@ export default function BiomassSourcing() {
             <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
               Close
             </Button>
-            {selectedRecord?.status === "SUBMITTED" && (
-              <>
-                <Button
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => {
-                    setIsViewDialogOpen(false);
-                    handleVerifyRecord(selectedRecord);
-                  }}
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Verify Record
-                </Button>
-                <Button
-                  variant="outline"
-                  className="text-orange-600 border-orange-600 hover:bg-orange-50"
-                  onClick={() => {
-                    setIsViewDialogOpen(false);
-                    handleRejectRecord(selectedRecord);
-                  }}
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject Record
-                </Button>
-              </>
-            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Verify Confirmation Dialog */}
-      <AlertDialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Verify Biomass Sourcing Record?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will mark the record from{" "}
-              <span className="font-semibold text-foreground">
-                {selectedRecord?.farmerName}
-              </span>{" "}
-              (Trip {selectedRecord?.tripNumber}) as VERIFIED. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmVerify}
-              className="bg-green-600 hover:bg-green-700 focus:ring-green-600"
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Verify Record
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Biomass Sourcing Record</DialogTitle>
-            <DialogDescription>
-              Provide a reason for rejecting this record
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="rejectionNote">Rejection Note *</Label>
-              <Textarea
-                id="rejectionNote"
-                value={rejectionNote}
-                onChange={(e) => setRejectionNote(e.target.value)}
-                placeholder="Explain why this record is being rejected..."
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-orange-600 hover:bg-orange-700"
-              onClick={handleConfirmReject}
-              disabled={!rejectionNote.trim()}
-            >
-              <XCircle className="h-4 w-4 mr-2" />
-              Reject Record
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the biomass sourcing record from{" "}
-              <span className="font-semibold text-foreground">
-                {selectedRecord?.farmerName}
-              </span>{" "}
-              (Trip {selectedRecord?.tripNumber}). This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            >
-              Delete Record
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
