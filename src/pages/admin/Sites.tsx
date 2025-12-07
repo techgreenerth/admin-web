@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -86,6 +87,7 @@ interface Site {
 }
 
 export default function Sites() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -243,8 +245,7 @@ export default function Sites() {
   };
 
   const handleViewSite = (site: Site) => {
-    setSelectedSite(site);
-    setIsViewDialogOpen(true);
+    navigate(`/sites/${site.id}`);
   };
 
   const handleEditSite = (site: Site) => {

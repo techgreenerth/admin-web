@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Users from "./pages/admin/Users";
 import Admins from "./pages/admin/Admins";
 import Sites from "./pages/admin/Sites";
+import SiteDetails from "./pages/admin/SiteDetails";
 import Kontikis from "./pages/admin/Kontikis";
 import Shifts from "./pages/admin/Shifts";
 import BiomassSourcing from "./pages/admin/BiomassSourcing";
@@ -47,6 +48,7 @@ const App = () => (
                   <Route path="users" element={<Users />} />
                   <Route path="admins" element={<Admins />} />
                   <Route path="sites" element={<Sites />} />
+                  <Route path="sites/:id" element={<SiteDetails />} />
                   <Route path="kontikis" element={<Kontikis />} />
                   <Route path="shifts" element={<Shifts />} />
                   <Route
