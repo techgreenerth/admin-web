@@ -123,7 +123,21 @@ export default function SiteDetails() {
     { id: "11", name: "Labor Consent Forms", required: true, files: [] },
   ]);
 
+  // Training folders
+  const [trainingFolders, setTrainingFolders] = useState<UploadFolder[]>([
+    { id: "t1", name: "Biochar Production Training", required: true, files: [] },
+    { id: "t2", name: "DMRV Training", required: true, files: [] },
+    { id: "t3", name: "Safety Training", required: true, files: [] },
+    { id: "t4", name: "Training Complete Declaration", required: true, files: [] },
+  ]);
+
+  // Internal uploads folder
+  const [internalUploadsFolders, setInternalUploadsFolders] = useState<UploadFolder[]>([
+    { id: "i1", name: "Internal Uploads", required: true, files: [] },
+  ]);
+
   const [selectedFolder, setSelectedFolder] = useState<UploadFolder | null>(null);
+  const [selectedFolderType, setSelectedFolderType] = useState<"upload" | "training" | "internal">("upload");
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [isViewFileDialogOpen, setIsViewFileDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
@@ -158,8 +172,9 @@ export default function SiteDetails() {
     }
   };
 
-  const handleOpenFolder = (folder: UploadFolder) => {
+  const handleOpenFolder = (folder: UploadFolder, folderType: "upload" | "training" | "internal") => {
     setSelectedFolder(folder);
+    setSelectedFolderType(folderType);
     setIsFolderDialogOpen(true);
   };
 
@@ -181,25 +196,63 @@ export default function SiteDetails() {
         : "document",
     }));
 
-    setUploadFolders((prev) =>
-      prev.map((folder) =>
-        folder.id === selectedFolder.id
-          ? { ...folder, files: [...folder.files, ...newFiles] }
-          : folder
-      )
-    );
+    // Update the correct folder type
+    if (selectedFolderType === "upload") {
+      setUploadFolders((prev) =>
+        prev.map((folder) =>
+          folder.id === selectedFolder.id
+            ? { ...folder, files: [...folder.files, ...newFiles] }
+            : folder
+        )
+      );
+    } else if (selectedFolderType === "training") {
+      setTrainingFolders((prev) =>
+        prev.map((folder) =>
+          folder.id === selectedFolder.id
+            ? { ...folder, files: [...folder.files, ...newFiles] }
+            : folder
+        )
+      );
+    } else if (selectedFolderType === "internal") {
+      setInternalUploadsFolders((prev) =>
+        prev.map((folder) =>
+          folder.id === selectedFolder.id
+            ? { ...folder, files: [...folder.files, ...newFiles] }
+            : folder
+        )
+      );
+    }
   };
 
   const handleDeleteFile = (fileId: string) => {
     if (!selectedFolder) return;
 
-    setUploadFolders((prev) =>
-      prev.map((folder) =>
-        folder.id === selectedFolder.id
-          ? { ...folder, files: folder.files.filter((f) => f.id !== fileId) }
-          : folder
-      )
-    );
+    // Update the correct folder type
+    if (selectedFolderType === "upload") {
+      setUploadFolders((prev) =>
+        prev.map((folder) =>
+          folder.id === selectedFolder.id
+            ? { ...folder, files: folder.files.filter((f) => f.id !== fileId) }
+            : folder
+        )
+      );
+    } else if (selectedFolderType === "training") {
+      setTrainingFolders((prev) =>
+        prev.map((folder) =>
+          folder.id === selectedFolder.id
+            ? { ...folder, files: folder.files.filter((f) => f.id !== fileId) }
+            : folder
+        )
+      );
+    } else if (selectedFolderType === "internal") {
+      setInternalUploadsFolders((prev) =>
+        prev.map((folder) =>
+          folder.id === selectedFolder.id
+            ? { ...folder, files: folder.files.filter((f) => f.id !== fileId) }
+            : folder
+        )
+      );
+    }
 
     setSelectedFolder((prev) =>
       prev ? { ...prev, files: prev.files.filter((f) => f.id !== fileId) } : null
@@ -362,7 +415,113 @@ export default function SiteDetails() {
               return (
                 <div
                   key={folder.id}
-                  onClick={() => handleOpenFolder(folder)}
+                  onClick={() => handleOpenFolder(folder, "upload")}
+                  className={`border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
+                    isUploaded
+                      ? "border-green-500 bg-green-50 hover:bg-green-100"
+                      : "border-red-500 bg-red-50 hover:bg-red-100"
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3 flex-1">
+                      {isUploaded ? (
+                        <FolderOpen className="h-6 w-6 text-green-600 mt-0.5" />
+                      ) : (
+                        <Folder className="h-6 w-6 text-red-600 mt-0.5" />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{folder.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {folder.files.length} file{folder.files.length !== 1 ? "s" : ""}{" "}
+                          uploaded
+                        </p>
+                      </div>
+                    </div>
+                    {isUploaded ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-red-600" />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Training Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Upload className="h-5 w-5 text-[#295F58]" />
+            Training Documentation
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            All training materials are mandatory. Click on a folder to upload files.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {trainingFolders.map((folder) => {
+              const isUploaded = folder.files.length > 0;
+              return (
+                <div
+                  key={folder.id}
+                  onClick={() => handleOpenFolder(folder, "training")}
+                  className={`border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
+                    isUploaded
+                      ? "border-green-500 bg-green-50 hover:bg-green-100"
+                      : "border-red-500 bg-red-50 hover:bg-red-100"
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3 flex-1">
+                      {isUploaded ? (
+                        <FolderOpen className="h-6 w-6 text-green-600 mt-0.5" />
+                      ) : (
+                        <Folder className="h-6 w-6 text-red-600 mt-0.5" />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{folder.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {folder.files.length} file{folder.files.length !== 1 ? "s" : ""}{" "}
+                          uploaded
+                        </p>
+                      </div>
+                    </div>
+                    {isUploaded ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-red-600" />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Internal Uploads Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Upload className="h-5 w-5 text-[#295F58]" />
+            Internal Uploads (Greenerth Team)
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Internal documentation uploaded by Greenerth team.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {internalUploadsFolders.map((folder) => {
+              const isUploaded = folder.files.length > 0;
+              return (
+                <div
+                  key={folder.id}
+                  onClick={() => handleOpenFolder(folder, "internal")}
                   className={`border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
                     isUploaded
                       ? "border-green-500 bg-green-50 hover:bg-green-100"
