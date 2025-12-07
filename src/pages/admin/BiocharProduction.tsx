@@ -109,7 +109,6 @@ export default function BiocharProduction() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
-  const [stepFilter, setStepFilter] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -635,7 +634,7 @@ export default function BiocharProduction() {
                         <Button
                           size="sm"
                           onClick={() => handleVerifyKontiki(selectedRecord, kontiki)}
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-green-600 hover:bg-green-700 text-white"
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
                           Accept
@@ -644,7 +643,7 @@ export default function BiocharProduction() {
                           size="sm"
                           variant="outline"
                           onClick={() => handleRejectKontiki(selectedRecord, kontiki)}
-                          className="border-orange-600 text-orange-600 hover:bg-orange-50"
+                          className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors"
                         >
                           <XCircle className="h-4 w-4 mr-2" />
                           Reject

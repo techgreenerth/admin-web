@@ -5,12 +5,9 @@ import {
   ChevronLeft,
   ChevronRight,
   FlaskConical,
-  MapPin,
-  User,
-  Calendar,
-  Image as ImageIcon,
   Video,
-  Clock,
+  CheckCircle,
+  ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,12 +30,17 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+
+interface KontikiActivationData {
+  kontikiId: string;
+  kontikiName: string;
+  mixingVideo: string;
+}
 
 interface BiocharActivationRecord {
   id: string;
@@ -57,17 +59,11 @@ interface BiocharActivationRecord {
   shiftId: string;
   shiftName: string;
   shiftNumber: number;
-  tractorPhoto: string;
-  mixingVideo: string;
+  kontikis: KontikiActivationData[];
   capturedAt: string;
   deviceInfo?: string;
   appVersion?: string;
-  status: string;
   submittedAt: string;
-  verifiedAt?: string;
-  verifiedById?: string;
-  verifiedByName?: string;
-  rejectionNote?: string;
 }
 
 export default function BiocharActivation() {
@@ -116,16 +112,22 @@ export default function BiocharActivation() {
       shiftId: "1",
       shiftName: "Shift 1",
       shiftNumber: 1,
-      tractorPhoto: "https://via.placeholder.com/400x300?text=Tractor+Photo",
-      mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+      kontikis: [
+        {
+          kontikiId: "1",
+          kontikiName: "Kon-tiki 1",
+          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+        },
+        {
+          kontikiId: "2",
+          kontikiName: "Kon-tiki 2",
+          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+        },
+      ],
       capturedAt: "2024-01-15T16:30:00Z",
       deviceInfo: "Samsung Galaxy A52",
       appVersion: "1.2.0",
-      status: "VERIFIED",
       submittedAt: "2024-01-15T16:35:00Z",
-      verifiedAt: "2024-01-15T18:20:00Z",
-      verifiedById: "admin1",
-      verifiedByName: "Admin User",
     },
     {
       id: "2",
@@ -144,12 +146,16 @@ export default function BiocharActivation() {
       shiftId: "2",
       shiftName: "Shift 2",
       shiftNumber: 2,
-      tractorPhoto: "https://via.placeholder.com/400x300?text=Tractor+Photo",
-      mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+      kontikis: [
+        {
+          kontikiId: "3",
+          kontikiName: "Kon-tiki 3",
+          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+        },
+      ],
       capturedAt: "2024-01-16T11:15:00Z",
       deviceInfo: "Xiaomi Redmi Note 10",
       appVersion: "1.2.0",
-      status: "SUBMITTED",
       submittedAt: "2024-01-16T11:20:00Z",
     },
     {
@@ -169,32 +175,19 @@ export default function BiocharActivation() {
       shiftId: "1",
       shiftName: "Shift 1",
       shiftNumber: 1,
-      tractorPhoto: "https://via.placeholder.com/400x300?text=Tractor+Photo",
-      mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+      kontikis: [
+        {
+          kontikiId: "1",
+          kontikiName: "Kon-tiki 1",
+          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
+        },
+      ],
       capturedAt: "2024-01-14T14:00:00Z",
       deviceInfo: "Samsung Galaxy A52",
       appVersion: "1.2.0",
-      status: "REJECTED",
       submittedAt: "2024-01-14T14:05:00Z",
-      rejectionNote:
-        "Mixing video quality is poor. Please record again with better lighting.",
     },
   ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "DRAFT":
-        return "bg-gray-100 text-gray-800";
-      case "SUBMITTED":
-        return "bg-blue-100 text-blue-800";
-      case "VERIFIED":
-        return "bg-green-100 text-green-800";
-      case "REJECTED":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
 
   const getShiftColor = (shiftNumber: number) => {
     const colors = [
@@ -461,141 +454,85 @@ export default function BiocharActivation() {
 
       {/* View Details Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Biochar Activation Details</DialogTitle>
-            <DialogDescription>
-              Complete information about this activation record
-            </DialogDescription>
           </DialogHeader>
           {selectedRecord && (
             <div className="space-y-6 py-4">
-              {/* Status Banner */}
-              {/* Record Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Date & Time</Label>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <div className="font-medium">
-                      {selectedRecord.recordDate} at {selectedRecord.recordTime}
-                    </div>
-                  </div>
+              {/* Record Submitted Status */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <CheckCircle className="h-5 w-5" />
+                  <div className="font-medium">Record Submitted</div>
                 </div>
               </div>
 
-              {/* Site & User Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Site</Label>
-                  <div className="font-medium">
+              {/* General Record Information */}
+              <div className="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4">
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Date</Label>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.recordDate}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Time</Label>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.recordTime}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Site</Label>
+                  <div className="text-sm font-medium">
                     {selectedRecord.siteCode} - {selectedRecord.siteName}
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">User</Label>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div className="font-medium">
-                      {selectedRecord.userCode} - {selectedRecord.userName}
-                    </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">User</Label>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.userCode} - {selectedRecord.userName}
                   </div>
                 </div>
-              </div>
-
-              {/* Shift & Mixing Agent */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Shift</Label>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <Badge
-                      className={getShiftColor(selectedRecord.shiftNumber)}
-                    >
-                      Shift {selectedRecord.shiftNumber}
-                    </Badge>
-                    <span className="text-sm">{selectedRecord.shiftName}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Mixing Agent</Label>
-                  <div className="flex items-center gap-2">
-                    <FlaskConical className="h-4 w-4 text-muted-foreground" />
-                    <div className="font-medium">
-                      {selectedRecord.mixingAgent}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* GPS Location */}
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">GPS Location</Label>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div className="font-mono text-sm">
-                    {selectedRecord.latitude}, {selectedRecord.longitude}
-                    {selectedRecord.gpsAccuracy && (
-                      <span className="text-muted-foreground ml-2">
-                        (±{selectedRecord.gpsAccuracy})
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Media */}
-              <div className="space-y-3">
-                <Label className="text-muted-foreground">Media</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Tractor Photo */}
-                  <div className="space-y-2">
-                    <Label className="text-sm flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4" />
-                      Tractor Photo
-                    </Label>
-                    <div className="border rounded-lg overflow-hidden">
-                      <img
-                        src={selectedRecord.tractorPhoto}
-                        alt="Tractor with activated biochar"
-                        className="w-full h-auto"
-                      />
-                    </div>
-                  </div>
-                  {/* Mixing Video */}
-                  <div className="space-y-2">
-                    <Label className="text-sm flex items-center gap-2">
-                      <Video className="h-4 w-4" />
-                      Mixing Video
-                    </Label>
-                    <div className="border rounded-lg overflow-hidden">
-                      <video
-                        controls
-                        className="w-full h-auto"
-                        src={selectedRecord.mixingVideo}
-                      >
-                        Your browser does not support the video tag.
-                      </video>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Metadata */}
-              <div className="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    Captured At
+                    Location
                   </Label>
-                  <div className="text-sm">
-                    {new Date(selectedRecord.capturedAt).toLocaleString()}
+                  <div className="text-sm font-mono">
+                    {selectedRecord.latitude}, {selectedRecord.longitude}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">
+                    Shift No.
+                  </Label>
+                  <div className="text-sm font-medium">
+                    Shift {selectedRecord.shiftNumber}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">
+                    Mixing Agent
+                  </Label>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.mixingAgent}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">
+                    Ken tiki used
+                  </Label>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.kontikis
+                      .map((k) => k.kontikiName)
+                      .join(", ")}
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
                     Device
                   </Label>
-                  <div className="text-sm">
+                  <div className="text-sm font-medium">
                     {selectedRecord.deviceInfo || "N/A"}
                   </div>
                 </div>
@@ -603,11 +540,43 @@ export default function BiocharActivation() {
                   <Label className="text-muted-foreground text-xs">
                     App Version
                   </Label>
-                  <div className="text-sm">
+                  <div className="text-sm font-medium">
                     {selectedRecord.appVersion || "N/A"}
                   </div>
                 </div>
               </div>
+
+              {/* Kontiki Sections */}
+              {selectedRecord.kontikis.map((kontiki) => (
+                <div
+                  key={kontiki.kontikiId}
+                  className="border border-gray-200 rounded-lg p-6 space-y-6"
+                >
+                  {/* Kontiki Header */}
+                  <div className="pb-4 border-b">
+                    <h3 className="text-lg font-semibold text-[#295F58]">
+                      {kontiki.kontikiName}
+                    </h3>
+                  </div>
+
+                  {/* Mixing Video */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Video className="h-5 w-5 text-[#295F58]" />
+                      Mixing Video
+                    </Label>
+                    <div className="border rounded-lg overflow-hidden max-w-2xl">
+                      <video
+                        controls
+                        className="w-full h-auto"
+                        src={kontiki.mixingVideo}
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </DialogContent>

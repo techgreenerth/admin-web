@@ -5,11 +5,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Beaker,
-  MapPin,
-  User,
-  Calendar,
+  CheckCircle,
   Image as ImageIcon,
-  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,11 +29,17 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+
+interface KontikiSamplingData {
+  kontikiId: string;
+  kontikiName: string;
+  samplePhoto: string;
+}
 
 interface BiocharSamplingRecord {
   id: string;
@@ -51,17 +54,14 @@ interface BiocharSamplingRecord {
   latitude: string;
   longitude: string;
   gpsAccuracy?: string;
-  productionBatches: string;
-  samplePhotos: string[];
+  shiftId: string;
+  shiftName: string;
+  shiftNumber: number;
+  kontikis: KontikiSamplingData[];
   capturedAt: string;
   deviceInfo?: string;
   appVersion?: string;
-  status: string;
   submittedAt: string;
-  verifiedAt?: string;
-  verifiedById?: string;
-  verifiedByName?: string;
-  rejectionNote?: string;
 }
 
 export default function BiocharSampling() {
@@ -105,25 +105,25 @@ export default function BiocharSampling() {
       latitude: "28.61394",
       longitude: "77.20902",
       gpsAccuracy: "5m",
-      productionBatches: "8",
-      samplePhotos: [
-        "https://via.placeholder.com/400x300?text=Sample+1",
-        "https://via.placeholder.com/400x300?text=Sample+2",
-        "https://via.placeholder.com/400x300?text=Sample+3",
-        "https://via.placeholder.com/400x300?text=Sample+4",
-        "https://via.placeholder.com/400x300?text=Sample+5",
-        "https://via.placeholder.com/400x300?text=Sample+6",
-        "https://via.placeholder.com/400x300?text=Sample+7",
-        "https://via.placeholder.com/400x300?text=Sample+8",
+      shiftId: "1",
+      shiftName: "Shift 1",
+      shiftNumber: 1,
+      kontikis: [
+        {
+          kontikiId: "1",
+          kontikiName: "Kon-tiki 1",
+          samplePhoto: "https://via.placeholder.com/400x300?text=K1+Sample",
+        },
+        {
+          kontikiId: "2",
+          kontikiName: "Kon-tiki 2",
+          samplePhoto: "https://via.placeholder.com/400x300?text=K2+Sample",
+        },
       ],
       capturedAt: "2024-01-15T17:30:00Z",
       deviceInfo: "Samsung Galaxy A52",
       appVersion: "1.2.0",
-      status: "VERIFIED",
       submittedAt: "2024-01-15T17:35:00Z",
-      verifiedAt: "2024-01-15T19:20:00Z",
-      verifiedById: "admin1",
-      verifiedByName: "Admin User",
     },
     {
       id: "2",
@@ -138,18 +138,19 @@ export default function BiocharSampling() {
       latitude: "28.62394",
       longitude: "77.21902",
       gpsAccuracy: "4m",
-      productionBatches: "5",
-      samplePhotos: [
-        "https://via.placeholder.com/400x300?text=Sample+1",
-        "https://via.placeholder.com/400x300?text=Sample+2",
-        "https://via.placeholder.com/400x300?text=Sample+3",
-        "https://via.placeholder.com/400x300?text=Sample+4",
-        "https://via.placeholder.com/400x300?text=Sample+5",
+      shiftId: "2",
+      shiftName: "Shift 2",
+      shiftNumber: 2,
+      kontikis: [
+        {
+          kontikiId: "3",
+          kontikiName: "Kon-tiki 3",
+          samplePhoto: "https://via.placeholder.com/400x300?text=K3+Sample",
+        },
       ],
       capturedAt: "2024-01-16T12:15:00Z",
       deviceInfo: "Xiaomi Redmi Note 10",
       appVersion: "1.2.0",
-      status: "SUBMITTED",
       submittedAt: "2024-01-16T12:20:00Z",
     },
     {
@@ -165,34 +166,32 @@ export default function BiocharSampling() {
       latitude: "28.61494",
       longitude: "77.21002",
       gpsAccuracy: "6m",
-      productionBatches: "3",
-      samplePhotos: [
-        "https://via.placeholder.com/400x300?text=Sample+1",
-        "https://via.placeholder.com/400x300?text=Sample+2",
-        "https://via.placeholder.com/400x300?text=Sample+3",
+      shiftId: "1",
+      shiftName: "Shift 1",
+      shiftNumber: 1,
+      kontikis: [
+        {
+          kontikiId: "1",
+          kontikiName: "Kon-tiki 1",
+          samplePhoto: "https://via.placeholder.com/400x300?text=K1+Sample",
+        },
       ],
       capturedAt: "2024-01-14T15:00:00Z",
       deviceInfo: "Samsung Galaxy A52",
       appVersion: "1.2.0",
-      status: "REJECTED",
       submittedAt: "2024-01-14T15:05:00Z",
-      rejectionNote: "Sample photos are unclear. Please retake with better focus and lighting.",
     },
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "DRAFT":
-        return "bg-gray-100 text-gray-800";
-      case "SUBMITTED":
-        return "bg-blue-100 text-blue-800";
-      case "VERIFIED":
-        return "bg-green-100 text-green-800";
-      case "REJECTED":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const getShiftColor = (shiftNumber: number) => {
+    const colors = [
+      "bg-blue-100 text-blue-800", // Shift 1
+      "bg-purple-100 text-purple-800", // Shift 2
+      "bg-orange-100 text-orange-800", // Shift 3
+      "bg-pink-100 text-pink-800", // Shift 4
+      "bg-cyan-100 text-cyan-800", // Shift 5
+    ];
+    return colors[shiftNumber - 1] || "bg-gray-100 text-gray-800";
   };
 
   // Filter records
@@ -201,7 +200,7 @@ export default function BiocharSampling() {
       record.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.productionBatches.includes(searchQuery);
+      record.kontikis.some(k => k.kontikiName.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
@@ -247,7 +246,7 @@ export default function BiocharSampling() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search user, site, batches..."
+                    placeholder="Search user, site, kontiki..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9"
@@ -311,7 +310,7 @@ export default function BiocharSampling() {
               <TableRow>
                 <TableHead>Record Info</TableHead>
                 <TableHead>Site & User</TableHead>
-                <TableHead>Production Batches</TableHead>
+                <TableHead>Shift & Kontikis</TableHead>
                 <TableHead>Samples</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -346,16 +345,20 @@ export default function BiocharSampling() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{record.productionBatches} batches</span>
+                      <div className="space-y-1">
+                        <Badge className={getShiftColor(record.shiftNumber)}>
+                          Shift {record.shiftNumber}
+                        </Badge>
+                        <div className="text-sm text-muted-foreground">
+                          {record.kontikis.map(k => k.kontikiName).join(", ")}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <ImageIcon className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">
-                          {record.samplePhotos.length} photos
+                          {record.kontikis.length} {record.kontikis.length === 1 ? 'photo' : 'photos'}
                         </span>
                       </div>
                     </TableCell>
@@ -424,109 +427,84 @@ export default function BiocharSampling() {
 
       {/* View Details Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Biochar Sampling Details</DialogTitle>
-            <DialogDescription>
-              Complete information about this sampling record
-            </DialogDescription>
           </DialogHeader>
           {selectedRecord && (
             <div className="space-y-6 py-4">
-              {/* Status Banner */}
-              {/* Record Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Date & Time</Label>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <div className="font-medium">
-                      {selectedRecord.recordDate} at {selectedRecord.recordTime}
-                    </div>
-                  </div>
+              {/* Record Submitted Status */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <CheckCircle className="h-5 w-5" />
+                  <div className="font-medium">Record Submitted</div>
                 </div>
               </div>
 
-              {/* Site & User Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Site</Label>
-                  <div className="font-medium">
-                    {selectedRecord.siteCode} - {selectedRecord.siteName}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">User</Label>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div className="font-medium">
-                      {selectedRecord.userCode} - {selectedRecord.userName}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Production Batches */}
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Production Batches</Label>
-                <div className="flex items-center gap-2">
-                  <Package className="h-4 w-4 text-muted-foreground" />
-                  <div className="font-medium">{selectedRecord.productionBatches} batches</div>
-                </div>
-              </div>
-
-              {/* GPS Location */}
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">GPS Location</Label>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div className="font-mono text-sm">
-                    {selectedRecord.latitude}, {selectedRecord.longitude}
-                    {selectedRecord.gpsAccuracy && (
-                      <span className="text-muted-foreground ml-2">
-                        (±{selectedRecord.gpsAccuracy})
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Sample Photos */}
-              <div className="space-y-3">
-                <Label className="text-muted-foreground">
-                  Sample Photos ({selectedRecord.samplePhotos.length})
-                </Label>
-                <div className="grid grid-cols-3 gap-4">
-                  {selectedRecord.samplePhotos.map((photo, index) => (
-                    <div key={index} className="space-y-2">
-                      <Label className="text-sm">Sample {index + 1}</Label>
-                      <div className="border rounded-lg overflow-hidden">
-                        <img
-                          src={photo}
-                          alt={`Sample ${index + 1}`}
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Metadata */}
+              {/* General Record Information */}
               <div className="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4">
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Captured At</Label>
-                  <div className="text-sm">{new Date(selectedRecord.capturedAt).toLocaleString()}</div>
+                  <Label className="text-muted-foreground text-xs">Date</Label>
+                  <div className="text-sm font-medium">{selectedRecord.recordDate}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Time</Label>
+                  <div className="text-sm font-medium">{selectedRecord.recordTime}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Site</Label>
+                  <div className="text-sm font-medium">{selectedRecord.siteCode} - {selectedRecord.siteName}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">User</Label>
+                  <div className="text-sm font-medium">{selectedRecord.userCode} - {selectedRecord.userName}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Location</Label>
+                  <div className="text-sm font-mono">{selectedRecord.latitude}, {selectedRecord.longitude}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Shift No.</Label>
+                  <div className="text-sm font-medium">Shift {selectedRecord.shiftNumber}</div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">Ken tiki used</Label>
+                  <div className="text-sm font-medium">{selectedRecord.kontikis.map(k => k.kontikiName).join(", ")}</div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Device</Label>
-                  <div className="text-sm">{selectedRecord.deviceInfo || "N/A"}</div>
+                  <div className="text-sm font-medium">{selectedRecord.deviceInfo || "N/A"}</div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">App Version</Label>
-                  <div className="text-sm">{selectedRecord.appVersion || "N/A"}</div>
+                  <div className="text-sm font-medium">{selectedRecord.appVersion || "N/A"}</div>
                 </div>
               </div>
+
+              {/* Kontiki Sections */}
+              {selectedRecord.kontikis.map((kontiki) => (
+                <div key={kontiki.kontikiId} className="border border-gray-200 rounded-lg p-6 space-y-6">
+                  {/* Kontiki Header */}
+                  <div className="pb-4 border-b">
+                    <h3 className="text-lg font-semibold text-[#295F58]">{kontiki.kontikiName}</h3>
+                  </div>
+
+                  {/* Sample Photo */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <ImageIcon className="h-5 w-5 text-[#295F58]" />
+                      Sample Photo
+                    </Label>
+                    <div className="border rounded-lg overflow-hidden max-w-md">
+                      <img
+                        src={kontiki.samplePhoto}
+                        alt={`${kontiki.kontikiName} Sample`}
+                        className="w-full h-auto"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </DialogContent>
