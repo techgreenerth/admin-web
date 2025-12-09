@@ -135,14 +135,14 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
+              {/* <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="/shifts" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
                     <Clock className="h-5 w-5" />
                     <span className="text-base">Production Shifts</span>
                   </NavLink>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
+              </SidebarMenuItem> */}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
