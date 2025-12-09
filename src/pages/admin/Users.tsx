@@ -276,8 +276,6 @@ export default function Users() {
                 <TableHead>User Code</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Organization</TableHead>
-                <TableHead>Experience</TableHead>
-                <TableHead>Proficiency</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -310,20 +308,6 @@ export default function Users() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">{user.organizationName}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{user.experience}</div>
-                  </TableCell>
-                  <TableCell>
-                    {user.proficiencyTestPassed ? (
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                        Passed
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-                        Pending
-                      </Badge>
-                    )}
                   </TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(user.status)}>

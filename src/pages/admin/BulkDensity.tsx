@@ -39,6 +39,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 interface BulkDensityRecord {
   id: string;
@@ -220,6 +221,11 @@ export default function BulkDensity() {
   const endIndex = startIndex + itemsPerPage;
   const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
 
+  // Calculate average bulk density from filtered records
+  const averageBulkDensity = filteredRecords.length > 0
+    ? (filteredRecords.reduce((sum, record) => sum + parseFloat(record.bulkDensityCalculated), 0) / filteredRecords.length).toFixed(2)
+    : "0.00";
+
   // Handlers
   const handleViewRecord = (record: BulkDensityRecord) => {
     setSelectedRecord(record);
@@ -228,12 +234,17 @@ export default function BulkDensity() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[#295F58]">Bulk Density Measurement</h1>
           <p className="text-muted-foreground mt-1">
             Track and verify biochar bulk density measurements
           </p>
+        </div>
+        {/* Average Bulk Density Display */}
+        <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-gray-50 text-sm text-muted-foreground">
+          <Scale className="h-4 w-4" />
+          <span>Average Bulk Density: {averageBulkDensity} kg/m³</span>
         </div>
       </div>
 

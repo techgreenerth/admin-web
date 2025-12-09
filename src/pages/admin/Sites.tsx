@@ -75,6 +75,7 @@ interface Site {
   siteType?: string;
   capacity?: string;
   infrastructure?: string;
+  kontikisCount?: number;
   sitePhotos: string[];
   createdAt: string;
   assignedUsers?: Array<{
@@ -138,6 +139,7 @@ export default function Sites() {
       siteType: "Rural",
       capacity: "500 kg/day",
       infrastructure: "2 Kontikis, Storage Shed",
+      kontikisCount: 2,
       sitePhotos: [],
       createdAt: "2024-01-15",
       assignedUsers: [
@@ -164,6 +166,7 @@ export default function Sites() {
       siteType: "Urban",
       capacity: "300 kg/day",
       infrastructure: "1 Kontiki, Open Area",
+      kontikisCount: 1,
       sitePhotos: [],
       createdAt: "2024-02-10",
       assignedUsers: [],
@@ -182,6 +185,7 @@ export default function Sites() {
       siteType: "Rural",
       capacity: "700 kg/day",
       infrastructure: "3 Kontikis, Warehouse",
+      kontikisCount: 3,
       sitePhotos: [],
       createdAt: "2024-03-20",
       assignedUsers: [],
@@ -365,6 +369,7 @@ export default function Sites() {
                 <TableHead>Site</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Type & Capacity</TableHead>
+                <TableHead>No. of Kon Tikis</TableHead>
                 <TableHead>Assigned Users</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -398,6 +403,11 @@ export default function Sites() {
                       <div className="text-xs text-muted-foreground">
                         {site.capacity || "N/A"}
                       </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm font-medium">
+                      {site.kontikisCount || 0}
                     </div>
                   </TableCell>
                   <TableCell>
