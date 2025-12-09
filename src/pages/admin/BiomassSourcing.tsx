@@ -7,6 +7,8 @@ import {
   Leaf,
   MapPin,
   User,
+  Truck,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +51,7 @@ interface BiomassSourcingRecord {
   latitude: string;
   longitude: string;
   gpsAccuracy?: string;
+  distanceKm: string;
   tripNumber: string;
   farmerName: string;
   farmerMobile: string;
@@ -95,6 +98,7 @@ export default function BiomassSourcing() {
       latitude: "28.61394",
       longitude: "77.20902",
       gpsAccuracy: "5.2",
+      distanceKm: "12.5",
       tripNumber: "1",
       farmerName: "Ramesh Kumar",
       farmerMobile: "+919876543210",
@@ -119,6 +123,7 @@ export default function BiomassSourcing() {
       latitude: "28.61500",
       longitude: "77.21000",
       gpsAccuracy: "3.8",
+      distanceKm: "8.3",
       tripNumber: "2",
       farmerName: "Suresh Patel",
       farmerMobile: "+919876543211",
@@ -146,6 +151,7 @@ export default function BiomassSourcing() {
       latitude: "19.07609",
       longitude: "72.87766",
       gpsAccuracy: "7.1",
+      distanceKm: "15.7",
       tripNumber: "3",
       farmerName: "Vijay Singh",
       farmerMobile: "+919876543212",
@@ -200,15 +206,63 @@ export default function BiomassSourcing() {
     setIsViewDialogOpen(true);
   };
 
+  // Calculate statistics
+  const totalTrips = filteredRecords.length;
+  const totalBiomassKg = totalTrips * 500; // Each trip = 500 kg
+  const totalDistanceKm = filteredRecords.reduce((sum, record) => {
+    return sum + parseFloat(record.distanceKm || "0");
+  }, 0);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-[#295F58]">Biomass Sourcing</h1>
-        <div className="mt-3 inline-block bg-gray-100 px-4 py-2 rounded-lg border border-gray-200">
-          <p className="text-base text-muted-foreground">
-            Total Biomass Sourced: <span className="font-semibold text-[#295F58]">{filteredRecords.length}</span> <span className="text-sm">(trip wise)</span>
-          </p>
-        </div>
+      </div>
+
+      {/* Dashboard Pills */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Biomass Sourced</p>
+                <h3 className="text-3xl font-bold text-[#295F58] mt-2">{filteredRecords.length}</h3>
+                <p className="text-xs text-muted-foreground mt-1">trips</p>
+              </div>
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
+                <Leaf className="h-6 w-6 text-[#295F58]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Biomass Weight</p>
+                <h3 className="text-3xl font-bold text-[#295F58] mt-2">{totalBiomassKg.toLocaleString()} kg</h3>
+                <p className="text-xs text-muted-foreground mt-1">{totalTrips} trips × 500 kg</p>
+              </div>
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
+                <Package className="h-6 w-6 text-[#295F58]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Distance Travelled</p>
+                <h3 className="text-3xl font-bold text-[#295F58] mt-2">{totalDistanceKm.toFixed(1)} km</h3>
+              </div>
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
+                <Truck className="h-6 w-6 text-[#295F58]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -285,7 +339,7 @@ export default function BiomassSourcing() {
                 <TableHead>Record Info</TableHead>
                 <TableHead>Farmer Details</TableHead>
                 <TableHead>Site & User</TableHead>
-                <TableHead>GPS Location</TableHead>
+                <TableHead>Distance Travelled</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -320,14 +374,9 @@ export default function BiomassSourcing() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        <span>{record.latitude}, {record.longitude}</span>
-                      </div>
-                      {record.gpsAccuracy && (
-                        <div className="mt-1">±{record.gpsAccuracy}m</div>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{record.distanceKm} km</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-right">

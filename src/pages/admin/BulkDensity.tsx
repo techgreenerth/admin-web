@@ -234,19 +234,28 @@ export default function BulkDensity() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#295F58]">Bulk Density Measurement</h1>
-          <p className="text-muted-foreground mt-1">
-            Track and verify biochar bulk density measurements
-          </p>
-        </div>
-        {/* Average Bulk Density Display */}
-        <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-gray-50 text-sm text-muted-foreground">
-          <Scale className="h-4 w-4" />
-          <span>Average Bulk Density: {averageBulkDensity} kg/m³</span>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-[#295F58]">Bulk Density Measurement</h1>
+        <p className="text-muted-foreground mt-1">
+          Track and verify biochar bulk density measurements
+        </p>
       </div>
+
+      {/* Average Bulk Density Pill */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Average Bulk Density</p>
+              <h3 className="text-3xl font-bold text-[#295F58] mt-2">{averageBulkDensity} kg/m³</h3>
+              <p className="text-xs text-muted-foreground mt-1">Based on {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''}</p>
+            </div>
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
+              <Scale className="h-6 w-6 text-[#295F58]" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="border-b">

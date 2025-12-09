@@ -269,6 +269,76 @@ export default function BiocharProduction() {
       status: "REJECTED",
       submittedAt: "2024-01-14T09:05:00Z",
     },
+    {
+      id: "4",
+      userId: "2",
+      userName: "Priya Sharma",
+      userCode: "USER-002",
+      siteId: "2",
+      siteName: "Dharampur Site",
+      siteCode: "SITE-002",
+      recordDate: "2024-01-17",
+      recordTime: "15:45",
+      latitude: "28.62494",
+      longitude: "77.22002",
+      gpsAccuracy: "3m",
+      shiftId: "3",
+      shiftName: "Shift 3",
+      shiftNumber: 3,
+      kontikis: [
+        {
+          kontikiId: "4",
+          kontikiName: "Kon-tiki 4",
+          moisturePercent: "12.0",
+          moisturePhoto: "https://via.placeholder.com/400x300?text=K4+Moisture+Meter",
+          startPhoto: "https://via.placeholder.com/400x300?text=K4+Start+25%25",
+          middlePhoto: "https://via.placeholder.com/400x300?text=K4+Middle+50%25",
+          endPhoto: "https://via.placeholder.com/400x300?text=K4+End+90%25",
+          finalPhoto: "https://via.placeholder.com/400x300?text=K4+Final+Biochar",
+          aiVolumeEstimate: "410 liters",
+          aiConfidenceScore: "0.92",
+          aiModelVersion: "v2.1.0",
+          status: "VERIFIED",
+          verifiedAt: "2024-01-17T16:10:00Z",
+          verifiedById: "admin1",
+          verifiedByName: "Admin User",
+        },
+        {
+          kontikiId: "5",
+          kontikiName: "Kon-tiki 5",
+          moisturePercent: "11.5",
+          moisturePhoto: "https://via.placeholder.com/400x300?text=K5+Moisture+Meter",
+          startPhoto: "https://via.placeholder.com/400x300?text=K5+Start+25%25",
+          middlePhoto: "https://via.placeholder.com/400x300?text=K5+Middle+50%25",
+          endPhoto: "https://via.placeholder.com/400x300?text=K5+End+90%25",
+          finalPhoto: "https://via.placeholder.com/400x300?text=K5+Final+Biochar",
+          aiVolumeEstimate: "395 liters",
+          aiConfidenceScore: "0.88",
+          aiModelVersion: "v2.1.0",
+          status: "SUBMITTED",
+        },
+        {
+          kontikiId: "6",
+          kontikiName: "Kon-tiki 6",
+          moisturePercent: "13.5",
+          moisturePhoto: "https://via.placeholder.com/400x300?text=K6+Moisture+Meter",
+          startPhoto: "https://via.placeholder.com/400x300?text=K6+Start+25%25",
+          middlePhoto: "https://via.placeholder.com/400x300?text=K6+Middle+50%25",
+          endPhoto: "https://via.placeholder.com/400x300?text=K6+End+90%25",
+          finalPhoto: "https://via.placeholder.com/400x300?text=K6+Final+Biochar",
+          aiVolumeEstimate: "370 liters",
+          aiConfidenceScore: "0.85",
+          aiModelVersion: "v2.1.0",
+          status: "REJECTED",
+          rejectionNote: "Moisture content too high, needs re-drying.",
+        },
+      ],
+      capturedAt: "2024-01-17T15:45:00Z",
+      deviceInfo: "Xiaomi Redmi Note 10",
+      appVersion: "1.2.0",
+      status: "IN_PROGRESS",
+      submittedAt: "2024-01-17T15:50:00Z",
+    },
   ];
 
   const getStatusColor = (status: string) => {
@@ -281,11 +351,57 @@ export default function BiocharProduction() {
         return "bg-green-100 text-green-800";
       case "REJECTED":
         return "bg-red-100 text-red-800";
+      case "IN_PROGRESS":
+        return "bg-yellow-100 text-yellow-800";
       case "PARTIALLY_VERIFIED":
         return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  // Helper function to determine the actual status based on kontikis
+  const getActualStatus = (record: BiocharProductionRecord) => {
+    const kontikis = record.kontikis;
+    const verifiedCount = kontikis.filter(k => k.status === "VERIFIED").length;
+    const rejectedCount = kontikis.filter(k => k.status === "REJECTED").length;
+    const submittedCount = kontikis.filter(k => k.status === "SUBMITTED").length;
+
+    // All submitted, none reviewed
+    if (submittedCount === kontikis.length) {
+      return "SUBMITTED";
+    }
+
+    // All reviewed (all verified or all rejected)
+    if (verifiedCount + rejectedCount === kontikis.length) {
+      return "VERIFIED";
+    }
+
+    // Partially reviewed (some reviewed, some pending)
+    return "IN_PROGRESS";
+  };
+
+  // Helper function to get status subtext
+  const getStatusSubtext = (record: BiocharProductionRecord) => {
+    const kontikis = record.kontikis;
+    const verifiedCount = kontikis.filter(k => k.status === "VERIFIED").length;
+    const rejectedCount = kontikis.filter(k => k.status === "REJECTED").length;
+    const submittedCount = kontikis.filter(k => k.status === "SUBMITTED").length;
+    const actualStatus = getActualStatus(record);
+
+    if (actualStatus === "SUBMITTED") {
+      return "Start Review";
+    }
+
+    if (actualStatus === "VERIFIED") {
+      return `${verifiedCount} accepted, ${rejectedCount} rejected`;
+    }
+
+    if (actualStatus === "IN_PROGRESS") {
+      return "Complete Review";
+    }
+
+    return "";
   };
 
   const getStepColor = (step: number) => {
@@ -306,7 +422,7 @@ export default function BiocharProduction() {
       record.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.kontikis.some(k => k.kontikiName.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = statusFilter === "all" || record.status === statusFilter;
+    const matchesStatus = statusFilter === "all" || getActualStatus(record) === statusFilter;
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
@@ -359,6 +475,19 @@ export default function BiocharProduction() {
     setSelectedKontiki(null);
   };
 
+  // Calculate statistics
+  const totalBatches = filteredRecords.length;
+  const totalBiocharProduced = filteredRecords.reduce((total, record) => {
+    const recordTotal = record.kontikis.reduce((sum, kontiki) => {
+      if (kontiki.aiVolumeEstimate) {
+        const volume = parseFloat(kontiki.aiVolumeEstimate.replace(/[^0-9.]/g, ''));
+        return sum + volume;
+      }
+      return sum;
+    }, 0);
+    return total + recordTotal;
+  }, 0);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -368,6 +497,37 @@ export default function BiocharProduction() {
             Track and verify biochar production records
           </p>
         </div>
+      </div>
+
+      {/* Dashboard Pills */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Batches</p>
+                <h3 className="text-3xl font-bold text-[#295F58] mt-2">{totalBatches}</h3>
+              </div>
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
+                <Factory className="h-6 w-6 text-[#295F58]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Biochar Produced</p>
+                <h3 className="text-3xl font-bold text-[#295F58] mt-2">{totalBiocharProduced.toFixed(0)} L</h3>
+              </div>
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
+                <Flame className="h-6 w-6 text-[#295F58]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -392,9 +552,8 @@ export default function BiocharProduction() {
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="SUBMITTED">Submitted</SelectItem>
+                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                     <SelectItem value="VERIFIED">Verified</SelectItem>
-                    <SelectItem value="PARTIALLY_VERIFIED">Partially Verified</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={siteFilter} onValueChange={setSiteFilter}>
@@ -500,9 +659,14 @@ export default function BiocharProduction() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(record.status)}>
-                        {record.status}
-                      </Badge>
+                      <div className="space-y-1">
+                        <Badge className={getStatusColor(getActualStatus(record))}>
+                          {getActualStatus(record).replace("_", " ")}
+                        </Badge>
+                        <div className="text-xs text-muted-foreground">
+                          {getStatusSubtext(record)}
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -577,9 +741,16 @@ export default function BiocharProduction() {
             <div className="space-y-6 py-4">
               {/* Record Submitted Status */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-blue-800">
-                  <CheckCircle className="h-5 w-5" />
-                  <div className="font-medium">Record Submitted</div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-blue-800">
+                    <CheckCircle className="h-5 w-5" />
+                    <div className="font-medium">Record Submitted</div>
+                  </div>
+                  {getActualStatus(selectedRecord) === "VERIFIED" && (
+                    <div className="text-sm text-blue-700 font-medium">
+                      {getStatusSubtext(selectedRecord)}
+                    </div>
+                  )}
                 </div>
               </div>
 

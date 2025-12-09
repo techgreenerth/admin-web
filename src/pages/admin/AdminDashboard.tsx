@@ -38,7 +38,8 @@ const mockStats = {
   pendingVerifications: 127,
   verifiedRecords: 1854,
   rejectedRecords: 43,
-  totalBiomassSourced: 24580,
+  totalBiomassTrips: 49, // Number of biomass sourcing trips
+  totalBiomassSourced: 24500, // 49 trips × 500 kg
   totalBatches: 156,
   totalBiocharProduced: 18420,
 };
@@ -197,10 +198,10 @@ export default function AdminDashboard() {
                   Total Biomass Sourced
                 </p>
                 <h3 className="text-4xl font-bold text-[#295F58]">
-                  {mockStats.totalBiomassSourced.toLocaleString()}
+                  {mockStats.totalBiomassSourced.toLocaleString()} kg
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Kilograms
+                  from {mockStats.totalBiomassTrips} trips
                 </p>
               </div>
               <div className="h-16 w-16 bg-gray-100 rounded-xl flex items-center justify-center">
