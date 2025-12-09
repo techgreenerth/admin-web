@@ -8,6 +8,7 @@ import {
   Video,
   CheckCircle,
   ImageIcon,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -249,7 +250,13 @@ export default function BiocharActivation() {
       <Card>
         <CardHeader className="border-b">
           <div className="flex flex-col gap-4">
-            <CardTitle className="text-lg">All Records</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">All Records</CardTitle>
+              <Button variant="outline" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div className="relative">
