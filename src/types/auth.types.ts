@@ -19,8 +19,8 @@ export interface Admin {
 
 export interface AuthResponse {
   user: Admin;
-  token: string;
-  refreshToken?: string;
+  accessToken: string;
+  userType: 'admin' | 'user';
 }
 
 export interface LoginCredentials {

@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, MoreVertical, Edit, Trash2, Shield, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { adminService, Admin as AdminType } from "@/lib/api/admin.service";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,25 +48,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface Admin {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  role: string;
-  status: string;
-  lastLoginAt: string;
-  createdAt: string;
-}
-
 export default function Admins() {
+  const [admins, setAdmins] = useState<AdminType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
 
   // Dialog states
@@ -72,7 +66,8 @@ export default function Admins() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
+  const [selectedAdmin, setSelectedAdmin] = useState<AdminType | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -81,57 +76,36 @@ export default function Admins() {
     email: "",
     phone: "",
     role: "ADMIN",
-    status: "ACTIVE",
     password: "",
   });
 
-  // Mock data - Replace with API call
-  const admins = [
-    {
-      id: "1",
-      firstName: "Sarah",
-      lastName: "Admin",
-      email: "sarah.admin@techgreenerth.com",
-      phone: "+1234567890",
-      role: "SUPER_ADMIN",
-      status: "ACTIVE",
-      lastLoginAt: "2024-11-28",
-      createdAt: "2024-01-01",
-    },
-    {
-      id: "2",
-      firstName: "David",
-      lastName: "Manager",
-      email: "david.manager@techgreenerth.com",
-      phone: "+1234567891",
-      role: "ADMIN",
-      status: "ACTIVE",
-      lastLoginAt: "2024-11-29",
-      createdAt: "2024-02-15",
-    },
-    {
-      id: "3",
-      firstName: "Emily",
-      lastName: "Supervisor",
-      email: "emily.sup@techgreenerth.com",
-      phone: "+1234567892",
-      role: "SUPERVISOR",
-      status: "ACTIVE",
-      lastLoginAt: "2024-11-27",
-      createdAt: "2024-03-20",
-    },
-    {
-      id: "4",
-      firstName: "Robert",
-      lastName: "Verifier",
-      email: "robert.v@techgreenerth.com",
-      phone: "+1234567893",
-      role: "VERIFIER",
-      status: "INACTIVE",
-      lastLoginAt: "2024-11-20",
-      createdAt: "2024-04-10",
-    },
-  ];
+  // Fetch admins
+  useEffect(() => {
+    fetchAdmins();
+  }, [currentPage, roleFilter, statusFilter, searchQuery]);
+
+  const fetchAdmins = async () => {
+    try {
+      setIsLoading(true);
+      const params: any = {
+        page: currentPage,
+        limit: itemsPerPage,
+      };
+
+      if (searchQuery) params.search = searchQuery;
+      if (roleFilter !== "all") params.role = roleFilter;
+      if (statusFilter !== "all") params.status = statusFilter;
+
+      const response = await adminService.getAll(params);
+      setAdmins(response.data);
+      setTotalPages(response.meta.totalPages);
+      setTotalCount(response.meta.total);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to fetch admins");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -161,22 +135,6 @@ export default function Admins() {
     }
   };
 
-  // Filter admins
-  const filteredAdmins = admins.filter((admin) => {
-    const matchesSearch =
-      admin.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      admin.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      admin.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === "all" || admin.role === roleFilter;
-    const matchesStatus = statusFilter === "all" || admin.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
-  // Pagination
-  const totalPages = Math.ceil(filteredAdmins.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedAdmins = filteredAdmins.slice(startIndex, endIndex);
 
   // Handlers
   const handleCreateAdmin = () => {
@@ -186,52 +144,87 @@ export default function Admins() {
       email: "",
       phone: "",
       role: "ADMIN",
-      status: "ACTIVE",
       password: "",
     });
     setIsCreateDialogOpen(true);
   };
 
-  const handleViewAdmin = (admin: Admin) => {
+  const handleViewAdmin = (admin: AdminType) => {
     setSelectedAdmin(admin);
     setIsViewDialogOpen(true);
   };
 
-  const handleEditAdmin = (admin: Admin) => {
+  const handleEditAdmin = (admin: AdminType) => {
     setSelectedAdmin(admin);
     setFormData({
       firstName: admin.firstName,
       lastName: admin.lastName,
       email: admin.email,
-      phone: admin.phone,
+      phone: admin.phone || "",
       role: admin.role,
-      status: admin.status,
       password: "",
     });
     setIsEditDialogOpen(true);
   };
 
-  const handleDeleteAdmin = (admin: Admin) => {
+  const handleDeleteAdmin = (admin: AdminType) => {
     setSelectedAdmin(admin);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSubmitCreate = () => {
-    // TODO: Add API call to create admin
-    console.log("Creating admin:", formData);
-    setIsCreateDialogOpen(false);
+  const handleSubmitCreate = async () => {
+    try {
+      setIsSubmitting(true);
+      await adminService.create(formData);
+      toast.success("Admin created successfully");
+      setIsCreateDialogOpen(false);
+      fetchAdmins();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to create admin");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSubmitEdit = () => {
-    // TODO: Add API call to update admin
-    console.log("Updating admin:", selectedAdmin?.id, formData);
-    setIsEditDialogOpen(false);
+  const handleSubmitEdit = async () => {
+    if (!selectedAdmin) return;
+
+    try {
+      setIsSubmitting(true);
+      const updateData: any = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+      };
+
+      if (formData.password) {
+        updateData.password = formData.password;
+      }
+
+      await adminService.update(selectedAdmin.id, updateData);
+      toast.success("Admin updated successfully");
+      setIsEditDialogOpen(false);
+      fetchAdmins();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to update admin");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleConfirmDelete = () => {
-    // TODO: Add API call to delete admin
-    console.log("Deleting admin:", selectedAdmin?.id);
-    setIsDeleteDialogOpen(false);
+  const handleConfirmDelete = async () => {
+    if (!selectedAdmin) return;
+
+    try {
+      await adminService.delete(selectedAdmin.id);
+      toast.success("Admin deleted successfully");
+      setIsDeleteDialogOpen(false);
+      fetchAdmins();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to delete admin");
+    }
   };
 
   return (
@@ -303,7 +296,20 @@ export default function Admins() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedAdmins.map((admin) => (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    Loading admins...
+                  </TableCell>
+                </TableRow>
+              ) : admins.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No admins found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                admins.map((admin) => (
                 <TableRow key={admin.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -337,7 +343,7 @@ export default function Admins() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-muted-foreground">
-                      {new Date(admin.lastLoginAt).toLocaleDateString()}
+                      {admin.lastLoginAt ? new Date(admin.lastLoginAt).toLocaleDateString() : "Never"}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -369,7 +375,7 @@ export default function Admins() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )))}
             </TableBody>
           </Table>
         </CardContent>
@@ -378,7 +384,7 @@ export default function Admins() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1} to {Math.min(endIndex, filteredAdmins.length)} of {filteredAdmins.length} results
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} results
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -478,19 +484,6 @@ export default function Admins() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="SUSPENDED">Suspended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="space-y-2 col-span-2">
               <Label htmlFor="password">Password *</Label>
               <Input
@@ -503,11 +496,11 @@ export default function Admins() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitCreate}>
-              Create Admin
+            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitCreate} disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create Admin"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -599,11 +592,11 @@ export default function Admins() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitEdit}>
-              Update Admin
+            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitEdit} disabled={isSubmitting}>
+              {isSubmitting ? "Updating..." : "Update Admin"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -658,7 +651,7 @@ export default function Admins() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Last Login</Label>
                   <p className="font-medium">
-                    {new Date(selectedAdmin.lastLoginAt).toLocaleString()}
+                    {selectedAdmin.lastLoginAt ? new Date(selectedAdmin.lastLoginAt).toLocaleString() : "Never"}
                   </p>
                 </div>
                 <div className="space-y-1">

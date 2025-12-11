@@ -25,7 +25,7 @@ export const authService = {
   },
 
   setAuthData(data: AuthResponse): void {
-    localStorage.setItem("accessToken", data.token);
+    localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("user", JSON.stringify(data.user));
   },
 };
