@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, MoreVertical, Edit, Trash2, User as UserIcon, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +47,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { userService, User as UserType } from "@/lib/api/user.service";
 
 interface User {
   id: string;
@@ -68,6 +70,8 @@ export default function Users() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -76,9 +80,15 @@ export default function Users() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  // Loading states
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Data state
+  const [users, setUsers] = useState<UserType[]>([]);
+
   // Form state
   const [formData, setFormData] = useState({
-    userCode: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -90,48 +100,31 @@ export default function Users() {
     password: "",
   });
 
-  // Mock data - Replace with API call
-  const users = [
-    {
-      id: "1",
-      userCode: "USER-001",
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@example.com",
-      phone: "+1234567890",
-      status: "ACTIVE",
-      organizationName: "Green Earth Co.",
-      experience: "5 years",
-      proficiencyTestPassed: true,
-      createdAt: "2024-01-15",
-    },
-    {
-      id: "2",
-      userCode: "USER-002",
-      firstName: "Jane",
-      lastName: "Smith",
-      email: "jane.smith@example.com",
-      phone: "+1234567891",
-      status: "ACTIVE",
-      organizationName: "Eco Solutions",
-      experience: "3 years",
-      proficiencyTestPassed: true,
-      createdAt: "2024-02-20",
-    },
-    {
-      id: "3",
-      userCode: "USER-003",
-      firstName: "Mike",
-      lastName: "Johnson",
-      email: "mike.j@example.com",
-      phone: "+1234567892",
-      status: "INACTIVE",
-      organizationName: "Carbon Capture Inc.",
-      experience: "2 years",
-      proficiencyTestPassed: false,
-      createdAt: "2024-03-10",
-    },
-  ];
+  // Fetch users on mount and when filters change
+  useEffect(() => {
+    fetchUsers();
+  }, [currentPage, statusFilter, searchQuery]);
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const params: any = {
+        page: currentPage,
+        limit: itemsPerPage,
+      };
+      if (searchQuery) params.search = searchQuery;
+      if (statusFilter !== "all") params.status = statusFilter;
+
+      const response = await userService.getAll(params);
+      setUsers(response.data);
+      setTotalPages(response.meta.totalPages);
+      setTotalCount(response.meta.total);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to fetch users");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -146,27 +139,13 @@ export default function Users() {
     }
   };
 
-  // Filter users
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.userCode.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  // Pagination
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  // Pagination calculations
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
   // Handlers
   const handleCreateUser = () => {
     setFormData({
-      userCode: "",
       firstName: "",
       lastName: "",
       email: "",
@@ -188,14 +167,13 @@ export default function Users() {
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setFormData({
-      userCode: user.userCode,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      phone: user.phone,
+      phone: user.phone || "",
       status: user.status,
-      organizationName: user.organizationName,
-      experience: user.experience,
+      organizationName: user.organizationName || "",
+      experience: user.experience || "",
       proficiencyTestPassed: user.proficiencyTestPassed,
       password: "",
     });
@@ -207,22 +185,70 @@ export default function Users() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSubmitCreate = () => {
-    // TODO: Add API call to create user
-    console.log("Creating user:", formData);
-    setIsCreateDialogOpen(false);
+  const handleSubmitCreate = async () => {
+    try {
+      setIsSubmitting(true);
+      const createData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        organizationName: formData.organizationName,
+        experience: formData.experience,
+        proficiencyTestPassed: formData.proficiencyTestPassed,
+      };
+      await userService.create(createData);
+      toast.success("User created successfully");
+      setIsCreateDialogOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to create user");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSubmitEdit = () => {
-    // TODO: Add API call to update user
-    console.log("Updating user:", selectedUser?.id, formData);
-    setIsEditDialogOpen(false);
+  const handleSubmitEdit = async () => {
+    if (!selectedUser) return;
+    try {
+      setIsSubmitting(true);
+      const updateData: any = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        organizationName: formData.organizationName,
+        experience: formData.experience,
+        status: formData.status,
+        proficiencyTestPassed: formData.proficiencyTestPassed,
+      };
+      if (formData.password) {
+        updateData.password = formData.password;
+      }
+      await userService.update(selectedUser.id, updateData);
+      toast.success("User updated successfully");
+      setIsEditDialogOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to update user");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleConfirmDelete = () => {
-    // TODO: Add API call to delete user
-    console.log("Deleting user:", selectedUser?.id);
-    setIsDeleteDialogOpen(false);
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
+    try {
+      setIsSubmitting(true);
+      await userService.delete(selectedUser.id);
+      toast.success("User deleted successfully");
+      setIsDeleteDialogOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to delete user");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -281,64 +307,78 @@ export default function Users() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback className="bg-[#E1EFEE] text-[#295F58]">
-                          {user.firstName[0]}{user.lastName[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">
-                          {user.firstName} {user.lastName}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-mono text-sm">{user.userCode}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{user.phone}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{user.organizationName}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(user.status)}>
-                      {user.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewUser(user)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteUser(user)}>
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Loading users...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    No users found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarFallback className="bg-[#E1EFEE] text-[#295F58]">
+                            {user.firstName[0]}{user.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">
+                            {user.firstName} {user.lastName}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm">{user.userCode}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">{user.phone || "-"}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">{user.organizationName || "-"}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(user.status)}>
+                        {user.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewUser(user)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteUser(user)}>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -347,7 +387,7 @@ export default function Users() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} results
+              Showing {startIndex + 1} to {endIndex} of {totalCount} results
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -396,15 +436,6 @@ export default function Users() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="userCode">User Code *</Label>
-              <Input
-                id="userCode"
-                value={formData.userCode}
-                onChange={(e) => setFormData({ ...formData, userCode: e.target.value })}
-                placeholder="USER-001"
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name *</Label>
               <Input
@@ -460,19 +491,6 @@ export default function Users() {
                 placeholder="e.g., 5 years"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="SUSPENDED">Suspended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="space-y-2 col-span-2">
               <Label htmlFor="password">Password *</Label>
               <Input
@@ -497,11 +515,11 @@ export default function Users() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitCreate}>
-              Create User
+            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitCreate} disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Create User"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -518,13 +536,25 @@ export default function Users() {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-userCode">User Code *</Label>
+              <Label htmlFor="edit-userCode">User Code</Label>
               <Input
                 id="edit-userCode"
-                value={formData.userCode}
-                onChange={(e) => setFormData({ ...formData, userCode: e.target.value })}
-                placeholder="USER-001"
+                value={selectedUser?.userCode || ""}
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
               />
+              <p className="text-xs text-muted-foreground">Cannot be changed</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={formData.email}
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
+              />
+              <p className="text-xs text-muted-foreground">Cannot be changed</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-firstName">First Name *</Label>
@@ -542,16 +572,6 @@ export default function Users() {
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                 placeholder="Enter last name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-email">Email *</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="user@example.com"
               />
             </div>
             <div className="space-y-2">
@@ -618,11 +638,11 @@ export default function Users() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitEdit}>
-              Update User
+            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitEdit} disabled={isSubmitting}>
+              {isSubmitting ? "Updating..." : "Update User"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -661,11 +681,11 @@ export default function Users() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Organization</Label>
-                  <p className="font-medium">{selectedUser.organizationName}</p>
+                  <p className="font-medium">{selectedUser.organizationName || "-"}</p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Experience</Label>
-                  <p className="font-medium">{selectedUser.experience}</p>
+                  <p className="font-medium">{selectedUser.experience || "-"}</p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Proficiency Test</Label>
@@ -727,12 +747,13 @@ export default function Users() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              disabled={isSubmitting}
             >
-              Delete User
+              {isSubmitting ? "Deleting..." : "Delete User"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
