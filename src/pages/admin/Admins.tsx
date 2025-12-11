@@ -76,6 +76,7 @@ export default function Admins() {
     email: "",
     phone: "",
     role: "ADMIN",
+    status: "ACTIVE",
     password: "",
   });
 
@@ -144,6 +145,7 @@ export default function Admins() {
       email: "",
       phone: "",
       role: "ADMIN",
+      status: "ACTIVE",
       password: "",
     });
     setIsCreateDialogOpen(true);
@@ -162,6 +164,7 @@ export default function Admins() {
       email: admin.email,
       phone: admin.phone || "",
       role: admin.role,
+      status: admin.status,
       password: "",
     });
     setIsEditDialogOpen(true);
@@ -175,7 +178,15 @@ export default function Admins() {
   const handleSubmitCreate = async () => {
     try {
       setIsSubmitting(true);
-      await adminService.create(formData);
+      const createData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+        password: formData.password,
+      };
+      await adminService.create(createData);
       toast.success("Admin created successfully");
       setIsCreateDialogOpen(false);
       fetchAdmins();
@@ -194,9 +205,9 @@ export default function Admins() {
       const updateData: any = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        email: formData.email,
         phone: formData.phone,
         role: formData.role,
+        status: formData.status,
       };
 
       if (formData.password) {
@@ -218,12 +229,15 @@ export default function Admins() {
     if (!selectedAdmin) return;
 
     try {
+      setIsSubmitting(true);
       await adminService.delete(selectedAdmin.id);
       toast.success("Admin deleted successfully");
       setIsDeleteDialogOpen(false);
       fetchAdmins();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to delete admin");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -535,13 +549,13 @@ export default function Admins() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-email">Email *</Label>
+              <Label htmlFor="edit-email">Email (Cannot be changed)</Label>
               <Input
                 id="edit-email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="admin@techgreenerth.com"
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
               />
             </div>
             <div className="space-y-2">
@@ -696,12 +710,13 @@ export default function Admins() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              disabled={isSubmitting}
             >
-              Delete Admin
+              {isSubmitting ? "Deleting..." : "Delete Admin"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
