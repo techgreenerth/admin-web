@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Header } from "./Header";
@@ -9,11 +10,10 @@ interface AppLayoutProps {
   userName?: string;
 }
 
-export function AppLayout({
-  children,
-  userRole = "admin",
-  userName,
-}: AppLayoutProps) {
+export function AppLayout({ children, userRole = "admin" }: AppLayoutProps) {
+  const { user } = useAuth();
+  const userName = user ? `${user.firstName} ${user.lastName}` : "Admin User";
+
   return (
     <SidebarProvider
       className="!h-screen !min-h-screen !max-h-screen overflow-hidden"

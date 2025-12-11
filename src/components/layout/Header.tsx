@@ -11,17 +11,29 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface HeaderProps {
   userRole?: "admin" | "partner" | "verifier";
   userName?: string;
 }
 
-export function Header({ userRole = "admin", userName = "Admin User" }: HeaderProps) {
+export function Header({
+  userRole = "admin",
+  userName = "Admin User",
+}: HeaderProps) {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
-  const handleLogout = () => {
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Error logging out");
+    }
   };
 
   return (
@@ -30,7 +42,11 @@ export function Header({ userRole = "admin", userName = "Admin User" }: HeaderPr
         <SidebarTrigger className="lg:hidden" />
 
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Greenerth" className="h-9 w-9 object-contain" />
+          <img
+            src="/logo.png"
+            alt="Greenerth"
+            className="h-9 w-9 object-contain"
+          />
           <div className="hidden sm:block">
             <h1 className="font-bold text-2xl text-[#295F58]">Greenerth</h1>
             <p className="text-sm text-muted-foreground">Admin Portal</p>
@@ -40,7 +56,7 @@ export function Header({ userRole = "admin", userName = "Admin User" }: HeaderPr
         <div className="ml-auto flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2 hover:bg-[#E1EFEE]/50">
+              <button className="flex items-center gap-2 outline-none">
                 <Avatar className="h-9 w-9">
                   <AvatarFallback className="bg-[#295F58] text-white font-semibold">
                     {userName.substring(0, 2).toUpperCase()}
@@ -52,7 +68,7 @@ export function Header({ userRole = "admin", userName = "Admin User" }: HeaderPr
                     {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
                   </span>
                 </div>
-              </Button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
