@@ -56,18 +56,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 
-interface Kontiki {
-  id: string;
-  kontikiCode: string;
-  kontikiName: string;
-  status: string;
-  siteId: string;
-  siteName: string;
-  siteCode: string;
-  capacity?: string;
-  specifications?: string;
-  createdAt: string;
-}
+import { useSites } from "@/contexts/siteContext";
+import { useKontikis } from "@/contexts/kontikisContext";
+import { Kontiki } from "@/types/kontikis.types";
 
 export default function Kontikis() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,6 +76,9 @@ export default function Kontikis() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedKontiki, setSelectedKontiki] = useState<Kontiki | null>(null);
 
+  const { kontikis, createKontiki,updateKontiki,deleteKontiki } = useKontikis();
+ const { sites, isLoading: isSitesLoading } = useSites();
+
   // Form state
   const [formData, setFormData] = useState({
     siteId: "",
@@ -94,53 +88,6 @@ export default function Kontikis() {
     specifications: "",
     status: "ACTIVE",
   });
-
-  // Mock data - Replace with API call
-  const kontikis: Kontiki[] = [
-    {
-      id: "1",
-      kontikiCode: "Kon-tiki 1",
-      kontikiName: "Main Production Unit",
-      status: "ACTIVE",
-      siteId: "site1",
-      siteName: "Green Valley Production Site",
-      siteCode: "AP-001",
-      capacity: "200 kg/batch",
-      specifications: "Standard biochar kiln with temperature control",
-      createdAt: "2024-01-15",
-    },
-    {
-      id: "2",
-      kontikiCode: "Kon-tiki 2",
-      kontikiName: "Secondary Unit",
-      status: "ACTIVE",
-      siteId: "site1",
-      siteName: "Green Valley Production Site",
-      siteCode: "AP-001",
-      capacity: "150 kg/batch",
-      specifications: "Compact design for smaller batches",
-      createdAt: "2024-02-10",
-    },
-    {
-      id: "3",
-      kontikiCode: "Kon-tiki 1",
-      kontikiName: "Primary Kiln",
-      status: "MAINTENANCE",
-      siteId: "site2",
-      siteName: "Eco Farm Biochar Unit",
-      siteCode: "AP-002",
-      capacity: "250 kg/batch",
-      specifications: "High-capacity unit with automated controls",
-      createdAt: "2024-01-20",
-    },
-  ];
-
-  // Mock sites for dropdown
-  const sites = [
-    { id: "site1", name: "Green Valley Production Site", code: "AP-001" },
-    { id: "site2", name: "Eco Farm Biochar Unit", code: "AP-002" },
-    { id: "site3", name: "Carbon Capture Facility", code: "AP-003" },
-  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -160,8 +107,9 @@ export default function Kontikis() {
     const matchesSearch =
       kontiki.kontikiName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       kontiki.kontikiCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      kontiki.siteName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || kontiki.status === statusFilter;
+      kontiki.site.siteName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || kontiki.status === statusFilter;
     const matchesSite = siteFilter === "all" || kontiki.siteId === siteFilter;
     return matchesSearch && matchesStatus && matchesSite;
   });
@@ -208,23 +156,56 @@ export default function Kontikis() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSubmitCreate = () => {
-    // TODO: Add API call to create kontiki
-    console.log("Creating kontiki:", formData);
-    setIsCreateDialogOpen(false);
+  const handleSubmitCreate = async () => {
+    try {
+      await createKontiki({
+        siteId: formData.siteId,
+        kontikiCode: formData.kontikiCode,
+        kontikiName: formData.kontikiName,
+        capacity: formData.capacity || undefined,
+        specifications: formData.specifications || undefined,
+      });
+
+      setIsCreateDialogOpen(false);
+
+      
+    } catch (error) {
+      console.error("Failed to create kontiki", error);
+    }
   };
 
-  const handleSubmitEdit = () => {
-    // TODO: Add API call to update kontiki
-    console.log("Updating kontiki:", selectedKontiki?.id, formData);
+const handleSubmitEdit = async () => {
+  if (!selectedKontiki) return;
+
+  try {
+    await updateKontiki(selectedKontiki.id, {
+      
+      kontikiName: formData.kontikiName,
+      capacity: formData.capacity || undefined,
+      specifications: formData.specifications || undefined,
+      status: formData.status as "ACTIVE" | "INACTIVE" | "MAINTENANCE",
+    });
+
     setIsEditDialogOpen(false);
-  };
+    setSelectedKontiki(null);
+  } catch (error) {
+    console.error("Failed to update kontiki", error);
+  }
+};
 
-  const handleConfirmDelete = () => {
-    // TODO: Add API call to delete kontiki
-    console.log("Deleting kontiki:", selectedKontiki?.id);
+
+  const handleConfirmDelete = async () => {
+  if (!selectedKontiki) return;
+
+  try {
+    await deleteKontiki(selectedKontiki.id);
+
     setIsDeleteDialogOpen(false);
-  };
+    setSelectedKontiki(null);
+  } catch (error) {
+    console.error("Failed to delete kontiki", error);
+  }
+};
 
   return (
     <div className="space-y-6">
@@ -235,7 +216,10 @@ export default function Kontikis() {
             Manage biochar production kilns and equipment
           </p>
         </div>
-        <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleCreateKontiki}>
+        <Button
+          className="bg-[#295F58] hover:bg-[#295F58]/90"
+          onClick={handleCreateKontiki}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Kontiki
         </Button>
@@ -263,7 +247,7 @@ export default function Kontikis() {
                   <SelectItem value="all">All Sites</SelectItem>
                   {sites.map((site) => (
                     <SelectItem key={site.id} value={site.id}>
-                      {site.code}
+                      {site.siteName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -311,9 +295,9 @@ export default function Kontikis() {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{kontiki.siteName}</div>
+                      <div className="font-medium">{kontiki.site.siteCode}</div>
                       <div className="text-xs text-muted-foreground font-mono">
-                        {kontiki.siteCode}
+                        {kontiki.site.siteCode}
                       </div>
                     </div>
                   </TableCell>
@@ -333,15 +317,22 @@ export default function Kontikis() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewKontiki(kontiki)}>
+                        <DropdownMenuItem
+                          onClick={() => handleViewKontiki(kontiki)}
+                        >
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditKontiki(kontiki)}>
+                        <DropdownMenuItem
+                          onClick={() => handleEditKontiki(kontiki)}
+                        >
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteKontiki(kontiki)}>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => handleDeleteKontiki(kontiki)}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </DropdownMenuItem>
@@ -358,7 +349,9 @@ export default function Kontikis() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1} to {Math.min(endIndex, filteredKontikis.length)} of {filteredKontikis.length} results
+              Showing {startIndex + 1} to{" "}
+              {Math.min(endIndex, filteredKontikis.length)} of{" "}
+              {filteredKontikis.length} results
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -371,22 +364,30 @@ export default function Kontikis() {
                 Previous
               </Button>
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className={currentPage === page ? "bg-[#295F58] hover:bg-[#295F58]/90" : ""}
-                  >
-                    {page}
-                  </Button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className={
+                        currentPage === page
+                          ? "bg-[#295F58] hover:bg-[#295F58]/90"
+                          : ""
+                      }
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
               >
                 Next
@@ -406,52 +407,86 @@ export default function Kontikis() {
               Add a new biochar production kiln
             </DialogDescription>
           </DialogHeader>
+
           <div className="grid grid-cols-2 gap-4 py-4">
+            {/* Site */}
             <div className="space-y-2 col-span-2">
               <Label htmlFor="siteId">Site *</Label>
-              <Select value={formData.siteId} onValueChange={(value) => setFormData({ ...formData, siteId: value })}>
+              <Select
+                value={formData.siteId}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, siteId: value })
+                }
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select site" />
+                  <SelectValue
+                    placeholder={
+                      isSitesLoading ? "Loading sites..." : "Select site"
+                    }
+                  />
                 </SelectTrigger>
+
                 <SelectContent>
                   {sites.map((site) => (
                     <SelectItem key={site.id} value={site.id}>
-                      {site.name} ({site.code})
+                      {site.siteName} ({site.siteCode})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Kontiki Code */}
             <div className="space-y-2">
               <Label htmlFor="kontikiCode">Kontiki Code *</Label>
               <Input
                 id="kontikiCode"
                 value={formData.kontikiCode}
-                onChange={(e) => setFormData({ ...formData, kontikiCode: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, kontikiCode: e.target.value })
+                }
                 placeholder="Kon-tiki 1"
               />
             </div>
+
+            {/* Kontiki Name */}
             <div className="space-y-2">
               <Label htmlFor="kontikiName">Kontiki Name *</Label>
               <Input
                 id="kontikiName"
                 value={formData.kontikiName}
-                onChange={(e) => setFormData({ ...formData, kontikiName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, kontikiName: e.target.value })
+                }
                 placeholder="Enter kontiki name"
               />
             </div>
+
+            {/* Capacity */}
             <div className="space-y-2">
               <Label htmlFor="capacity">Capacity</Label>
               <Input
                 id="capacity"
                 value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, capacity: e.target.value })
+                }
                 placeholder="e.g., 200 kg/batch"
               />
             </div>
+
+            {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    status: value as "ACTIVE" | "INACTIVE" | "MAINTENANCE",
+                  })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -462,22 +497,41 @@ export default function Kontikis() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Specifications */}
             <div className="space-y-2 col-span-2">
               <Label htmlFor="specifications">Specifications</Label>
               <Textarea
                 id="specifications"
                 value={formData.specifications}
-                onChange={(e) => setFormData({ ...formData, specifications: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: e.target.value,
+                  })
+                }
                 placeholder="Describe kontiki specifications"
                 rows={3}
               />
             </div>
           </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitCreate}>
+            <Button
+              className="bg-[#295F58] hover:bg-[#295F58]/90"
+              onClick={handleSubmitCreate}
+              disabled={
+                !formData.siteId ||
+                !formData.kontikiCode ||
+                !formData.kontikiName
+              }
+            >
               Create Kontiki
             </Button>
           </DialogFooter>
@@ -489,21 +543,24 @@ export default function Kontikis() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Kontiki</DialogTitle>
-            <DialogDescription>
-              Update kontiki information
-            </DialogDescription>
+            <DialogDescription>Update kontiki information</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2 col-span-2">
               <Label htmlFor="edit-siteId">Site *</Label>
-              <Select value={formData.siteId} onValueChange={(value) => setFormData({ ...formData, siteId: value })}>
+              <Select
+                value={formData.siteId}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, siteId: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select site" />
                 </SelectTrigger>
                 <SelectContent>
                   {sites.map((site) => (
                     <SelectItem key={site.id} value={site.id}>
-                      {site.name} ({site.code})
+                      {site.siteName} ({site.siteCode})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -523,7 +580,9 @@ export default function Kontikis() {
               <Input
                 id="edit-kontikiName"
                 value={formData.kontikiName}
-                onChange={(e) => setFormData({ ...formData, kontikiName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, kontikiName: e.target.value })
+                }
                 placeholder="Enter kontiki name"
               />
             </div>
@@ -532,13 +591,20 @@ export default function Kontikis() {
               <Input
                 id="edit-capacity"
                 value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, capacity: e.target.value })
+                }
                 placeholder="e.g., 200 kg/batch"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-status">Status *</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, status: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -554,17 +620,25 @@ export default function Kontikis() {
               <Textarea
                 id="edit-specifications"
                 value={formData.specifications}
-                onChange={(e) => setFormData({ ...formData, specifications: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, specifications: e.target.value })
+                }
                 placeholder="Describe kontiki specifications"
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitEdit}>
+            <Button
+              className="bg-[#295F58] hover:bg-[#295F58]/90"
+              onClick={handleSubmitEdit}
+            >
               Update Kontiki
             </Button>
           </DialogFooter>
@@ -587,16 +661,22 @@ export default function Kontikis() {
                   <Flame className="h-8 w-8 text-[#295F58]" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold">{selectedKontiki.kontikiName}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedKontiki.kontikiCode}</p>
+                  <h3 className="text-xl font-semibold">
+                    {selectedKontiki.kontikiName}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedKontiki.kontikiCode}
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Site</Label>
-                  <p className="font-medium">{selectedKontiki.siteName}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{selectedKontiki.siteCode}</p>
+                  <p className="font-medium">{selectedKontiki.site.siteName}</p>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {selectedKontiki.site.siteCode}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Status</Label>
@@ -608,7 +688,9 @@ export default function Kontikis() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Capacity</Label>
-                  <p className="font-medium">{selectedKontiki.capacity || "N/A"}</p>
+                  <p className="font-medium">
+                    {selectedKontiki.capacity || "N/A"}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Created At</Label>
@@ -617,8 +699,12 @@ export default function Kontikis() {
                   </p>
                 </div>
                 <div className="space-y-1 col-span-2">
-                  <Label className="text-muted-foreground">Specifications</Label>
-                  <p className="font-medium">{selectedKontiki.specifications || "N/A"}</p>
+                  <Label className="text-muted-foreground">
+                    Specifications
+                  </Label>
+                  <p className="font-medium">
+                    {selectedKontiki.specifications || "N/A"}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Kontiki ID</Label>
@@ -628,13 +714,19 @@ export default function Kontikis() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+            >
               Close
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={() => {
-              setIsViewDialogOpen(false);
-              handleEditKontiki(selectedKontiki!);
-            }}>
+            <Button
+              className="bg-[#295F58] hover:bg-[#295F58]/90"
+              onClick={() => {
+                setIsViewDialogOpen(false);
+                handleEditKontiki(selectedKontiki!);
+              }}
+            >
               <Edit className="h-4 w-4 mr-2" />
               Edit Kontiki
             </Button>
@@ -643,7 +735,10 @@ export default function Kontikis() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -652,7 +747,8 @@ export default function Kontikis() {
               <span className="font-semibold text-foreground">
                 {selectedKontiki?.kontikiName}
               </span>{" "}
-              ({selectedKontiki?.kontikiCode}). All associated production records will be affected. This action cannot be undone.
+              ({selectedKontiki?.kontikiCode}). All associated production
+              records will be affected. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

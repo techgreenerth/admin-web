@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSites } from "@/contexts/siteContext";
+import { userService } from "@/lib/api/user.service";
+import { Site } from "@/types/site.types";
 import {
   Plus,
   Search,
@@ -61,34 +64,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 
-interface Site {
-  id: string;
-  siteCode: string;
-  siteName: string;
-  status: string;
-  latitude: string;
-  longitude: string;
-  address: string;
-  district?: string;
-  state?: string;
-  country: string;
-  siteType?: string;
-  capacity?: string;
-  infrastructure?: string;
-  kontikisCount?: number;
-  sitePhotos: string[];
-  createdAt: string;
-  assignedUsers?: Array<{
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    userCode: string;
-  }>;
-}
 
 export default function Sites() {
   const navigate = useNavigate();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -106,6 +85,40 @@ export default function Sites() {
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
   const [selectedUserId, setSelectedUserId] = useState("");
 
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+
+  const {
+    sites,
+    isLoading,
+    createSite,
+    deleteSite,
+    assignUserToSite,
+    revokeUserFromSite,
+    updateSite
+  } = useSites();
+
+  // Fetch Users in Drop Down for Assigning 
+  const fetchUsersForAssignment = async () => {
+    try {
+      const response = await userService.getAll({
+        page: 1,
+        limit: 100, // enough for dropdown
+        status: "ACTIVE",
+      });
+
+      setAvailableUsers(response.data);
+    } catch (error: any) {
+      console.error(error.response?.data?.message || "Failed to fetch users");
+    }
+  };
+
+  useEffect(() => {
+    if (isAssignUserDialogOpen) {
+      fetchUsersForAssignment();
+    }
+  }, [isAssignUserDialogOpen]);
+
+
   // Form state
   const [formData, setFormData] = useState({
     siteCode: "",
@@ -122,82 +135,6 @@ export default function Sites() {
     sitePhotos: [] as string[],
     status: "ACTIVE",
   });
-
-  // Mock data - Replace with API call
-  const sites: Site[] = [
-    {
-      id: "1",
-      siteCode: "AP-001",
-      siteName: "Green Valley Production Site",
-      status: "ACTIVE",
-      latitude: "28.61394",
-      longitude: "77.20902",
-      address: "Plot 123, Industrial Area",
-      district: "New Delhi",
-      state: "Delhi",
-      country: "India",
-      siteType: "Rural",
-      capacity: "500 kg/day",
-      infrastructure: "2 Kontikis, Storage Shed",
-      kontikisCount: 2,
-      sitePhotos: [],
-      createdAt: "2024-01-15",
-      assignedUsers: [
-        {
-          id: "u1",
-          firstName: "John",
-          lastName: "Doe",
-          email: "john@example.com",
-          userCode: "USER-001",
-        },
-      ],
-    },
-    {
-      id: "2",
-      siteCode: "AP-002",
-      siteName: "Eco Farm Biochar Unit",
-      status: "ACTIVE",
-      latitude: "19.07609",
-      longitude: "72.87766",
-      address: "Farm Road 45",
-      district: "Mumbai",
-      state: "Maharashtra",
-      country: "India",
-      siteType: "Urban",
-      capacity: "300 kg/day",
-      infrastructure: "1 Kontiki, Open Area",
-      kontikisCount: 1,
-      sitePhotos: [],
-      createdAt: "2024-02-10",
-      assignedUsers: [],
-    },
-    {
-      id: "3",
-      siteCode: "AP-003",
-      siteName: "Carbon Capture Facility",
-      status: "UNDER_MAINTENANCE",
-      latitude: "13.08268",
-      longitude: "80.27072",
-      address: "Village Panchayat Area",
-      district: "Chennai",
-      state: "Tamil Nadu",
-      country: "India",
-      siteType: "Rural",
-      capacity: "700 kg/day",
-      infrastructure: "3 Kontikis, Warehouse",
-      kontikisCount: 3,
-      sitePhotos: [],
-      createdAt: "2024-03-20",
-      assignedUsers: [],
-    },
-  ];
-
-  // Mock users for assignment
-  const availableUsers = [
-    { id: "u1", name: "John Doe", userCode: "USER-001" },
-    { id: "u2", name: "Jane Smith", userCode: "USER-002" },
-    { id: "u3", name: "Mike Johnson", userCode: "USER-003" },
-  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -218,7 +155,8 @@ export default function Sites() {
       site.siteName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       site.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       site.address.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || site.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || site.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -272,6 +210,35 @@ export default function Sites() {
     setIsEditDialogOpen(true);
   };
 
+  const handleSubmitEdit = async () => {
+  if (!selectedSite) return;
+
+  try {
+    await updateSite(selectedSite.id, {
+      siteName: formData.siteName,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
+      address: formData.address,
+      district: formData.district,
+      state: formData.state,
+      country: formData.country,
+      siteType: formData.siteType,
+      capacity: formData.capacity,
+      infrastructure: formData.infrastructure,
+      sitePhotos: formData.sitePhotos,
+      status: formData.status,
+    });
+
+    setIsEditDialogOpen(false);
+    setSelectedSite(null);
+  } catch (error: any) {
+    console.error(
+      error.response?.data?.message || "Failed to update site"
+    );
+  }
+};
+
+
   const handleDeleteSite = (site: Site) => {
     setSelectedSite(site);
     setIsDeleteDialogOpen(true);
@@ -289,46 +256,68 @@ export default function Sites() {
     setIsRevokeUserDialogOpen(true);
   };
 
-  const handleSubmitCreate = () => {
-    // TODO: Add API call to create site
-    console.log("Creating site:", formData);
-    setIsCreateDialogOpen(false);
+  const handleSubmitCreate = async () => {
+    try {
+      await createSite(formData);
+      setIsCreateDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to create site", error);
+    }
   };
 
-  const handleSubmitEdit = () => {
-    // TODO: Add API call to update site
-    console.log("Updating site:", selectedSite?.id, formData);
-    setIsEditDialogOpen(false);
-  };
-
-  const handleConfirmDelete = () => {
-    // TODO: Add API call to delete site
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteSite(selectedSite.id);
+      setIsDeleteDialogOpen(false);
+      setSelectedSite(null);
+    } catch (error) {
+      console.error("Failed to delete site", error);
+    }
     console.log("Deleting site:", selectedSite?.id);
     setIsDeleteDialogOpen(false);
   };
 
-  const handleConfirmAssignUser = () => {
-    // TODO: Add API call to assign user
-    console.log("Assigning user:", selectedUserId, "to site:", selectedSite?.id);
-    setIsAssignUserDialogOpen(false);
+  const handleConfirmAssignUser = async () => {
+    try {
+      await assignUserToSite(selectedSite.id, {
+        userId: selectedUserId,
+      });
+      setIsAssignUserDialogOpen(false);
+      setSelectedUserId("");
+      setSelectedSite(null);
+    } catch (error) {
+      console.error("Failed to assign user", error);
+    }
   };
 
-  const handleConfirmRevokeUser = () => {
-    // TODO: Add API call to revoke user
-    console.log("Revoking user:", selectedUserId, "from site:", selectedSite?.id);
-    setIsRevokeUserDialogOpen(false);
+  const handleConfirmRevokeUser = async () => {
+    try {
+      await revokeUserFromSite(selectedSite.id, {
+        userId: selectedUserId,
+      });
+      setIsRevokeUserDialogOpen(false);
+      setSelectedUserId("");
+      setSelectedSite(null);
+    } catch (error) {
+      console.error("Failed to revoke user", error);
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#295F58]">Artisan Pro Sites</h1>
+          <h1 className="text-3xl font-bold text-[#295F58]">
+            Artisan Pro Sites
+          </h1>
           <p className="text-muted-foreground mt-1">
             Manage biochar production sites and user assignments
           </p>
         </div>
-        <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleCreateSite}>
+        <Button
+          className="bg-[#295F58] hover:bg-[#295F58]/90"
+          onClick={handleCreateSite}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Site
         </Button>
@@ -356,7 +345,9 @@ export default function Sites() {
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="ACTIVE">Active</SelectItem>
                   <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="UNDER_MAINTENANCE">Under Maintenance</SelectItem>
+                  <SelectItem value="UNDER_MAINTENANCE">
+                    Under Maintenance
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -390,7 +381,9 @@ export default function Sites() {
                     <div className="flex items-start gap-1">
                       <MapPin className="h-3 w-3 text-muted-foreground mt-0.5" />
                       <div className="text-sm">
-                        <div>{site.district}, {site.state}</div>
+                        <div>
+                          {site.district}, {site.state}
+                        </div>
                         <div className="text-xs text-muted-foreground">
                           {site.latitude}, {site.longitude}
                         </div>
@@ -413,7 +406,7 @@ export default function Sites() {
                   <TableCell>
                     <div className="flex items-center gap-1 text-sm">
                       <Users className="h-3 w-3" />
-                      {site.assignedUsers?.length || 0}
+                      {site._count?.userAssignments ?? 0}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -437,17 +430,25 @@ export default function Sites() {
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleAssignUser(site)}>
+                        <DropdownMenuItem
+                          onClick={() => handleAssignUser(site)}
+                        >
                           <UserPlus className="h-4 w-4 mr-2" />
                           Assign User
                         </DropdownMenuItem>
-                        {site.assignedUsers && site.assignedUsers.length > 0 && (
-                          <DropdownMenuItem onClick={() => handleRevokeUser(site)}>
-                            <UserMinus className="h-4 w-4 mr-2" />
-                            Revoke User
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteSite(site)}>
+                        {site.assignedUsers &&
+                          site.assignedUsers.length > 0 && (
+                            <DropdownMenuItem
+                              onClick={() => handleRevokeUser(site)}
+                            >
+                              <UserMinus className="h-4 w-4 mr-2" />
+                              Revoke User
+                            </DropdownMenuItem>
+                          )}
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => handleDeleteSite(site)}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </DropdownMenuItem>
@@ -464,7 +465,9 @@ export default function Sites() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1} to {Math.min(endIndex, filteredSites.length)} of {filteredSites.length} results
+              Showing {startIndex + 1} to{" "}
+              {Math.min(endIndex, filteredSites.length)} of{" "}
+              {filteredSites.length} results
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -477,22 +480,30 @@ export default function Sites() {
                 Previous
               </Button>
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className={currentPage === page ? "bg-[#295F58] hover:bg-[#295F58]/90" : ""}
-                  >
-                    {page}
-                  </Button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className={
+                        currentPage === page
+                          ? "bg-[#295F58] hover:bg-[#295F58]/90"
+                          : ""
+                      }
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
               >
                 Next
@@ -518,7 +529,9 @@ export default function Sites() {
               <Input
                 id="siteCode"
                 value={formData.siteCode}
-                onChange={(e) => setFormData({ ...formData, siteCode: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, siteCode: e.target.value })
+                }
                 placeholder="AP-001"
               />
             </div>
@@ -527,7 +540,9 @@ export default function Sites() {
               <Input
                 id="siteName"
                 value={formData.siteName}
-                onChange={(e) => setFormData({ ...formData, siteName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, siteName: e.target.value })
+                }
                 placeholder="Enter site name"
               />
             </div>
@@ -536,7 +551,9 @@ export default function Sites() {
               <Input
                 id="latitude"
                 value={formData.latitude}
-                onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, latitude: e.target.value })
+                }
                 placeholder="28.61394"
               />
             </div>
@@ -545,7 +562,9 @@ export default function Sites() {
               <Input
                 id="longitude"
                 value={formData.longitude}
-                onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, longitude: e.target.value })
+                }
                 placeholder="77.20902"
               />
             </div>
@@ -554,7 +573,9 @@ export default function Sites() {
               <Textarea
                 id="address"
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
                 placeholder="Enter full address"
                 rows={2}
               />
@@ -564,7 +585,9 @@ export default function Sites() {
               <Input
                 id="district"
                 value={formData.district}
-                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, district: e.target.value })
+                }
                 placeholder="Enter district"
               />
             </div>
@@ -573,7 +596,9 @@ export default function Sites() {
               <Input
                 id="state"
                 value={formData.state}
-                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, state: e.target.value })
+                }
                 placeholder="Enter state"
               />
             </div>
@@ -582,13 +607,20 @@ export default function Sites() {
               <Input
                 id="country"
                 value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, country: e.target.value })
+                }
                 placeholder="India"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="siteType">Site Type</Label>
-              <Select value={formData.siteType} onValueChange={(value) => setFormData({ ...formData, siteType: value })}>
+              <Select
+                value={formData.siteType}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, siteType: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -604,7 +636,9 @@ export default function Sites() {
               <Input
                 id="capacity"
                 value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, capacity: e.target.value })
+                }
                 placeholder="e.g., 500 kg/day"
               />
             </div>
@@ -613,30 +647,45 @@ export default function Sites() {
               <Textarea
                 id="infrastructure"
                 value={formData.infrastructure}
-                onChange={(e) => setFormData({ ...formData, infrastructure: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, infrastructure: e.target.value })
+                }
                 placeholder="Describe available infrastructure"
                 rows={2}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, status: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ACTIVE">Active</SelectItem>
                   <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="UNDER_MAINTENANCE">Under Maintenance</SelectItem>
+                  <SelectItem value="UNDER_MAINTENANCE">
+                    Under Maintenance
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitCreate}>
+            <Button
+              className="bg-[#295F58] hover:bg-[#295F58]/90"
+              onClick={handleSubmitCreate}
+            >
               Create Site
             </Button>
           </DialogFooter>
@@ -648,9 +697,7 @@ export default function Sites() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Site</DialogTitle>
-            <DialogDescription>
-              Update site information
-            </DialogDescription>
+            <DialogDescription>Update site information</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
@@ -667,7 +714,9 @@ export default function Sites() {
               <Input
                 id="edit-siteName"
                 value={formData.siteName}
-                onChange={(e) => setFormData({ ...formData, siteName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, siteName: e.target.value })
+                }
                 placeholder="Enter site name"
               />
             </div>
@@ -676,7 +725,9 @@ export default function Sites() {
               <Input
                 id="edit-latitude"
                 value={formData.latitude}
-                onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, latitude: e.target.value })
+                }
                 placeholder="28.61394"
               />
             </div>
@@ -685,7 +736,9 @@ export default function Sites() {
               <Input
                 id="edit-longitude"
                 value={formData.longitude}
-                onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, longitude: e.target.value })
+                }
                 placeholder="77.20902"
               />
             </div>
@@ -694,7 +747,9 @@ export default function Sites() {
               <Textarea
                 id="edit-address"
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
                 placeholder="Enter full address"
                 rows={2}
               />
@@ -704,7 +759,9 @@ export default function Sites() {
               <Input
                 id="edit-district"
                 value={formData.district}
-                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, district: e.target.value })
+                }
                 placeholder="Enter district"
               />
             </div>
@@ -713,7 +770,9 @@ export default function Sites() {
               <Input
                 id="edit-state"
                 value={formData.state}
-                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, state: e.target.value })
+                }
                 placeholder="Enter state"
               />
             </div>
@@ -722,13 +781,20 @@ export default function Sites() {
               <Input
                 id="edit-country"
                 value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, country: e.target.value })
+                }
                 placeholder="India"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-siteType">Site Type</Label>
-              <Select value={formData.siteType} onValueChange={(value) => setFormData({ ...formData, siteType: value })}>
+              <Select
+                value={formData.siteType}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, siteType: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -744,7 +810,9 @@ export default function Sites() {
               <Input
                 id="edit-capacity"
                 value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, capacity: e.target.value })
+                }
                 placeholder="e.g., 500 kg/day"
               />
             </div>
@@ -753,30 +821,45 @@ export default function Sites() {
               <Textarea
                 id="edit-infrastructure"
                 value={formData.infrastructure}
-                onChange={(e) => setFormData({ ...formData, infrastructure: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, infrastructure: e.target.value })
+                }
                 placeholder="Describe available infrastructure"
                 rows={2}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-status">Status *</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, status: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ACTIVE">Active</SelectItem>
                   <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="UNDER_MAINTENANCE">Under Maintenance</SelectItem>
+                  <SelectItem value="UNDER_MAINTENANCE">
+                    Under Maintenance
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitEdit}>
+            <Button
+              className="bg-[#295F58] hover:bg-[#295F58]/90"
+              onClick={handleSubmitEdit}
+            >
               Update Site
             </Button>
           </DialogFooter>
@@ -797,7 +880,9 @@ export default function Sites() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Site Code</Label>
-                  <p className="font-medium font-mono">{selectedSite.siteCode}</p>
+                  <p className="font-medium font-mono">
+                    {selectedSite.siteCode}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Site Name</Label>
@@ -813,28 +898,41 @@ export default function Sites() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Site Type</Label>
-                  <p className="font-medium">{selectedSite.siteType || "N/A"}</p>
+                  <p className="font-medium">
+                    {selectedSite.siteType || "N/A"}
+                  </p>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground">GPS Coordinates</Label>
+                  <Label className="text-muted-foreground">
+                    GPS Coordinates
+                  </Label>
                   <p className="font-medium text-sm">
                     {selectedSite.latitude}, {selectedSite.longitude}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground">Production Capacity</Label>
-                  <p className="font-medium">{selectedSite.capacity || "N/A"}</p>
+                  <Label className="text-muted-foreground">
+                    Production Capacity
+                  </Label>
+                  <p className="font-medium">
+                    {selectedSite.capacity || "N/A"}
+                  </p>
                 </div>
                 <div className="space-y-1 col-span-2">
                   <Label className="text-muted-foreground">Address</Label>
                   <p className="font-medium">{selectedSite.address}</p>
                   <p className="text-sm text-muted-foreground">
-                    {selectedSite.district}, {selectedSite.state}, {selectedSite.country}
+                    {selectedSite.district}, {selectedSite.state},{" "}
+                    {selectedSite.country}
                   </p>
                 </div>
                 <div className="space-y-1 col-span-2">
-                  <Label className="text-muted-foreground">Infrastructure</Label>
-                  <p className="font-medium">{selectedSite.infrastructure || "N/A"}</p>
+                  <Label className="text-muted-foreground">
+                    Infrastructure
+                  </Label>
+                  <p className="font-medium">
+                    {selectedSite.infrastructure || "N/A"}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Created At</Label>
@@ -850,16 +948,28 @@ export default function Sites() {
 
               {/* Assigned Users Section */}
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Assigned Users ({selectedSite.assignedUsers?.length || 0})</Label>
-                {selectedSite.assignedUsers && selectedSite.assignedUsers.length > 0 ? (
+                <Label className="text-muted-foreground">
+                  Assigned Users ({selectedSite.assignedUsers?.length || 0})
+                </Label>
+                {selectedSite.assignedUsers &&
+                selectedSite.assignedUsers.length > 0 ? (
                   <div className="border rounded-lg divide-y">
                     {selectedSite.assignedUsers.map((user) => (
-                      <div key={user.id} className="p-3 flex items-center justify-between">
+                      <div
+                        key={user.id}
+                        className="p-3 flex items-center justify-between"
+                      >
                         <div>
-                          <p className="font-medium">{user.firstName} {user.lastName}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                          <p className="font-medium">
+                            {user.firstName} {user.lastName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {user.email}
+                          </p>
                         </div>
-                        <span className="text-xs font-mono text-muted-foreground">{user.userCode}</span>
+                        <span className="text-xs font-mono text-muted-foreground">
+                          {user.userCode}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -872,13 +982,19 @@ export default function Sites() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+            >
               Close
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={() => {
-              setIsViewDialogOpen(false);
-              handleEditSite(selectedSite!);
-            }}>
+            <Button
+              className="bg-[#295F58] hover:bg-[#295F58]/90"
+              onClick={() => {
+                setIsViewDialogOpen(false);
+                handleEditSite(selectedSite!);
+              }}
+            >
               <Edit className="h-4 w-4 mr-2" />
               Edit Site
             </Button>
@@ -887,7 +1003,10 @@ export default function Sites() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -896,7 +1015,9 @@ export default function Sites() {
               <span className="font-semibold text-foreground">
                 {selectedSite?.siteName}
               </span>{" "}
-              ({selectedSite?.siteCode}). All associated data including kontikis, production shifts, and records will be affected. This action cannot be undone.
+              ({selectedSite?.siteCode}). All associated data including
+              kontikis, production shifts, and records will be affected. This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -912,7 +1033,10 @@ export default function Sites() {
       </AlertDialog>
 
       {/* Assign User Dialog */}
-      <Dialog open={isAssignUserDialogOpen} onOpenChange={setIsAssignUserDialogOpen}>
+      <Dialog
+        open={isAssignUserDialogOpen}
+        onOpenChange={setIsAssignUserDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Assign User to Site</DialogTitle>
@@ -929,8 +1053,8 @@ export default function Sites() {
                 </SelectTrigger>
                 <SelectContent>
                   {availableUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.name} ({user.userCode})
+                    <SelectItem key={user.firstName} value={user.id}>
+                      {user.firstName} {user.lastName}({user.userCode})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -938,7 +1062,10 @@ export default function Sites() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssignUserDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsAssignUserDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button
@@ -953,7 +1080,10 @@ export default function Sites() {
       </Dialog>
 
       {/* Revoke User Dialog */}
-      <Dialog open={isRevokeUserDialogOpen} onOpenChange={setIsRevokeUserDialogOpen}>
+      <Dialog
+        open={isRevokeUserDialogOpen}
+        onOpenChange={setIsRevokeUserDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Revoke User from Site</DialogTitle>
@@ -979,7 +1109,10 @@ export default function Sites() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRevokeUserDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsRevokeUserDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button
