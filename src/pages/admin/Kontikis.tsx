@@ -78,6 +78,7 @@ export default function Kontikis() {
 
   const { kontikis, createKontiki,updateKontiki,deleteKontiki } = useKontikis();
  const { sites, isLoading: isSitesLoading } = useSites();
+const [errors, setErrors] = useState<any>({});
 
   // Form state
   const [formData, setFormData] = useState({
@@ -100,6 +101,28 @@ export default function Kontikis() {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+   const validateForm = () => {
+    const newErrors: any = {};
+
+    // Kontikis Code
+    if (!formData.kontikiCode.trim()) {
+      newErrors.kontikiCode = "kontiki Code is required";
+    }
+
+    // Kontikis Name (cannot be only numbers)
+    if (!formData.kontikiName.trim()) {
+      newErrors.kontikiName = "kontiki Name is required";
+    } else if (/^\d+$/.test(formData.kontikiName)) {
+      newErrors.kontikiName = "kontiki Name cannot be only numbers";
+    }
+    // Capacity (number only)
+    if (formData.capacity && !/^\d+(\.\d+)?$/.test(formData.capacity)) {
+      newErrors.capacity = "Production capacity must be a number";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   // Filter kontikis
@@ -130,6 +153,7 @@ export default function Kontikis() {
       specifications: "",
       status: "ACTIVE",
     });
+     setErrors({});
     setIsCreateDialogOpen(true);
   };
 
@@ -148,6 +172,7 @@ export default function Kontikis() {
       specifications: kontiki.specifications || "",
       status: kontiki.status,
     });
+    setErrors({});
     setIsEditDialogOpen(true);
   };
 
@@ -157,6 +182,7 @@ export default function Kontikis() {
   };
 
   const handleSubmitCreate = async () => {
+    if (!validateForm()) return;
     try {
       await createKontiki({
         siteId: formData.siteId,
@@ -175,7 +201,7 @@ export default function Kontikis() {
   };
 
 const handleSubmitEdit = async () => {
-  if (!selectedKontiki) return;
+  if (!validateForm()) return;
 
   try {
     await updateKontiki(selectedKontiki.id, {
@@ -447,6 +473,7 @@ const handleSubmitEdit = async () => {
                 }
                 placeholder="Kon-tiki 1"
               />
+              {errors.kontikiCode && <p className="text-red-500 text-sm">{errors.kontikiCode}</p>}
             </div>
 
             {/* Kontiki Name */}
@@ -460,6 +487,8 @@ const handleSubmitEdit = async () => {
                 }
                 placeholder="Enter kontiki name"
               />
+               {errors.kontikiName && <p className="text-red-500 text-sm">{errors.kontikiName}</p>}
+            
             </div>
 
             {/* Capacity */}
@@ -473,6 +502,8 @@ const handleSubmitEdit = async () => {
                 }
                 placeholder="e.g., 200 kg/batch"
               />
+              {errors.capacity && <p className="text-red-500 text-sm">{errors.capacity}</p>}
+            
             </div>
 
             {/* Status */}
@@ -585,6 +616,8 @@ const handleSubmitEdit = async () => {
                 }
                 placeholder="Enter kontiki name"
               />
+              {errors.kontikiName && <p className="text-red-500 text-sm">{errors.kontikiName}</p>}
+            
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-capacity">Capacity</Label>
@@ -596,6 +629,8 @@ const handleSubmitEdit = async () => {
                 }
                 placeholder="e.g., 200 kg/batch"
               />
+              {errors.capacity && <p className="text-red-500 text-sm">{errors.capacity}</p>}
+            
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-status">Status *</Label>

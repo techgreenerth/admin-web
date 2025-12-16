@@ -64,7 +64,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 
-
 export default function Sites() {
   const navigate = useNavigate();
 
@@ -82,6 +81,7 @@ export default function Sites() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAssignUserDialogOpen, setIsAssignUserDialogOpen] = useState(false);
   const [isRevokeUserDialogOpen, setIsRevokeUserDialogOpen] = useState(false);
+  const [errors, setErrors] = useState<any>({});
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
   const [selectedUserId, setSelectedUserId] = useState("");
 
@@ -94,10 +94,10 @@ export default function Sites() {
     deleteSite,
     assignUserToSite,
     revokeUserFromSite,
-    updateSite
+    updateSite,
   } = useSites();
 
-  // Fetch Users in Drop Down for Assigning 
+  // Fetch Users in Drop Down for Assigning
   const fetchUsersForAssignment = async () => {
     try {
       const response = await userService.getAll({
@@ -118,6 +118,50 @@ export default function Sites() {
     }
   }, [isAssignUserDialogOpen]);
 
+  const validateForm = () => {
+    const newErrors: any = {};
+
+    // Site Code
+    if (!formData.siteCode.trim()) {
+      newErrors.siteCode = "Site Code is required";
+    }
+
+    // Site Name (cannot be only numbers)
+    if (!formData.siteName.trim()) {
+      newErrors.siteName = "Site Name is required";
+    } else if (/^\d+$/.test(formData.siteName)) {
+      newErrors.siteName = "Site Name cannot be only numbers";
+    }
+
+    // Latitude
+if (!formData.latitude) {
+  newErrors.latitude = "Latitude is required";
+} else if (!/^-?\d+(\.\d{1,5})?$/.test(formData.latitude)) {
+  newErrors.latitude = "Latitude must be a decimal with up to 5 places";
+}
+
+// Longitude
+if (!formData.longitude) {
+  newErrors.longitude = "Longitude is required";
+} else if (!/^-?\d+(\.\d{1,5})?$/.test(formData.longitude)) {
+  newErrors.longitude = "Longitude must be a decimal with up to 5 places";
+}
+
+    // Address
+    if (!formData.address.trim()) {
+      newErrors.address = "Address is required";
+    }
+
+    // Capacity (number only)
+    if (formData.capacity && !/^\d+(\.\d+)?$/.test(formData.capacity)) {
+      newErrors.capacity = "Production capacity must be a number";
+    }
+
+    
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Form state
   const [formData, setFormData] = useState({
@@ -183,6 +227,7 @@ export default function Sites() {
       sitePhotos: [],
       status: "ACTIVE",
     });
+    setErrors({});
     setIsCreateDialogOpen(true);
   };
 
@@ -207,37 +252,34 @@ export default function Sites() {
       sitePhotos: site.sitePhotos,
       status: site.status,
     });
+    setErrors({});
     setIsEditDialogOpen(true);
   };
 
   const handleSubmitEdit = async () => {
-  if (!selectedSite) return;
+    if (!validateForm()) return;
+    try {
+      await updateSite(selectedSite.id, {
+        siteName: formData.siteName,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        address: formData.address,
+        district: formData.district,
+        state: formData.state,
+        country: formData.country,
+        siteType: formData.siteType,
+        capacity: formData.capacity,
+        infrastructure: formData.infrastructure,
+        sitePhotos: formData.sitePhotos,
+        status: formData.status,
+      });
 
-  try {
-    await updateSite(selectedSite.id, {
-      siteName: formData.siteName,
-      latitude: formData.latitude,
-      longitude: formData.longitude,
-      address: formData.address,
-      district: formData.district,
-      state: formData.state,
-      country: formData.country,
-      siteType: formData.siteType,
-      capacity: formData.capacity,
-      infrastructure: formData.infrastructure,
-      sitePhotos: formData.sitePhotos,
-      status: formData.status,
-    });
-
-    setIsEditDialogOpen(false);
-    setSelectedSite(null);
-  } catch (error: any) {
-    console.error(
-      error.response?.data?.message || "Failed to update site"
-    );
-  }
-};
-
+      setIsEditDialogOpen(false);
+      setSelectedSite(null);
+    } catch (error: any) {
+      console.error(error.response?.data?.message || "Failed to update site");
+    }
+  };
 
   const handleDeleteSite = (site: Site) => {
     setSelectedSite(site);
@@ -257,9 +299,11 @@ export default function Sites() {
   };
 
   const handleSubmitCreate = async () => {
+    if (!validateForm()) return;
     try {
       await createSite(formData);
       setIsCreateDialogOpen(false);
+      setErrors({});
     } catch (error) {
       console.error("Failed to create site", error);
     }
@@ -276,7 +320,6 @@ export default function Sites() {
     console.log("Deleting site:", selectedSite?.id);
     setIsDeleteDialogOpen(false);
   };
-
   const handleConfirmAssignUser = async () => {
     try {
       await assignUserToSite(selectedSite.id, {
@@ -289,7 +332,6 @@ export default function Sites() {
       console.error("Failed to assign user", error);
     }
   };
-
   const handleConfirmRevokeUser = async () => {
     try {
       await revokeUserFromSite(selectedSite.id, {
@@ -534,6 +576,7 @@ export default function Sites() {
                 }
                 placeholder="AP-001"
               />
+              {errors.siteCode && <p className="text-red-500 text-sm">{errors.siteCode}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="siteName">Site Name *</Label>
@@ -545,6 +588,7 @@ export default function Sites() {
                 }
                 placeholder="Enter site name"
               />
+              {errors.siteName && <p className="text-red-500 text-sm">{errors.siteName}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="latitude">Latitude * (5 decimals)</Label>
@@ -556,6 +600,7 @@ export default function Sites() {
                 }
                 placeholder="28.61394"
               />
+              {errors.latitude && <p className="text-red-500 text-sm">{errors.latitude}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="longitude">Longitude * (5 decimals)</Label>
@@ -567,6 +612,7 @@ export default function Sites() {
                 }
                 placeholder="77.20902"
               />
+              {errors.longitude && <p className="text-red-500 text-sm">{errors.longitude}</p>}
             </div>
             <div className="space-y-2 col-span-2">
               <Label htmlFor="address">Address *</Label>
@@ -579,6 +625,7 @@ export default function Sites() {
                 placeholder="Enter full address"
                 rows={2}
               />
+              {errors.address && <p className="text-red-500 text-sm">{errors.address}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="district">District</Label>
@@ -641,6 +688,7 @@ export default function Sites() {
                 }
                 placeholder="e.g., 500 kg/day"
               />
+              {errors.capacity && <p className="text-red-500 text-sm">{errors.capacity}</p>}
             </div>
             <div className="space-y-2 col-span-2">
               <Label htmlFor="infrastructure">Infrastructure</Label>
@@ -691,6 +739,8 @@ export default function Sites() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      
 
       {/* Edit Site Dialog - Similar to Create */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -708,6 +758,7 @@ export default function Sites() {
                 disabled
                 className="bg-gray-50"
               />
+              
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-siteName">Site Name *</Label>
@@ -719,6 +770,7 @@ export default function Sites() {
                 }
                 placeholder="Enter site name"
               />
+              {errors.siteName && <p className="text-red-500 text-sm">{errors.siteName}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-latitude">Latitude * (5 decimals)</Label>
@@ -729,7 +781,10 @@ export default function Sites() {
                   setFormData({ ...formData, latitude: e.target.value })
                 }
                 placeholder="28.61394"
+              
               />
+              {errors.latitude && <p className="text-red-500 text-sm">{errors.latitude}</p>}
+            
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-longitude">Longitude * (5 decimals)</Label>
@@ -741,7 +796,9 @@ export default function Sites() {
                 }
                 placeholder="77.20902"
               />
-            </div>
+              {errors.longitude && <p className="text-red-500 text-sm">{errors.longitude}</p>}
+            
+              </div>
             <div className="space-y-2 col-span-2">
               <Label htmlFor="edit-address">Address *</Label>
               <Textarea
@@ -753,6 +810,8 @@ export default function Sites() {
                 placeholder="Enter full address"
                 rows={2}
               />
+               {errors.address && <p className="text-red-500 text-sm">{errors.address}</p>}
+           
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-district">District</Label>
@@ -815,6 +874,8 @@ export default function Sites() {
                 }
                 placeholder="e.g., 500 kg/day"
               />
+              {errors.capacity && <p className="text-red-500 text-sm">{errors.capacity}</p>}
+            
             </div>
             <div className="space-y-2 col-span-2">
               <Label htmlFor="edit-infrastructure">Infrastructure</Label>
