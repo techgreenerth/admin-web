@@ -13,6 +13,7 @@ interface SitesContextType {
   meta: PaginationMeta | null;
   isLoading: boolean;
   fetchSites: () => Promise<void>;
+  getSiteById: (id: string) => Promise<Site>;
   createSite: (payload: CreateSitePayload) => Promise<void>;
   deleteSite: (id: string) => Promise<void>;
   updateSite: (id: string, payload: UpdateSitePayload) => Promise<void>;
@@ -94,6 +95,17 @@ const revokeUserFromSite = async (
     setIsLoading(false);
   }
 };
+// Fetch sites by ID
+const getSiteById = async (id: string): Promise<Site> => {
+  setIsLoading(true);
+  try {
+    const site = await sitesService.getSiteById(id);
+    return site;
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
 // Update a site 
 const updateSite = async (
@@ -117,7 +129,9 @@ const updateSite = async (
         deleteSite,
         assignUserToSite,
         revokeUserFromSite,
-        updateSite
+        updateSite,
+        getSiteById
+        
         
       }}
     >

@@ -648,6 +648,7 @@ export default function Sites() {
       </AlertDialog>
 
       {/* Assign User Dialog */}
+      
       <AssignUserDialog
         open={isAssignUserDialogOpen}
         onOpenChange={setIsAssignUserDialogOpen}
@@ -660,14 +661,15 @@ export default function Sites() {
       />
 
       {/* Revoke User Dialog */}
+
       <RevokeUserDialog
-        open={isRevokeUserDialogOpen}
-        onOpenChange={setIsRevokeUserDialogOpen}
-        selectedSite={selectedSite}
-        selectedUserId={selectedUserId}
-        setSelectedUserId={setSelectedUserId}
-        onConfirm={handleConfirmRevokeUser}
-      />
+  open={isRevokeUserDialogOpen}
+  onOpenChange={setIsRevokeUserDialogOpen}
+  selectedSite={selectedSite}
+  selectedUserId={selectedUserId}
+  setSelectedUserId={setSelectedUserId}
+  onConfirm={handleConfirmRevokeUser}
+/>
     </div>
   );
 }
