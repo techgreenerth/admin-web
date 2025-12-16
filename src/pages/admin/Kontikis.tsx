@@ -35,15 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,11 +46,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Textarea } from "@/components/ui/textarea";
 
 import { useSites } from "@/contexts/siteContext";
 import { useKontikis } from "@/contexts/kontikisContext";
 import { Kontiki } from "@/types/kontikis.types";
+import { ViewKontikiDialog } from "@/components/kontikis/ViewKontikiDialog";
+import { EditKontikiDialog } from "@/components/kontikis/EditKontikiDialog";
+import { CreateKontikiDialog } from "@/components/kontikis/CreateKontikiDialog";
+
+// import { useAppSelector } from "@/store/hook";
 
 export default function Kontikis() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,10 +72,11 @@ export default function Kontikis() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedKontiki, setSelectedKontiki] = useState<Kontiki | null>(null);
 
-  const { kontikis, createKontiki, updateKontiki, deleteKontiki ,isLoading} =
+  const { kontikis, createKontiki, updateKontiki, deleteKontiki, isLoading } =
     useKontikis();
+
+
   const { sites, isLoading: isSitesLoading } = useSites();
-  // const [isLoading, setIsLoading] = useState(true);
   const [errors, setErrors] = useState<any>({});
 
   // Form state
@@ -454,355 +451,35 @@ export default function Kontikis() {
       </Card>
 
       {/* Create Kontiki Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create New Kontiki</DialogTitle>
-            <DialogDescription>
-              Add a new biochar production kiln
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid grid-cols-2 gap-4 py-4">
-            {/* Site */}
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="siteId">Site *</Label>
-              <Select
-                value={formData.siteId}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, siteId: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      isSitesLoading ? "Loading sites..." : "Select site"
-                    }
-                  />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {sites.map((site) => (
-                    <SelectItem key={site.id} value={site.id}>
-                      {site.siteName} ({site.siteCode})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Kontiki Code */}
-            <div className="space-y-2">
-              <Label htmlFor="kontikiCode">Kontiki Code *</Label>
-              <Input
-                id="kontikiCode"
-                value={formData.kontikiCode}
-                onChange={(e) =>
-                  setFormData({ ...formData, kontikiCode: e.target.value })
-                }
-                placeholder="Kon-tiki 1"
-              />
-              {errors.kontikiCode && (
-                <p className="text-red-500 text-sm">{errors.kontikiCode}</p>
-              )}
-            </div>
-
-            {/* Kontiki Name */}
-            <div className="space-y-2">
-              <Label htmlFor="kontikiName">Kontiki Name *</Label>
-              <Input
-                id="kontikiName"
-                value={formData.kontikiName}
-                onChange={(e) =>
-                  setFormData({ ...formData, kontikiName: e.target.value })
-                }
-                placeholder="Enter kontiki name"
-              />
-              {errors.kontikiName && (
-                <p className="text-red-500 text-sm">{errors.kontikiName}</p>
-              )}
-            </div>
-
-            {/* Capacity */}
-            <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity</Label>
-              <Input
-                id="capacity"
-                value={formData.capacity}
-                onChange={(e) =>
-                  setFormData({ ...formData, capacity: e.target.value })
-                }
-                placeholder="e.g., 200 kg/batch"
-              />
-              {errors.capacity && (
-                <p className="text-red-500 text-sm">{errors.capacity}</p>
-              )}
-            </div>
-
-            {/* Status */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    status: value as "ACTIVE" | "INACTIVE" | "MAINTENANCE",
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Specifications */}
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="specifications">Specifications</Label>
-              <Textarea
-                id="specifications"
-                value={formData.specifications}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: e.target.value,
-                  })
-                }
-                placeholder="Describe kontiki specifications"
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsCreateDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="bg-[#295F58] hover:bg-[#295F58]/90"
-              onClick={handleSubmitCreate}
-              disabled={
-                !formData.siteId ||
-                !formData.kontikiCode ||
-                !formData.kontikiName
-              }
-            >
-              Create Kontiki
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+      <CreateKontikiDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+        sites={sites}
+        isSitesLoading={isSitesLoading}
+        onSubmit={handleSubmitCreate}
+      />
       {/* Edit Kontiki Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Kontiki</DialogTitle>
-            <DialogDescription>Update kontiki information</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="edit-siteId">Site *</Label>
-              <Select
-                value={formData.siteId}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, siteId: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select site" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sites.map((site) => (
-                    <SelectItem key={site.id} value={site.id}>
-                      {site.siteName} ({site.siteCode})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-kontikiCode">Kontiki Code *</Label>
-              <Input
-                id="edit-kontikiCode"
-                value={formData.kontikiCode}
-                disabled
-                className="bg-gray-50"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-kontikiName">Kontiki Name *</Label>
-              <Input
-                id="edit-kontikiName"
-                value={formData.kontikiName}
-                onChange={(e) =>
-                  setFormData({ ...formData, kontikiName: e.target.value })
-                }
-                placeholder="Enter kontiki name"
-              />
-              {errors.kontikiName && (
-                <p className="text-red-500 text-sm">{errors.kontikiName}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-capacity">Capacity</Label>
-              <Input
-                id="edit-capacity"
-                value={formData.capacity}
-                onChange={(e) =>
-                  setFormData({ ...formData, capacity: e.target.value })
-                }
-                placeholder="e.g., 200 kg/batch"
-              />
-              {errors.capacity && (
-                <p className="text-red-500 text-sm">{errors.capacity}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-status">Status *</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="edit-specifications">Specifications</Label>
-              <Textarea
-                id="edit-specifications"
-                value={formData.specifications}
-                onChange={(e) =>
-                  setFormData({ ...formData, specifications: e.target.value })
-                }
-                placeholder="Describe kontiki specifications"
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="bg-[#295F58] hover:bg-[#295F58]/90"
-              onClick={handleSubmitEdit}
-            >
-              Update Kontiki
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditKontikiDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+        sites={sites}
+        onSubmit={handleSubmitEdit}
+        />
 
       {/* View Kontiki Details Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Kontiki Details</DialogTitle>
-            <DialogDescription>
-              Complete information about the kontiki
-            </DialogDescription>
-          </DialogHeader>
-          {selectedKontiki && (
-            <div className="space-y-6 py-4">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-[#E1EFEE]">
-                  <Flame className="h-8 w-8 text-[#295F58]" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold">
-                    {selectedKontiki.kontikiName}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedKontiki.kontikiCode}
-                  </p>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Site</Label>
-                  <p className="font-medium">{selectedKontiki.site.siteName}</p>
-                  <p className="text-xs text-muted-foreground font-mono">
-                    {selectedKontiki.site.siteCode}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Status</Label>
-                  <div>
-                    <Badge className={getStatusColor(selectedKontiki.status)}>
-                      {selectedKontiki.status}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Capacity</Label>
-                  <p className="font-medium">
-                    {selectedKontiki.capacity || "N/A"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Created At</Label>
-                  <p className="font-medium">
-                    {new Date(selectedKontiki.createdAt).toLocaleString()}
-                  </p>
-                </div>
-                <div className="space-y-1 col-span-2">
-                  <Label className="text-muted-foreground">
-                    Specifications
-                  </Label>
-                  <p className="font-medium">
-                    {selectedKontiki.specifications || "N/A"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Kontiki ID</Label>
-                  <p className="font-medium text-xs">{selectedKontiki.id}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsViewDialogOpen(false)}
-            >
-              Close
-            </Button>
-            <Button
-              className="bg-[#295F58] hover:bg-[#295F58]/90"
-              onClick={() => {
-                setIsViewDialogOpen(false);
-                handleEditKontiki(selectedKontiki!);
-              }}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Kontiki
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ViewKontikiDialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        kontiki={selectedKontiki}
+        onEdit={handleEditKontiki}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog
