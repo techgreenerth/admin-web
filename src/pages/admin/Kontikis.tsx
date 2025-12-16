@@ -76,9 +76,11 @@ export default function Kontikis() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedKontiki, setSelectedKontiki] = useState<Kontiki | null>(null);
 
-  const { kontikis, createKontiki,updateKontiki,deleteKontiki } = useKontikis();
- const { sites, isLoading: isSitesLoading } = useSites();
-const [errors, setErrors] = useState<any>({});
+  const { kontikis, createKontiki, updateKontiki, deleteKontiki ,isLoading} =
+    useKontikis();
+  const { sites, isLoading: isSitesLoading } = useSites();
+  // const [isLoading, setIsLoading] = useState(true);
+  const [errors, setErrors] = useState<any>({});
 
   // Form state
   const [formData, setFormData] = useState({
@@ -103,7 +105,7 @@ const [errors, setErrors] = useState<any>({});
     }
   };
 
-   const validateForm = () => {
+  const validateForm = () => {
     const newErrors: any = {};
 
     // Kontikis Code
@@ -153,7 +155,7 @@ const [errors, setErrors] = useState<any>({});
       specifications: "",
       status: "ACTIVE",
     });
-     setErrors({});
+    setErrors({});
     setIsCreateDialogOpen(true);
   };
 
@@ -193,45 +195,41 @@ const [errors, setErrors] = useState<any>({});
       });
 
       setIsCreateDialogOpen(false);
-
-      
     } catch (error) {
       console.error("Failed to create kontiki", error);
     }
   };
 
-const handleSubmitEdit = async () => {
-  if (!validateForm()) return;
+  const handleSubmitEdit = async () => {
+    if (!validateForm()) return;
 
-  try {
-    await updateKontiki(selectedKontiki.id, {
-      
-      kontikiName: formData.kontikiName,
-      capacity: formData.capacity || undefined,
-      specifications: formData.specifications || undefined,
-      status: formData.status as "ACTIVE" | "INACTIVE" | "MAINTENANCE",
-    });
+    try {
+      await updateKontiki(selectedKontiki.id, {
+        kontikiName: formData.kontikiName,
+        capacity: formData.capacity || undefined,
+        specifications: formData.specifications || undefined,
+        status: formData.status as "ACTIVE" | "INACTIVE" | "MAINTENANCE",
+      });
 
-    setIsEditDialogOpen(false);
-    setSelectedKontiki(null);
-  } catch (error) {
-    console.error("Failed to update kontiki", error);
-  }
-};
-
+      setIsEditDialogOpen(false);
+      setSelectedKontiki(null);
+    } catch (error) {
+      console.error("Failed to update kontiki", error);
+    }
+  };
 
   const handleConfirmDelete = async () => {
-  if (!selectedKontiki) return;
+    if (!selectedKontiki) return;
 
-  try {
-    await deleteKontiki(selectedKontiki.id);
+    try {
+      await deleteKontiki(selectedKontiki.id);
 
-    setIsDeleteDialogOpen(false);
-    setSelectedKontiki(null);
-  } catch (error) {
-    console.error("Failed to delete kontiki", error);
-  }
-};
+      setIsDeleteDialogOpen(false);
+      setSelectedKontiki(null);
+    } catch (error) {
+      console.error("Failed to delete kontiki", error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -304,69 +302,100 @@ const handleSubmitEdit = async () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedKontikis.map((kontiki) => (
-                <TableRow key={kontiki.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE]">
-                        <Flame className="h-4 w-4 text-[#295F58]" />
-                      </div>
-                      <div>
-                        <div className="font-medium">{kontiki.kontikiName}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {kontiki.kontikiCode}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{kontiki.site.siteCode}</div>
-                      <div className="text-xs text-muted-foreground font-mono">
-                        {kontiki.site.siteCode}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{kontiki.capacity || "N/A"}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(kontiki.status)}>
-                      {kontiki.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleViewKontiki(kontiki)}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleEditKontiki(kontiki)}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleDeleteKontiki(kontiki)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    Loading Kontikis...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : kontikis.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    No Kontikis found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedKontikis.map((kontiki) => (
+                  <TableRow key={kontiki.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE]">
+                          <Flame className="h-4 w-4 text-[#295F58]" />
+                        </div>
+                        <div>
+                          <div className="font-medium">
+                            {kontiki.kontikiName}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {kontiki.kontikiCode}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">
+                          {kontiki.site.siteCode}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-mono">
+                          {kontiki.site.siteCode}
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="text-sm">{kontiki.capacity || "N/A"}</div>
+                    </TableCell>
+
+                    <TableCell>
+                      <Badge className={getStatusColor(kontiki.status)}>
+                        {kontiki.status}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleViewKontiki(kontiki)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => handleEditKontiki(kontiki)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => handleDeleteKontiki(kontiki)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -473,7 +502,9 @@ const handleSubmitEdit = async () => {
                 }
                 placeholder="Kon-tiki 1"
               />
-              {errors.kontikiCode && <p className="text-red-500 text-sm">{errors.kontikiCode}</p>}
+              {errors.kontikiCode && (
+                <p className="text-red-500 text-sm">{errors.kontikiCode}</p>
+              )}
             </div>
 
             {/* Kontiki Name */}
@@ -487,8 +518,9 @@ const handleSubmitEdit = async () => {
                 }
                 placeholder="Enter kontiki name"
               />
-               {errors.kontikiName && <p className="text-red-500 text-sm">{errors.kontikiName}</p>}
-            
+              {errors.kontikiName && (
+                <p className="text-red-500 text-sm">{errors.kontikiName}</p>
+              )}
             </div>
 
             {/* Capacity */}
@@ -502,8 +534,9 @@ const handleSubmitEdit = async () => {
                 }
                 placeholder="e.g., 200 kg/batch"
               />
-              {errors.capacity && <p className="text-red-500 text-sm">{errors.capacity}</p>}
-            
+              {errors.capacity && (
+                <p className="text-red-500 text-sm">{errors.capacity}</p>
+              )}
             </div>
 
             {/* Status */}
@@ -616,8 +649,9 @@ const handleSubmitEdit = async () => {
                 }
                 placeholder="Enter kontiki name"
               />
-              {errors.kontikiName && <p className="text-red-500 text-sm">{errors.kontikiName}</p>}
-            
+              {errors.kontikiName && (
+                <p className="text-red-500 text-sm">{errors.kontikiName}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-capacity">Capacity</Label>
@@ -629,8 +663,9 @@ const handleSubmitEdit = async () => {
                 }
                 placeholder="e.g., 200 kg/batch"
               />
-              {errors.capacity && <p className="text-red-500 text-sm">{errors.capacity}</p>}
-            
+              {errors.capacity && (
+                <p className="text-red-500 text-sm">{errors.capacity}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-status">Status *</Label>

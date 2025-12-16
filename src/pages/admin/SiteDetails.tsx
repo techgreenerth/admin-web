@@ -61,7 +61,7 @@ export default function SiteDetails() {
  
 const { id } = useParams();
 const navigate = useNavigate();
-const { sites, isLoading } = useSites();
+const { sites } = useSites();
 
 const site = sites.find((s) => s.id === id);
 

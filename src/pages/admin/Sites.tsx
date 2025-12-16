@@ -409,7 +409,26 @@ if (!formData.longitude) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedSites.map((site) => (
+              {
+              isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    Loading Sites...
+                  </TableCell>
+                </TableRow>
+              ) : sites.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    No Sites found
+                  </TableCell>
+                </TableRow>
+              ) : (paginatedSites.map((site) => (
                 <TableRow key={site.id}>
                   <TableCell>
                     <div>
@@ -498,7 +517,7 @@ if (!formData.longitude) {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+              )))}
             </TableBody>
           </Table>
         </CardContent>
