@@ -35,30 +35,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSites } from "@/contexts/siteContext";
+import { Site } from "@/types/site.types";
 
-interface Site {
-  id: string;
-  siteCode: string;
-  siteName: string;
-  status: string;
-  latitude: string;
-  longitude: string;
-  address: string;
-  district?: string;
-  state?: string;
-  country: string;
-  siteType?: string;
-  capacity?: string;
-  infrastructure?: string;
-  createdAt: string;
-  assignedUsers?: Array<{
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    userCode: string;
-  }>;
-}
+
 
 interface UploadedFile {
   id: string;
@@ -78,35 +58,12 @@ interface UploadFolder {
 }
 
 export default function SiteDetails() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+ 
+const { id } = useParams();
+const navigate = useNavigate();
+const { sites } = useSites();
 
-  // Mock data - Replace with API call
-  const site: Site = {
-    id: id || "1",
-    siteCode: "AP-001",
-    siteName: "Green Valley Production Site",
-    status: "ACTIVE",
-    latitude: "28.61394",
-    longitude: "77.20902",
-    address: "Plot 123, Industrial Area",
-    district: "New Delhi",
-    state: "Delhi",
-    country: "India",
-    siteType: "Rural",
-    capacity: "500 kg/day",
-    infrastructure: "2 Kontikis, Storage Shed",
-    createdAt: "2024-01-15",
-    assignedUsers: [
-      {
-        id: "u1",
-        firstName: "John",
-        lastName: "Doe",
-        email: "john@example.com",
-        userCode: "USER-001",
-      },
-    ],
-  };
+const site = sites.find((s) => s.id === id);
 
   // Upload folders with initial data
   const [uploadFolders, setUploadFolders] = useState<UploadFolder[]>([

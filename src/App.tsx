@@ -27,6 +27,8 @@ import HelpSupport from "./pages/admin/HelpSupport";
 import Settings from "./pages/admin/Settings";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/admin/Profile";
+import { SitesProvider } from "./contexts/siteContext";
+import { KontikiProvider } from "./contexts/kontikisContext";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +39,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <SitesProvider>
+            <KontikiProvider>
           <Routes>
             {/* Auth routes - No layout */}
             <Route path="/login" element={<Login />} />
@@ -82,6 +86,8 @@ const App = () => (
               }
             />
           </Routes>
+          </KontikiProvider>
+          </SitesProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
