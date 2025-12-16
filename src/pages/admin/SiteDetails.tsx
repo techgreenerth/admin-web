@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -38,8 +38,6 @@ import {
 import { useSites } from "@/contexts/siteContext";
 import { Site } from "@/types/site.types";
 
-
-
 interface UploadedFile {
   id: string;
   name: string;
@@ -58,12 +56,11 @@ interface UploadFolder {
 }
 
 export default function SiteDetails() {
- 
-const { id } = useParams();
-const navigate = useNavigate();
-const { sites } = useSites();
-
-const site = sites.find((s) => s.id === id);
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { getSiteById, updateSite, isLoading } = useSites();
+  const [site, setSite] = useState<Site | null>(null);
+  // const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Upload folders with initial data
   const [uploadFolders, setUploadFolders] = useState<UploadFolder[]>([
@@ -76,25 +73,44 @@ const site = sites.find((s) => s.id === id);
     { id: "7", name: "Farmer Declaration Form", required: true, files: [] },
     { id: "8", name: "Labor Payment Proofs", required: true, files: [] },
     { id: "9", name: "Biochar Distribution List", required: true, files: [] },
-    { id: "10", name: "Biochar Distribution Photos", required: true, files: [] },
+    {
+      id: "10",
+      name: "Biochar Distribution Photos",
+      required: true,
+      files: [],
+    },
     { id: "11", name: "Labor Consent Forms", required: true, files: [] },
   ]);
 
   // Training folders
   const [trainingFolders, setTrainingFolders] = useState<UploadFolder[]>([
-    { id: "t1", name: "Biochar Production Training", required: true, files: [] },
+    {
+      id: "t1",
+      name: "Biochar Production Training",
+      required: true,
+      files: [],
+    },
     { id: "t2", name: "DMRV Training", required: true, files: [] },
     { id: "t3", name: "Safety Training", required: true, files: [] },
-    { id: "t4", name: "Training Complete Declaration", required: true, files: [] },
+    {
+      id: "t4",
+      name: "Training Complete Declaration",
+      required: true,
+      files: [],
+    },
   ]);
 
   // Internal uploads folder
-  const [internalUploadsFolders, setInternalUploadsFolders] = useState<UploadFolder[]>([
-    { id: "i1", name: "Internal Uploads", required: true, files: [] },
-  ]);
+  const [internalUploadsFolders, setInternalUploadsFolders] = useState<
+    UploadFolder[]
+  >([{ id: "i1", name: "Internal Uploads", required: true, files: [] }]);
 
-  const [selectedFolder, setSelectedFolder] = useState<UploadFolder | null>(null);
-  const [selectedFolderType, setSelectedFolderType] = useState<"upload" | "training" | "internal">("upload");
+  const [selectedFolder, setSelectedFolder] = useState<UploadFolder | null>(
+    null
+  );
+  const [selectedFolderType, setSelectedFolderType] = useState<
+    "upload" | "training" | "internal"
+  >("upload");
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [isViewFileDialogOpen, setIsViewFileDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
@@ -102,19 +118,41 @@ const site = sites.find((s) => s.id === id);
 
   // Form state for editing
   const [formData, setFormData] = useState({
-    siteCode: site.siteCode,
-    siteName: site.siteName,
-    latitude: site.latitude,
-    longitude: site.longitude,
-    address: site.address,
-    district: site.district || "",
-    state: site.state || "",
-    country: site.country,
-    siteType: site.siteType || "",
-    capacity: site.capacity || "",
-    infrastructure: site.infrastructure || "",
-    status: site.status,
+    siteCode:"",
+    siteName: "",
+    latitude: "",
+    longitude: "",
+    address: "",
+    district: "",
+    state: "",
+    country: "",
+    siteType: "",
+    capacity: "",
+    infrastructure: "",
+    status: "",
   });
+
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      const data = await getSiteById(id);
+      setSite(data);
+      setFormData({
+        siteCode: data.siteCode,
+        siteName: data.siteName,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        address: data.address,
+        district: data.district ?? "",
+        state: data.state ?? "",
+        country: data.country,
+        siteType: data.siteType ?? "",
+        capacity: data.capacity ?? "",
+        infrastructure: data.infrastructure ?? "",
+        status: data.status,
+      });
+    })();
+  }, [id]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -129,7 +167,10 @@ const site = sites.find((s) => s.id === id);
     }
   };
 
-  const handleOpenFolder = (folder: UploadFolder, folderType: "upload" | "training" | "internal") => {
+  const handleOpenFolder = (
+    folder: UploadFolder,
+    folderType: "upload" | "training" | "internal"
+  ) => {
     setSelectedFolder(folder);
     setSelectedFolderType(folderType);
     setIsFolderDialogOpen(true);
@@ -212,7 +253,9 @@ const site = sites.find((s) => s.id === id);
     }
 
     setSelectedFolder((prev) =>
-      prev ? { ...prev, files: prev.files.filter((f) => f.id !== fileId) } : null
+      prev
+        ? { ...prev, files: prev.files.filter((f) => f.id !== fileId) }
+        : null
     );
   };
 
@@ -228,11 +271,17 @@ const site = sites.find((s) => s.id === id);
     link.click();
   };
 
-  const handleSubmitEdit = () => {
-    // TODO: Add API call to update site
-    console.log("Updating site:", site.id, formData);
+  const handleSubmitEdit = async () => {
+    if (!site) return;
+    await updateSite(site.id, formData);
+    const refreshed = await getSiteById(site.id);
+    setSite(refreshed);
     setIsEditDialogOpen(false);
   };
+
+  if (isLoading || !site) {
+    return <div className="p-6">Loading site details...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -248,7 +297,9 @@ const site = sites.find((s) => s.id === id);
             <ArrowLeft className="h-5 w-5 text-[#295F58]" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-[#295F58]">{site.siteName}</h1>
+            <h1 className="text-3xl font-bold text-[#295F58]">
+              {site.siteName}
+            </h1>
             <p className="text-muted-foreground mt-1">
               Site Code: <span className="font-mono">{site.siteCode}</span>
             </p>
@@ -283,11 +334,15 @@ const site = sites.find((s) => s.id === id);
               <p className="font-medium text-sm">{site.siteType || "N/A"}</p>
             </div>
             <div className="space-y-1">
-              <Label className="text-muted-foreground text-xs">Production Capacity</Label>
+              <Label className="text-muted-foreground text-xs">
+                Production Capacity
+              </Label>
               <p className="font-medium text-sm">{site.capacity || "N/A"}</p>
             </div>
             <div className="space-y-1 col-span-2">
-              <Label className="text-muted-foreground text-xs">GPS Coordinates</Label>
+              <Label className="text-muted-foreground text-xs">
+                GPS Coordinates
+              </Label>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
                 <p className="font-medium text-sm font-mono">
@@ -296,7 +351,9 @@ const site = sites.find((s) => s.id === id);
               </div>
             </div>
             <div className="space-y-1">
-              <Label className="text-muted-foreground text-xs">Created At</Label>
+              <Label className="text-muted-foreground text-xs">
+                Created At
+              </Label>
               <p className="font-medium text-sm">
                 {new Date(site.createdAt).toLocaleDateString()}
               </p>
@@ -309,8 +366,12 @@ const site = sites.find((s) => s.id === id);
               </p>
             </div>
             <div className="space-y-1 col-span-3">
-              <Label className="text-muted-foreground text-xs">Infrastructure</Label>
-              <p className="font-medium text-sm">{site.infrastructure || "N/A"}</p>
+              <Label className="text-muted-foreground text-xs">
+                Infrastructure
+              </Label>
+              <p className="font-medium text-sm">
+                {site.infrastructure || "N/A"}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -322,32 +383,34 @@ const site = sites.find((s) => s.id === id);
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <Users className="h-5 w-5 text-[#295F58]" />
-              Assigned Users ({site.assignedUsers?.length || 0})
+              Assigned Users ({site.userAssignments?.length ?? 0})
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          {site.assignedUsers && site.assignedUsers.length > 0 ? (
+          {site.userAssignments && site.userAssignments.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {site.assignedUsers.map((user) => (
+              {site.userAssignments.map((assignment) => (
                 <div
-                  key={user.id}
-                  className="border rounded-lg p-3 flex items-center justify-between"
+                  key={assignment.id}
+                  className="border rounded-lg p-3 flex justify-between"
                 >
                   <div>
                     <p className="font-medium text-sm">
-                      {user.firstName} {user.lastName}
+                      {assignment.user.firstName} {assignment.user.lastName}
                     </p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {assignment.user.email}
+                    </p>
                   </div>
                   <span className="text-xs font-mono text-muted-foreground">
-                    {user.userCode}
+                    {assignment.user.userCode}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <p className="text-sm text-muted-foreground text-center py-4">
               No users assigned to this site
             </p>
           )}
@@ -389,8 +452,8 @@ const site = sites.find((s) => s.id === id);
                       <div className="flex-1">
                         <p className="font-medium text-sm">{folder.name}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {folder.files.length} file{folder.files.length !== 1 ? "s" : ""}{" "}
-                          uploaded
+                          {folder.files.length} file
+                          {folder.files.length !== 1 ? "s" : ""} uploaded
                         </p>
                       </div>
                     </div>
@@ -415,7 +478,8 @@ const site = sites.find((s) => s.id === id);
             Training Documentation
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            All training materials are mandatory. Click on a folder to upload files.
+            All training materials are mandatory. Click on a folder to upload
+            files.
           </p>
         </CardHeader>
         <CardContent>
@@ -442,8 +506,8 @@ const site = sites.find((s) => s.id === id);
                       <div className="flex-1">
                         <p className="font-medium text-sm">{folder.name}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {folder.files.length} file{folder.files.length !== 1 ? "s" : ""}{" "}
-                          uploaded
+                          {folder.files.length} file
+                          {folder.files.length !== 1 ? "s" : ""} uploaded
                         </p>
                       </div>
                     </div>
@@ -495,8 +559,8 @@ const site = sites.find((s) => s.id === id);
                       <div className="flex-1">
                         <p className="font-medium text-sm">{folder.name}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {folder.files.length} file{folder.files.length !== 1 ? "s" : ""}{" "}
-                          uploaded
+                          {folder.files.length} file
+                          {folder.files.length !== 1 ? "s" : ""} uploaded
                         </p>
                       </div>
                     </div>
@@ -559,7 +623,8 @@ const site = sites.find((s) => s.id === id);
                     <div className="flex-1">
                       <p className="font-medium text-sm">{file.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {file.size} • Uploaded {new Date(file.uploadedAt).toLocaleString()} by{" "}
+                        {file.size} • Uploaded{" "}
+                        {new Date(file.uploadedAt).toLocaleString()} by{" "}
                         {file.uploadedBy}
                       </p>
                     </div>
@@ -595,7 +660,9 @@ const site = sites.find((s) => s.id === id);
             ) : (
               <div className="text-center py-8 border-2 border-dashed rounded-lg">
                 <Folder className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No files uploaded yet</p>
+                <p className="text-sm text-muted-foreground">
+                  No files uploaded yet
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Click "Upload Files" to add documents
                 </p>
@@ -603,7 +670,10 @@ const site = sites.find((s) => s.id === id);
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFolderDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsFolderDialogOpen(false)}
+            >
               Close
             </Button>
           </DialogFooter>
@@ -611,7 +681,10 @@ const site = sites.find((s) => s.id === id);
       </Dialog>
 
       {/* View File Dialog */}
-      <Dialog open={isViewFileDialogOpen} onOpenChange={setIsViewFileDialogOpen}>
+      <Dialog
+        open={isViewFileDialogOpen}
+        onOpenChange={setIsViewFileDialogOpen}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedFile?.name}</DialogTitle>
@@ -651,7 +724,10 @@ const site = sites.find((s) => s.id === id);
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewFileDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewFileDialogOpen(false)}
+            >
               Close
             </Button>
             {selectedFile && (
@@ -689,7 +765,9 @@ const site = sites.find((s) => s.id === id);
               <Input
                 id="edit-siteName"
                 value={formData.siteName}
-                onChange={(e) => setFormData({ ...formData, siteName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, siteName: e.target.value })
+                }
                 placeholder="Enter site name"
               />
             </div>
@@ -698,7 +776,9 @@ const site = sites.find((s) => s.id === id);
               <Input
                 id="edit-latitude"
                 value={formData.latitude}
-                onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, latitude: e.target.value })
+                }
                 placeholder="28.61394"
               />
             </div>
@@ -707,7 +787,9 @@ const site = sites.find((s) => s.id === id);
               <Input
                 id="edit-longitude"
                 value={formData.longitude}
-                onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, longitude: e.target.value })
+                }
                 placeholder="77.20902"
               />
             </div>
@@ -716,7 +798,9 @@ const site = sites.find((s) => s.id === id);
               <Textarea
                 id="edit-address"
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
                 placeholder="Enter full address"
                 rows={2}
               />
@@ -726,7 +810,9 @@ const site = sites.find((s) => s.id === id);
               <Input
                 id="edit-district"
                 value={formData.district}
-                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, district: e.target.value })
+                }
                 placeholder="Enter district"
               />
             </div>
@@ -735,7 +821,9 @@ const site = sites.find((s) => s.id === id);
               <Input
                 id="edit-state"
                 value={formData.state}
-                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, state: e.target.value })
+                }
                 placeholder="Enter state"
               />
             </div>
@@ -744,13 +832,20 @@ const site = sites.find((s) => s.id === id);
               <Input
                 id="edit-country"
                 value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, country: e.target.value })
+                }
                 placeholder="India"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-siteType">Site Type</Label>
-              <Select value={formData.siteType} onValueChange={(value) => setFormData({ ...formData, siteType: value })}>
+              <Select
+                value={formData.siteType}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, siteType: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -766,7 +861,9 @@ const site = sites.find((s) => s.id === id);
               <Input
                 id="edit-capacity"
                 value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, capacity: e.target.value })
+                }
                 placeholder="e.g., 500 kg/day"
               />
             </div>
@@ -775,30 +872,45 @@ const site = sites.find((s) => s.id === id);
               <Textarea
                 id="edit-infrastructure"
                 value={formData.infrastructure}
-                onChange={(e) => setFormData({ ...formData, infrastructure: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, infrastructure: e.target.value })
+                }
                 placeholder="Describe available infrastructure"
                 rows={2}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-status">Status *</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, status: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ACTIVE">Active</SelectItem>
                   <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="UNDER_MAINTENANCE">Under Maintenance</SelectItem>
+                  <SelectItem value="UNDER_MAINTENANCE">
+                    Under Maintenance
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitEdit}>
+            <Button
+              className="bg-[#295F58] hover:bg-[#295F58]/90"
+              onClick={handleSubmitEdit}
+            >
               Update Site
             </Button>
           </DialogFooter>

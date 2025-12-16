@@ -1,22 +1,3 @@
-// export interface Site {
-    
-//   "siteCode": "string",
-//   "siteName": "string",
-//   "latitude": "string",
-//   "longitude": "string",
-//   "address": "string",
-//   "district": "string",
-//   "state": "string",
-//   "country": "string",
-//   "siteType": "string",
-//   "capacity": "string",
-//   "infrastructure": "string",
-//   "sitePhotos": [
-//     "string"
-//   ],
-//   "status": "ACTIVE"
-
-// }
 
 export interface Site {
   id: string;
@@ -36,17 +17,26 @@ export interface Site {
   sitePhotos: string[];
   createdAt: string;
 
+  userAssignments?: UserAssignment[];
+  
   _count?: {
     userAssignments: number;
+    kontikis: number
   };
   
-  assignedUsers?: Array<{
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    userCode: string;
-  }>;
+
+}
+
+export interface UserAssignment {
+id: string;
+userId: string;
+siteId: string;
+status: string;
+assignedAt: string;
+revokedAt: string | null;
+createdAt: string;
+updatedAt: string;
+user: AssignedUser;
 }
 
 export interface CreateSitePayload {
@@ -78,6 +68,23 @@ export type UpdateSitePayload = {
   sitePhotos?: string[];
   status?: string;
 };
+
+export interface AssignedUser {
+  id: string;
+  userCode: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface UserAssignment {
+  id: string;
+  userCode: string;
+  firstName: string;
+  lastName: string | null;
+  email: AssignedUser;
+}
+
 
 export interface AssignUserPayload {
   userId: string;

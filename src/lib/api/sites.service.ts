@@ -1,5 +1,5 @@
 import apiClient from "./axios";
-import { SitesResponse,CreateSitePayload ,UpdateSitePayload,AssignUserPayload, RevokeUserPayload} from "@/types/site.types";
+import { Site,SitesResponse,CreateSitePayload ,UpdateSitePayload,AssignUserPayload, RevokeUserPayload} from "@/types/site.types";
 
 export const sitesService = {
   async getAllSites(
@@ -46,7 +46,12 @@ async updateSite(id: string, payload: UpdateSitePayload) {
     payload
   );
   return response.data;
-}
+},
+
+async getSiteById(siteId: string): Promise<Site> {
+  const response = await apiClient.get<Site>(`/v1/sites/${siteId}`);
+  return response.data;
+},
 
 };
 

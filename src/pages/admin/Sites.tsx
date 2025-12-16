@@ -63,6 +63,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { AssignUserDialog } from "@/components/sites/AssignUserDialog";
+import { ViewSiteDetailsDialog } from "@/components/sites/ViewSiteDetailsDialog";
+import { EditSiteDialog } from "@/components/sites/EditSiteDialog";
+import { CreateSiteDialog } from "@/components/sites/CreateSiteDialog";
+import { RevokeUserDialog } from "@/components/sites/RevokeUserDialog";
 
 export default function Sites() {
   const navigate = useNavigate();
@@ -134,18 +139,18 @@ export default function Sites() {
     }
 
     // Latitude
-if (!formData.latitude) {
-  newErrors.latitude = "Latitude is required";
-} else if (!/^-?\d+(\.\d{1,5})?$/.test(formData.latitude)) {
-  newErrors.latitude = "Latitude must be a decimal with up to 5 places";
-}
+    if (!formData.latitude) {
+      newErrors.latitude = "Latitude is required";
+    } else if (!/^-?\d+(\.\d{1,5})?$/.test(formData.latitude)) {
+      newErrors.latitude = "Latitude must be a decimal with up to 5 places";
+    }
 
-// Longitude
-if (!formData.longitude) {
-  newErrors.longitude = "Longitude is required";
-} else if (!/^-?\d+(\.\d{1,5})?$/.test(formData.longitude)) {
-  newErrors.longitude = "Longitude must be a decimal with up to 5 places";
-}
+    // Longitude
+    if (!formData.longitude) {
+      newErrors.longitude = "Longitude is required";
+    } else if (!/^-?\d+(\.\d{1,5})?$/.test(formData.longitude)) {
+      newErrors.longitude = "Longitude must be a decimal with up to 5 places";
+    }
 
     // Address
     if (!formData.address.trim()) {
@@ -156,8 +161,6 @@ if (!formData.longitude) {
     if (formData.capacity && !/^\d+(\.\d+)?$/.test(formData.capacity)) {
       newErrors.capacity = "Production capacity must be a number";
     }
-
-    
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -409,8 +412,7 @@ if (!formData.longitude) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {
-              isLoading ? (
+              {isLoading ? (
                 <TableRow>
                   <TableCell
                     colSpan={6}
@@ -428,96 +430,102 @@ if (!formData.longitude) {
                     No Sites found
                   </TableCell>
                 </TableRow>
-              ) : (paginatedSites.map((site) => (
-                <TableRow key={site.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{site.siteName}</div>
-                      <div className="text-xs text-muted-foreground font-mono">
-                        {site.siteCode}
+              ) : (
+                paginatedSites.map((site) => (
+                  <TableRow key={site.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{site.siteName}</div>
+                        <div className="text-xs text-muted-foreground font-mono">
+                          {site.siteCode}
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-start gap-1">
-                      <MapPin className="h-3 w-3 text-muted-foreground mt-0.5" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-start gap-1">
+                        <MapPin className="h-3 w-3 text-muted-foreground mt-0.5" />
+                        <div className="text-sm">
+                          <div>
+                            {site.district}, {site.state}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {site.latitude}, {site.longitude}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <div className="text-sm">
-                        <div>
-                          {site.district}, {site.state}
-                        </div>
+                        <div>{site.siteType || "N/A"}</div>
                         <div className="text-xs text-muted-foreground">
-                          {site.latitude}, {site.longitude}
+                          {site.capacity || "N/A"}
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>{site.siteType || "N/A"}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {site.capacity || "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm font-medium">
+                        {site._count?.kontikis ?? 0}
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm font-medium">
-                      {site.kontikisCount || 0}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Users className="h-3 w-3" />
-                      {site._count?.userAssignments ?? 0}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(site.status)}>
-                      {site.status.replace("_", " ")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewSite(site)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditSite(site)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleAssignUser(site)}
-                        >
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Assign User
-                        </DropdownMenuItem>
-                        {site.assignedUsers &&
-                          site.assignedUsers.length > 0 && (
-                            <DropdownMenuItem
-                              onClick={() => handleRevokeUser(site)}
-                            >
-                              <UserMinus className="h-4 w-4 mr-2" />
-                              Revoke User
-                            </DropdownMenuItem>
-                          )}
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleDeleteSite(site)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              )))}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Users className="h-3 w-3" />
+                        {site._count?.userAssignments ?? 0}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(site.status)}>
+                        {site.status.replace("_", " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleViewSite(site)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleEditSite(site)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleAssignUser(site)}
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Assign User
+                          </DropdownMenuItem>
+                          {site.assignedUsers &&
+                            site.assignedUsers.length > 0 && (
+                              <DropdownMenuItem
+                                onClick={() => handleRevokeUser(site)}
+                              >
+                                <UserMinus className="h-4 w-4 mr-2" />
+                                Revoke User
+                              </DropdownMenuItem>
+                            )}
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => handleDeleteSite(site)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -576,511 +584,38 @@ if (!formData.longitude) {
       </Card>
 
       {/* Create Site Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Artisan Pro Site</DialogTitle>
-            <DialogDescription>
-              Add a new biochar production site to the platform
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="siteCode">Site Code *</Label>
-              <Input
-                id="siteCode"
-                value={formData.siteCode}
-                onChange={(e) =>
-                  setFormData({ ...formData, siteCode: e.target.value })
-                }
-                placeholder="AP-001"
-              />
-              {errors.siteCode && <p className="text-red-500 text-sm">{errors.siteCode}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="siteName">Site Name *</Label>
-              <Input
-                id="siteName"
-                value={formData.siteName}
-                onChange={(e) =>
-                  setFormData({ ...formData, siteName: e.target.value })
-                }
-                placeholder="Enter site name"
-              />
-              {errors.siteName && <p className="text-red-500 text-sm">{errors.siteName}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="latitude">Latitude * (5 decimals)</Label>
-              <Input
-                id="latitude"
-                value={formData.latitude}
-                onChange={(e) =>
-                  setFormData({ ...formData, latitude: e.target.value })
-                }
-                placeholder="28.61394"
-              />
-              {errors.latitude && <p className="text-red-500 text-sm">{errors.latitude}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="longitude">Longitude * (5 decimals)</Label>
-              <Input
-                id="longitude"
-                value={formData.longitude}
-                onChange={(e) =>
-                  setFormData({ ...formData, longitude: e.target.value })
-                }
-                placeholder="77.20902"
-              />
-              {errors.longitude && <p className="text-red-500 text-sm">{errors.longitude}</p>}
-            </div>
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="address">Address *</Label>
-              <Textarea
-                id="address"
-                value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
-                }
-                placeholder="Enter full address"
-                rows={2}
-              />
-              {errors.address && <p className="text-red-500 text-sm">{errors.address}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="district">District</Label>
-              <Input
-                id="district"
-                value={formData.district}
-                onChange={(e) =>
-                  setFormData({ ...formData, district: e.target.value })
-                }
-                placeholder="Enter district"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="state">State</Label>
-              <Input
-                id="state"
-                value={formData.state}
-                onChange={(e) =>
-                  setFormData({ ...formData, state: e.target.value })
-                }
-                placeholder="Enter state"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
-              <Input
-                id="country"
-                value={formData.country}
-                onChange={(e) =>
-                  setFormData({ ...formData, country: e.target.value })
-                }
-                placeholder="India"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="siteType">Site Type</Label>
-              <Select
-                value={formData.siteType}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, siteType: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Rural">Rural</SelectItem>
-                  <SelectItem value="Urban">Urban</SelectItem>
-                  <SelectItem value="Semi-Urban">Semi-Urban</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="capacity">Production Capacity</Label>
-              <Input
-                id="capacity"
-                value={formData.capacity}
-                onChange={(e) =>
-                  setFormData({ ...formData, capacity: e.target.value })
-                }
-                placeholder="e.g., 500 kg/day"
-              />
-              {errors.capacity && <p className="text-red-500 text-sm">{errors.capacity}</p>}
-            </div>
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="infrastructure">Infrastructure</Label>
-              <Textarea
-                id="infrastructure"
-                value={formData.infrastructure}
-                onChange={(e) =>
-                  setFormData({ ...formData, infrastructure: e.target.value })
-                }
-                placeholder="Describe available infrastructure"
-                rows={2}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="UNDER_MAINTENANCE">
-                    Under Maintenance
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsCreateDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="bg-[#295F58] hover:bg-[#295F58]/90"
-              onClick={handleSubmitCreate}
-            >
-              Create Site
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      
+      <CreateSiteDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+        onSubmit={handleSubmitCreate}
+      />
 
-      {/* Edit Site Dialog - Similar to Create */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Site</DialogTitle>
-            <DialogDescription>Update site information</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-siteCode">Site Code *</Label>
-              <Input
-                id="edit-siteCode"
-                value={formData.siteCode}
-                disabled
-                className="bg-gray-50"
-              />
-              
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-siteName">Site Name *</Label>
-              <Input
-                id="edit-siteName"
-                value={formData.siteName}
-                onChange={(e) =>
-                  setFormData({ ...formData, siteName: e.target.value })
-                }
-                placeholder="Enter site name"
-              />
-              {errors.siteName && <p className="text-red-500 text-sm">{errors.siteName}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-latitude">Latitude * (5 decimals)</Label>
-              <Input
-                id="edit-latitude"
-                value={formData.latitude}
-                onChange={(e) =>
-                  setFormData({ ...formData, latitude: e.target.value })
-                }
-                placeholder="28.61394"
-              
-              />
-              {errors.latitude && <p className="text-red-500 text-sm">{errors.latitude}</p>}
-            
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-longitude">Longitude * (5 decimals)</Label>
-              <Input
-                id="edit-longitude"
-                value={formData.longitude}
-                onChange={(e) =>
-                  setFormData({ ...formData, longitude: e.target.value })
-                }
-                placeholder="77.20902"
-              />
-              {errors.longitude && <p className="text-red-500 text-sm">{errors.longitude}</p>}
-            
-              </div>
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="edit-address">Address *</Label>
-              <Textarea
-                id="edit-address"
-                value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
-                }
-                placeholder="Enter full address"
-                rows={2}
-              />
-               {errors.address && <p className="text-red-500 text-sm">{errors.address}</p>}
-           
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-district">District</Label>
-              <Input
-                id="edit-district"
-                value={formData.district}
-                onChange={(e) =>
-                  setFormData({ ...formData, district: e.target.value })
-                }
-                placeholder="Enter district"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-state">State</Label>
-              <Input
-                id="edit-state"
-                value={formData.state}
-                onChange={(e) =>
-                  setFormData({ ...formData, state: e.target.value })
-                }
-                placeholder="Enter state"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-country">Country</Label>
-              <Input
-                id="edit-country"
-                value={formData.country}
-                onChange={(e) =>
-                  setFormData({ ...formData, country: e.target.value })
-                }
-                placeholder="India"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-siteType">Site Type</Label>
-              <Select
-                value={formData.siteType}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, siteType: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Rural">Rural</SelectItem>
-                  <SelectItem value="Urban">Urban</SelectItem>
-                  <SelectItem value="Semi-Urban">Semi-Urban</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-capacity">Production Capacity</Label>
-              <Input
-                id="edit-capacity"
-                value={formData.capacity}
-                onChange={(e) =>
-                  setFormData({ ...formData, capacity: e.target.value })
-                }
-                placeholder="e.g., 500 kg/day"
-              />
-              {errors.capacity && <p className="text-red-500 text-sm">{errors.capacity}</p>}
-            
-            </div>
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="edit-infrastructure">Infrastructure</Label>
-              <Textarea
-                id="edit-infrastructure"
-                value={formData.infrastructure}
-                onChange={(e) =>
-                  setFormData({ ...formData, infrastructure: e.target.value })
-                }
-                placeholder="Describe available infrastructure"
-                rows={2}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-status">Status *</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="UNDER_MAINTENANCE">
-                    Under Maintenance
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="bg-[#295F58] hover:bg-[#295F58]/90"
-              onClick={handleSubmitEdit}
-            >
-              Update Site
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Edit Site Dialog  */}
+      <EditSiteDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+        onCancel={() => setIsEditDialogOpen(false)}
+        onSubmit={handleSubmitEdit}
+      />
 
       {/* View Site Details Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Site Details</DialogTitle>
-            <DialogDescription>
-              Complete information about the artisan pro site
-            </DialogDescription>
-          </DialogHeader>
-          {selectedSite && (
-            <div className="space-y-6 py-4">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Site Code</Label>
-                  <p className="font-medium font-mono">
-                    {selectedSite.siteCode}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Site Name</Label>
-                  <p className="font-medium">{selectedSite.siteName}</p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Status</Label>
-                  <div>
-                    <Badge className={getStatusColor(selectedSite.status)}>
-                      {selectedSite.status.replace("_", " ")}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Site Type</Label>
-                  <p className="font-medium">
-                    {selectedSite.siteType || "N/A"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">
-                    GPS Coordinates
-                  </Label>
-                  <p className="font-medium text-sm">
-                    {selectedSite.latitude}, {selectedSite.longitude}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">
-                    Production Capacity
-                  </Label>
-                  <p className="font-medium">
-                    {selectedSite.capacity || "N/A"}
-                  </p>
-                </div>
-                <div className="space-y-1 col-span-2">
-                  <Label className="text-muted-foreground">Address</Label>
-                  <p className="font-medium">{selectedSite.address}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedSite.district}, {selectedSite.state},{" "}
-                    {selectedSite.country}
-                  </p>
-                </div>
-                <div className="space-y-1 col-span-2">
-                  <Label className="text-muted-foreground">
-                    Infrastructure
-                  </Label>
-                  <p className="font-medium">
-                    {selectedSite.infrastructure || "N/A"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Created At</Label>
-                  <p className="font-medium">
-                    {new Date(selectedSite.createdAt).toLocaleString()}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground">Site ID</Label>
-                  <p className="font-medium text-xs">{selectedSite.id}</p>
-                </div>
-              </div>
-
-              {/* Assigned Users Section */}
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">
-                  Assigned Users ({selectedSite.assignedUsers?.length || 0})
-                </Label>
-                {selectedSite.assignedUsers &&
-                selectedSite.assignedUsers.length > 0 ? (
-                  <div className="border rounded-lg divide-y">
-                    {selectedSite.assignedUsers.map((user) => (
-                      <div
-                        key={user.id}
-                        className="p-3 flex items-center justify-between"
-                      >
-                        <div>
-                          <p className="font-medium">
-                            {user.firstName} {user.lastName}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
-                        </div>
-                        <span className="text-xs font-mono text-muted-foreground">
-                          {user.userCode}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg">
-                    No users assigned to this site
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsViewDialogOpen(false)}
-            >
-              Close
-            </Button>
-            <Button
-              className="bg-[#295F58] hover:bg-[#295F58]/90"
-              onClick={() => {
-                setIsViewDialogOpen(false);
-                handleEditSite(selectedSite!);
-              }}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Site
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ViewSiteDetailsDialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        site={selectedSite}
+        getStatusColor={getStatusColor}
+        onClose={() => setIsViewDialogOpen(false)}
+        onEdit={() => {
+          setIsViewDialogOpen(false);
+          handleEditSite(selectedSite!);
+        }}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog
@@ -1113,98 +648,28 @@ if (!formData.longitude) {
       </AlertDialog>
 
       {/* Assign User Dialog */}
-      <Dialog
+      
+      <AssignUserDialog
         open={isAssignUserDialogOpen}
         onOpenChange={setIsAssignUserDialogOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign User to Site</DialogTitle>
-            <DialogDescription>
-              Select a user to assign to {selectedSite?.siteName}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="assignUser">Select User *</Label>
-              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableUsers.map((user) => (
-                    <SelectItem key={user.firstName} value={user.id}>
-                      {user.firstName} {user.lastName}({user.userCode})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsAssignUserDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="bg-[#295F58] hover:bg-[#295F58]/90"
-              onClick={handleConfirmAssignUser}
-              disabled={!selectedUserId}
-            >
-              Assign User
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        siteName={selectedSite?.siteName}
+        availableUsers={availableUsers}
+        selectedUserId={selectedUserId}
+        onUserChange={setSelectedUserId}
+        onCancel={() => setIsAssignUserDialogOpen(false)}
+        onConfirm={handleConfirmAssignUser}
+      />
 
       {/* Revoke User Dialog */}
-      <Dialog
-        open={isRevokeUserDialogOpen}
-        onOpenChange={setIsRevokeUserDialogOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Revoke User from Site</DialogTitle>
-            <DialogDescription>
-              Select a user to revoke from {selectedSite?.siteName}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="revokeUser">Select User *</Label>
-              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectedSite?.assignedUsers?.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.firstName} {user.lastName} ({user.userCode})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsRevokeUserDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="bg-red-600 hover:bg-red-700"
-              onClick={handleConfirmRevokeUser}
-              disabled={!selectedUserId}
-            >
-              Revoke User
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+      <RevokeUserDialog
+  open={isRevokeUserDialogOpen}
+  onOpenChange={setIsRevokeUserDialogOpen}
+  selectedSite={selectedSite}
+  selectedUserId={selectedUserId}
+  setSelectedUserId={setSelectedUserId}
+  onConfirm={handleConfirmRevokeUser}
+/>
     </div>
   );
 }
