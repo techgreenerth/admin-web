@@ -461,7 +461,7 @@ if (!formData.longitude) {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm font-medium">
-                      {site.kontikisCount || 0}
+                      {site._count?.kontikis ?? 0}
                     </div>
                   </TableCell>
                   <TableCell>

@@ -38,6 +38,7 @@ export interface Site {
 
   _count?: {
     userAssignments: number;
+    kontikis: number
   };
   
   assignedUsers?: Array<{
