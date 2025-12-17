@@ -9,7 +9,9 @@ import {
   CheckCircle,
   ImageIcon,
   Download,
+  Loader2,
 } from "lucide-react";
+import { useBiocharActivation } from "@/contexts/biocharActivationContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,38 +38,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-
-interface KontikiActivationData {
-  kontikiId: string;
-  kontikiName: string;
-  mixingVideo: string;
-}
-
-interface BiocharActivationRecord {
-  id: string;
-  userId: string;
-  userName: string;
-  userCode: string;
-  siteId: string;
-  siteName: string;
-  siteCode: string;
-  recordDate: string;
-  recordTime: string;
-  latitude: string;
-  longitude: string;
-  gpsAccuracy?: string;
-  mixingAgent: string;
-  shiftId: string;
-  shiftName: string;
-  shiftNumber: number;
-  kontikis: KontikiActivationData[];
-  capturedAt: string;
-  deviceInfo?: string;
-  appVersion?: string;
-  submittedAt: string;
-}
+import { BiocharActivationRecord } from "@/types/biocharActivation.types";
 
 export default function BiocharActivation() {
+  // Use context hook
+  const { records, isLoading } = useBiocharActivation();
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
@@ -92,102 +67,6 @@ export default function BiocharActivation() {
   const users = [
     { id: "1", code: "USER-001" },
     { id: "2", code: "USER-002" },
-  ];
-
-  // Mock data - TODO: Replace with actual API call
-  const records: BiocharActivationRecord[] = [
-    {
-      id: "1",
-      userId: "1",
-      userName: "Rajesh Kumar",
-      userCode: "USER-001",
-      siteId: "1",
-      siteName: "Kothapally Site",
-      siteCode: "SITE-001",
-      recordDate: "2024-01-15",
-      recordTime: "16:30",
-      latitude: "28.61394",
-      longitude: "77.20902",
-      gpsAccuracy: "5m",
-      mixingAgent: "Potassium Hydroxide (KOH)",
-      shiftId: "1",
-      shiftName: "Shift 1",
-      shiftNumber: 1,
-      kontikis: [
-        {
-          kontikiId: "1",
-          kontikiName: "Kon-tiki 1",
-          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-        },
-        {
-          kontikiId: "2",
-          kontikiName: "Kon-tiki 2",
-          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-        },
-      ],
-      capturedAt: "2024-01-15T16:30:00Z",
-      deviceInfo: "Samsung Galaxy A52",
-      appVersion: "1.2.0",
-      submittedAt: "2024-01-15T16:35:00Z",
-    },
-    {
-      id: "2",
-      userId: "2",
-      userName: "Priya Sharma",
-      userCode: "USER-002",
-      siteId: "2",
-      siteName: "Dharampur Site",
-      siteCode: "SITE-002",
-      recordDate: "2024-01-16",
-      recordTime: "11:15",
-      latitude: "28.62394",
-      longitude: "77.21902",
-      gpsAccuracy: "4m",
-      mixingAgent: "Sodium Hydroxide (NaOH)",
-      shiftId: "2",
-      shiftName: "Shift 2",
-      shiftNumber: 2,
-      kontikis: [
-        {
-          kontikiId: "3",
-          kontikiName: "Kon-tiki 3",
-          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-        },
-      ],
-      capturedAt: "2024-01-16T11:15:00Z",
-      deviceInfo: "Xiaomi Redmi Note 10",
-      appVersion: "1.2.0",
-      submittedAt: "2024-01-16T11:20:00Z",
-    },
-    {
-      id: "3",
-      userId: "1",
-      userName: "Rajesh Kumar",
-      userCode: "USER-001",
-      siteId: "1",
-      siteName: "Kothapally Site",
-      siteCode: "SITE-001",
-      recordDate: "2024-01-14",
-      recordTime: "14:00",
-      latitude: "28.61494",
-      longitude: "77.21002",
-      gpsAccuracy: "6m",
-      mixingAgent: "Potassium Hydroxide (KOH)",
-      shiftId: "1",
-      shiftName: "Shift 1",
-      shiftNumber: 1,
-      kontikis: [
-        {
-          kontikiId: "1",
-          kontikiName: "Kon-tiki 1",
-          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-        },
-      ],
-      capturedAt: "2024-01-14T14:00:00Z",
-      deviceInfo: "Samsung Galaxy A52",
-      appVersion: "1.2.0",
-      submittedAt: "2024-01-14T14:05:00Z",
-    },
   ];
 
   const getShiftColor = (shiftNumber: number) => {
@@ -342,7 +221,16 @@ export default function BiocharActivation() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedRecords.length === 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Loading biochar activation records...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : paginatedRecords.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={5}
@@ -566,22 +454,41 @@ export default function BiocharActivation() {
                     </h3>
                   </div>
 
-                  {/* Mixing Video */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <Video className="h-5 w-5 text-[#295F58]" />
-                      Mixing Video
-                    </Label>
-                    <div className="border rounded-lg overflow-hidden max-w-2xl">
-                      <video
-                        controls
-                        className="w-full h-auto"
-                        src={kontiki.mixingVideo}
-                      >
-                        Your browser does not support the video tag.
-                      </video>
+                  {/* Tractor Photo */}
+                  {kontiki.tractorPhoto && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <ImageIcon className="h-5 w-5 text-[#295F58]" />
+                        Tractor Photo
+                      </Label>
+                      <div className="border rounded-lg overflow-hidden max-w-md">
+                        <img
+                          src={kontiki.tractorPhoto}
+                          alt="Tractor"
+                          className="w-full h-auto"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Mixing Video */}
+                  {kontiki.mixingVideo && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <Video className="h-5 w-5 text-[#295F58]" />
+                        Mixing Video
+                      </Label>
+                      <div className="border rounded-lg overflow-hidden max-w-2xl">
+                        <video
+                          controls
+                          className="w-full h-auto"
+                          src={kontiki.mixingVideo}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
