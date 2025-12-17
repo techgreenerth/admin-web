@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -31,6 +32,7 @@ interface Props {
   sites: SiteSummary[];
 
   onSubmit: () => void;
+  isSubmitting?: boolean;
 }
 
 export function EditKontikiDialog({
@@ -41,6 +43,7 @@ export function EditKontikiDialog({
   errors,
   sites,
   onSubmit,
+  isSubmitting = false,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -162,14 +165,23 @@ export function EditKontikiDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
           <Button
             className="bg-[#295F58] hover:bg-[#295F58]/90"
             onClick={onSubmit}
+            disabled={isSubmitting}
           >
-            Update Kontiki
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Updating Kontiki...
+              </>
+            ) : (
+              "Update Kontiki"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

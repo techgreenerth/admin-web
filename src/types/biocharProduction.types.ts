@@ -2,22 +2,38 @@ export type KontikiStatus = "SUBMITTED" | "VERIFIED" | "REJECTED";
 export type ProductionStatus = "SUBMITTED" | "VERIFIED" | "PARTIALLY_VERIFIED" | "REJECTED" | "IN_PROGRESS";
 
 export interface KontikiData {
+  id: string;
+  productionId: string;
   kontikiId: string;
-  kontikiName: string;
+
+  productionStep: number;
+  productionStepName: string;
+
   moisturePercent?: string;
   moisturePhoto?: string;
   startPhoto?: string;
   middlePhoto?: string;
   endPhoto?: string;
   finalPhoto?: string;
+
   aiVolumeEstimate?: string;
   aiConfidenceScore?: string;
   aiModelVersion?: string;
+
   status: KontikiStatus;
-  verifiedAt?: string;
-  verifiedById?: string;
-  verifiedByName?: string;
-  rejectionNote?: string;
+
+  verifiedAt?: string | null;
+  verifiedById?: string | null;
+  rejectionNote?: string | null;
+
+  kontiki?: {
+    id: string;
+    kontikiCode: string;
+    kontikiName: string;
+  };
+
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface BiocharProductionRecord {
@@ -36,7 +52,7 @@ export interface BiocharProductionRecord {
   shiftId: string;
   shiftName: string;
   shiftNumber: number;
-  kontikis: KontikiData[];
+  kontikiRecords: KontikiData[];
   capturedAt: string;
   deviceInfo?: string;
   appVersion?: string;
@@ -44,6 +60,25 @@ export interface BiocharProductionRecord {
   submittedAt: string;
   createdAt?: string;
   updatedAt?: string;
+
+  user?: {
+    userCode: string;
+    firstName: string;
+    lastName: string;
+  };
+
+  site?: {
+    
+    siteCode: string;
+    siteName: string;
+  };
+
+  shift?: {
+    id: string;
+    shiftNumber:string;
+    shiftName: string;
+
+  };
 }
 
 export interface VerifyKontikiPayload {

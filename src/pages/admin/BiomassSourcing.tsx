@@ -73,20 +73,34 @@ export default function BiomassSourcing() {
     { id: "u2", name: "Jane Smith", code: "USER-002" },
   ];
 
+  const normalizeLower = (value: unknown) => {
+    if (typeof value === "string") return value.toLowerCase();
+    if (value == null) return "";
+    return String(value).toLowerCase();
+  };
+
   // Filter records
   const filteredRecords = records.filter((record) => {
+    const q = searchQuery.trim().toLowerCase();
+
     const matchesSearch =
-      record.farmerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.tripNumber.includes(searchQuery) ||
-      record.userName.toLowerCase().includes(searchQuery.toLowerCase());
+      q.length === 0 ||
+      normalizeLower(record.farmerName).includes(q) ||
+      normalizeLower(record.tripNumber).includes(q) ||
+      normalizeLower(record.userName).includes(q);
+
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
-    // Date range filter
+    // Date range filter (treat endDate as inclusive, end-of-day)
     let matchesDateRange = true;
     if (startDate && endDate) {
-      const recordDate = new Date(record.recordDate);
-      matchesDateRange = recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
+      const recordDate = record.recordDate ? new Date(record.recordDate) : null;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      matchesDateRange = !!recordDate && recordDate >= start && recordDate <= end;
     }
 
     return matchesSearch && matchesSite && matchesUser && matchesDateRange;

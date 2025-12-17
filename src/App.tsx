@@ -33,6 +33,7 @@ import { BiomassSourcingProvider } from "./contexts/biomassSourcingContext";
 import { BiocharProductionProvider } from "./contexts/biocharProductionContext";
 import { BiocharActivationProvider } from "./contexts/biocharActivationContext";
 import { BiocharSamplingProvider } from "./contexts/biocharSamplingContext";
+import { BulkDensityProvider } from "./contexts/bulkDensityContext";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
                 <BiocharProductionProvider>
                   <BiocharActivationProvider>
                     <BiocharSamplingProvider>
+                      <BulkDensityProvider>
           <Routes>
             {/* Auth routes - No layout */}
             <Route path="/login" element={<Login />} />
@@ -94,6 +96,7 @@ const App = () => (
               }
             />
           </Routes>
+                      </BulkDensityProvider>
                     </BiocharSamplingProvider>
                   </BiocharActivationProvider>
                 </BiocharProductionProvider>

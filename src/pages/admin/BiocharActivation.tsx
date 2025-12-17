@@ -80,22 +80,35 @@ export default function BiocharActivation() {
     return colors[shiftNumber - 1] || "bg-gray-100 text-gray-800";
   };
 
+  const normalizeLower = (value: unknown) => {
+    if (typeof value === "string") return value.toLowerCase();
+    if (value == null) return "";
+    return String(value).toLowerCase();
+  };
+
   // Filter records
   const filteredRecords = records.filter((record) => {
+    const q = searchQuery.trim().toLowerCase();
+
     const matchesSearch =
-      record.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.mixingAgent.toLowerCase().includes(searchQuery.toLowerCase());
+      q.length === 0 ||
+      normalizeLower(record.userName).includes(q) ||
+      normalizeLower(record.userCode).includes(q) ||
+      normalizeLower(record.siteCode).includes(q) ||
+      normalizeLower(record.mixingAgent).includes(q);
+
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
-    // Date range filter
+    // Date range filter (treat endDate as inclusive, end-of-day)
     let matchesDateRange = true;
     if (startDate && endDate) {
-      const recordDate = new Date(record.recordDate);
-      matchesDateRange =
-        recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
+      const recordDate = record.recordDate ? new Date(record.recordDate) : null;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      matchesDateRange = !!recordDate && recordDate >= start && recordDate <= end;
     }
 
     return matchesSearch && matchesSite && matchesUser && matchesDateRange;

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ interface CreateSiteDialogProps {
   errors: Record<string, string>;
 
   onSubmit: () => void;
+  isSubmitting?: boolean;
 }
 
 export function CreateSiteDialog({
@@ -36,6 +38,7 @@ export function CreateSiteDialog({
   setFormData,
   errors,
   onSubmit,
+  isSubmitting = false,
 }: CreateSiteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -181,14 +184,26 @@ export function CreateSiteDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
           <Button
             className="bg-[#295F58] hover:bg-[#295F58]/90"
             onClick={onSubmit}
+            disabled={isSubmitting}
           >
-            Create Site
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Site...
+              </>
+            ) : (
+              "Create Site"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

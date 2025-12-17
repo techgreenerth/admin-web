@@ -175,12 +175,22 @@ export default function Shifts() {
     return colors[number - 1] || "bg-gray-100 text-gray-800";
   };
 
+  const normalizeLower = (value: unknown) => {
+    if (typeof value === "string") return value.toLowerCase();
+    if (value == null) return "";
+    return String(value).toLowerCase();
+  };
+
   // Filter shifts
   const filteredShifts = shifts.filter((shift) => {
+    const q = searchQuery.trim().toLowerCase();
+
     const matchesSearch =
-      shift.shiftName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      shift.siteName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      shift.shiftNumber.toString().includes(searchQuery);
+      q.length === 0 ||
+      normalizeLower(shift.shiftName).includes(q) ||
+      normalizeLower(shift.siteName).includes(q) ||
+      normalizeLower(shift.shiftNumber).includes(q);
+
     const matchesStatus = statusFilter === "all" || shift.status === statusFilter;
     const matchesSite = siteFilter === "all" || shift.siteId === siteFilter;
     return matchesSearch && matchesStatus && matchesSite;

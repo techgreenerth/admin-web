@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   MoreVertical,
@@ -18,6 +18,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { useBiocharProduction } from "@/contexts/biocharProductionContext";
+import { useSites } from "@/contexts/siteContext";
+import { userService, User as UserType } from "@/lib/api/user.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,8 +71,13 @@ import {
 } from "@/types/biocharProduction.types";
 
 export default function BiocharProduction() {
-  // Use context hook
-  const { records, isLoading, verifyKontiki, rejectKontiki } = useBiocharProduction();
+  // Use context hooks
+  const { records, isLoading, verifyKontiki, rejectKontiki } =
+    useBiocharProduction();
+  const { sites: allSites, fetchSites } = useSites();
+
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [isUsersLoading, setIsUsersLoading] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -87,20 +94,37 @@ export default function BiocharProduction() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<BiocharProductionRecord | null>(null);
-  const [selectedKontiki, setSelectedKontiki] = useState<KontikiData | null>(null);
+  const [selectedRecord, setSelectedRecord] =
+    useState<BiocharProductionRecord | null>(null);
+  const [selectedKontiki, setSelectedKontiki] = useState<KontikiData | null>(
+    null
+  );
   const [rejectionNote, setRejectionNote] = useState("");
 
-  // Mock data for filters
-  const sites = [
-    { id: "1", code: "SITE-001" },
-    { id: "2", code: "SITE-002" },
-  ];
+  // Load dropdown data
+  useEffect(() => {
+    // Sites are provided via SitesProvider.
+    // NOTE: fetchSites isn't memoized in the context, so don't add it as a dependency
+    // or this effect can refire on every provider re-render.
+    fetchSites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const users = [
-    { id: "1", code: "USER-001" },
-    { id: "2", code: "USER-002" },
-  ];
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setIsUsersLoading(true);
+        const resp = await userService.getAll({ page: 1, limit: 200, status: "ACTIVE" });
+        setUsers(resp.data);
+      } catch (error) {
+        console.error("Failed to fetch users for filter dropdown:", error);
+      } finally {
+        setIsUsersLoading(false);
+      }
+    };
+
+    loadUsers();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -121,20 +145,34 @@ export default function BiocharProduction() {
     }
   };
 
-  // Helper function to determine the actual status based on kontikis
+  const normalizeLower = (value: unknown) => {
+    if (typeof value === "string") return value.toLowerCase();
+    if (value == null) return "";
+    return String(value).toLowerCase();
+  };
+
+  const getKontikiRecords = (record: BiocharProductionRecord) =>
+    record.kontikiRecords ?? [];
+
+  const getKontikiName = (kontikiRecord: KontikiData) =>
+    kontikiRecord.kontiki?.kontikiName ?? "—";
+
+  // Helper function to determine the actual status based on kontiki records
   const getActualStatus = (record: BiocharProductionRecord) => {
-    const kontikis = record.kontikis;
-    const verifiedCount = kontikis.filter(k => k.status === "VERIFIED").length;
-    const rejectedCount = kontikis.filter(k => k.status === "REJECTED").length;
-    const submittedCount = kontikis.filter(k => k.status === "SUBMITTED").length;
+    const kontikiRecords = getKontikiRecords(record);
+    if (kontikiRecords.length === 0) return "IN_PROGRESS";
+
+    const verifiedCount = kontikiRecords.filter((k) => k.status === "VERIFIED").length;
+    const rejectedCount = kontikiRecords.filter((k) => k.status === "REJECTED").length;
+    const submittedCount = kontikiRecords.filter((k) => k.status === "SUBMITTED").length;
 
     // All submitted, none reviewed
-    if (submittedCount === kontikis.length) {
+    if (submittedCount === kontikiRecords.length) {
       return "SUBMITTED";
     }
 
     // All reviewed (all verified or all rejected)
-    if (verifiedCount + rejectedCount === kontikis.length) {
+    if (verifiedCount + rejectedCount === kontikiRecords.length) {
       return "VERIFIED";
     }
 
@@ -144,10 +182,10 @@ export default function BiocharProduction() {
 
   // Helper function to get status subtext
   const getStatusSubtext = (record: BiocharProductionRecord) => {
-    const kontikis = record.kontikis;
-    const verifiedCount = kontikis.filter(k => k.status === "VERIFIED").length;
-    const rejectedCount = kontikis.filter(k => k.status === "REJECTED").length;
-    const submittedCount = kontikis.filter(k => k.status === "SUBMITTED").length;
+    const kontikiRecords = getKontikiRecords(record);
+    const verifiedCount = kontikiRecords.filter((k) => k.status === "VERIFIED").length;
+    const rejectedCount = kontikiRecords.filter((k) => k.status === "REJECTED").length;
+    const submittedCount = kontikiRecords.filter((k) => k.status === "SUBMITTED").length;
     const actualStatus = getActualStatus(record);
 
     if (actualStatus === "SUBMITTED") {
@@ -159,6 +197,10 @@ export default function BiocharProduction() {
     }
 
     if (actualStatus === "IN_PROGRESS") {
+      // If some are still submitted, show review progress.
+      if (submittedCount > 0) {
+        return `Reviewed ${verifiedCount + rejectedCount} / ${kontikiRecords.length}`;
+      }
       return "Complete Review";
     }
 
@@ -167,34 +209,63 @@ export default function BiocharProduction() {
 
   const getStepColor = (step: number) => {
     const colors = [
-      "bg-purple-100 text-purple-800",  // Step 1: Moisture
-      "bg-blue-100 text-blue-800",      // Step 2: Start
-      "bg-orange-100 text-orange-800",  // Step 3: Middle
-      "bg-pink-100 text-pink-800",      // Step 4: End
-      "bg-green-100 text-green-800",    // Step 5: Final
+      "bg-purple-100 text-purple-800", // Step 1: Moisture
+      "bg-blue-100 text-blue-800", // Step 2: Start
+      "bg-orange-100 text-orange-800", // Step 3: Middle
+      "bg-pink-100 text-pink-800", // Step 4: End
+      "bg-green-100 text-green-800", // Step 5: Final
     ];
     return colors[step - 1] || "bg-gray-100 text-gray-800";
   };
 
   // Filter records
   const filteredRecords = records.filter((record) => {
+    const q = searchQuery.trim().toLowerCase();
+    const kontikiRecords = getKontikiRecords(record);
+
     const matchesSearch =
-      record.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.kontikis.some(k => k.kontikiName.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = statusFilter === "all" || getActualStatus(record) === statusFilter;
+      q.length === 0 ||
+      // User fields
+      normalizeLower(record.userName).includes(q) ||
+      normalizeLower(record.userCode).includes(q) ||
+      normalizeLower(record.user?.userCode).includes(q) ||
+      normalizeLower(record.user?.firstName).includes(q) ||
+      normalizeLower(record.user?.lastName).includes(q) ||
+      // Site fields
+      normalizeLower(record.siteCode).includes(q) ||
+      normalizeLower(record.siteName).includes(q) ||
+      normalizeLower(record.site?.siteCode).includes(q) ||
+      normalizeLower(record.site?.siteName).includes(q) ||
+      // Kontiki fields
+      kontikiRecords.some((k) =>
+        normalizeLower(k.kontikiId).includes(q) ||
+        normalizeLower(k.kontiki?.kontikiCode).includes(q) ||
+        normalizeLower(k.kontiki?.kontikiName).includes(q)
+      );
+
+    const matchesStatus =
+      statusFilter === "all" || getActualStatus(record) === statusFilter;
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
-    // Date range filter
+    // Date range filter (treat endDate as inclusive, end-of-day)
     let matchesDateRange = true;
     if (startDate && endDate) {
-      const recordDate = new Date(record.recordDate);
-      matchesDateRange = recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
+      const recordDate = record.recordDate ? new Date(record.recordDate) : null;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      matchesDateRange = !!recordDate && recordDate >= start && recordDate <= end;
     }
 
-    return matchesSearch && matchesStatus && matchesSite && matchesUser && matchesDateRange;
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesSite &&
+      matchesUser &&
+      matchesDateRange
+    );
   });
 
   // Pagination
@@ -209,13 +280,19 @@ export default function BiocharProduction() {
     setIsViewDialogOpen(true);
   };
 
-  const handleVerifyKontiki = (record: BiocharProductionRecord, kontiki: KontikiData) => {
+  const handleVerifyKontiki = (
+    record: BiocharProductionRecord,
+    kontiki: KontikiData
+  ) => {
     setSelectedRecord(record);
     setSelectedKontiki(kontiki);
     setIsVerifyDialogOpen(true);
   };
 
-  const handleRejectKontiki = (record: BiocharProductionRecord, kontiki: KontikiData) => {
+  const handleRejectKontiki = (
+    record: BiocharProductionRecord,
+    kontiki: KontikiData
+  ) => {
     setSelectedRecord(record);
     setSelectedKontiki(kontiki);
     setRejectionNote("");
@@ -224,9 +301,11 @@ export default function BiocharProduction() {
 
   const handleConfirmVerify = async () => {
     if (!selectedRecord || !selectedKontiki) return;
-    
+
     try {
-      await verifyKontiki(selectedRecord.id, { kontikiId: selectedKontiki.kontikiId });
+      await verifyKontiki(selectedRecord.id, {
+        kontikiId: selectedKontiki.kontikiId,
+      });
       setIsVerifyDialogOpen(false);
       setSelectedKontiki(null);
       setIsViewDialogOpen(false); // Close the view dialog to refresh
@@ -237,7 +316,7 @@ export default function BiocharProduction() {
 
   const handleConfirmReject = async () => {
     if (!selectedRecord || !selectedKontiki || !rejectionNote.trim()) return;
-    
+
     try {
       await rejectKontiki(selectedRecord.id, {
         kontikiId: selectedKontiki.kontikiId,
@@ -255,13 +334,16 @@ export default function BiocharProduction() {
   // Calculate statistics
   const totalBatches = filteredRecords.length;
   const totalBiocharProduced = filteredRecords.reduce((total, record) => {
-    const recordTotal = record.kontikis.reduce((sum, kontiki) => {
+    const kontikiRecords = getKontikiRecords(record);
+
+    const recordTotal = kontikiRecords.reduce((sum, kontiki) => {
       if (kontiki.aiVolumeEstimate) {
-        const volume = parseFloat(kontiki.aiVolumeEstimate.replace(/[^0-9.]/g, ''));
-        return sum + volume;
+        const volume = parseFloat(kontiki.aiVolumeEstimate.replace(/[^0-9.]/g, ""));
+        return sum + (isNaN(volume) ? 0 : volume);
       }
       return sum;
     }, 0);
+
     return total + recordTotal;
   }, 0);
 
@@ -269,7 +351,9 @@ export default function BiocharProduction() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#295F58]">Biochar Production</h1>
+          <h1 className="text-3xl font-bold text-[#295F58]">
+            Biochar Production
+          </h1>
           <p className="text-muted-foreground mt-1">
             Track and verify biochar production records
           </p>
@@ -282,8 +366,12 @@ export default function BiocharProduction() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Batches</p>
-                <h3 className="text-3xl font-bold text-[#295F58] mt-2">{totalBatches}</h3>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Batches
+                </p>
+                <h3 className="text-3xl font-bold text-[#295F58] mt-2">
+                  {totalBatches}
+                </h3>
               </div>
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
                 <Factory className="h-6 w-6 text-[#295F58]" />
@@ -296,8 +384,12 @@ export default function BiocharProduction() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Biochar Produced</p>
-                <h3 className="text-3xl font-bold text-[#295F58] mt-2">{totalBiocharProduced.toFixed(0)} L</h3>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Biochar Produced
+                </p>
+                <h3 className="text-3xl font-bold text-[#295F58] mt-2">
+                  {totalBiocharProduced.toFixed(0)} L
+                </h3>
               </div>
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
                 <Flame className="h-6 w-6 text-[#295F58]" />
@@ -345,14 +437,18 @@ export default function BiocharProduction() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sites</SelectItem>
-                    {sites.map((site) => (
+                    {allSites.map((site) => (
                       <SelectItem key={site.id} value={site.id}>
-                        {site.code}
+                        {site.siteCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={userFilter} onValueChange={setUserFilter}>
+                <Select
+                  value={userFilter}
+                  onValueChange={setUserFilter}
+                  disabled={isUsersLoading}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="User" />
                   </SelectTrigger>
@@ -360,7 +456,7 @@ export default function BiocharProduction() {
                     <SelectItem value="all">All Users</SelectItem>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
-                        {user.code}
+                        {user.userCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -368,7 +464,12 @@ export default function BiocharProduction() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="startDate" className="text-xs text-muted-foreground mb-1 block">From</Label>
+                  <Label
+                    htmlFor="startDate"
+                    className="text-xs text-muted-foreground mb-1 block"
+                  >
+                    From
+                  </Label>
                   <Input
                     id="startDate"
                     type="date"
@@ -378,7 +479,12 @@ export default function BiocharProduction() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="endDate" className="text-xs text-muted-foreground mb-1 block">To</Label>
+                  <Label
+                    htmlFor="endDate"
+                    className="text-xs text-muted-foreground mb-1 block"
+                  >
+                    To
+                  </Label>
                   <Input
                     id="endDate"
                     type="date"
@@ -414,7 +520,10 @@ export default function BiocharProduction() {
                 </TableRow>
               ) : paginatedRecords.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell
+                    colSpan={5}
+                    className="text-center text-muted-foreground py-8"
+                  >
                     No records found
                   </TableCell>
                 </TableRow>
@@ -428,31 +537,43 @@ export default function BiocharProduction() {
                             <Factory className="h-4 w-4 text-[#295F58]" />
                           </div>
                           <div>
-                            <div className="font-medium">{record.recordDate}</div>
-                            <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                            <div className="font-medium">
+                              {record.recordDate}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {record.recordTime}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="text-sm font-medium">{record.siteCode}</div>
-                        <div className="text-sm text-muted-foreground">{record.userCode}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <Badge className={getStepColor(record.shiftNumber)}>
-                          Shift {record.shiftNumber}
-                        </Badge>
+                        <div className="text-sm font-medium">
+                          {record.site?.siteCode ?? record.siteCode ?? "—"}
+                        </div>
                         <div className="text-sm text-muted-foreground">
-                          {record.kontikis.map(k => k.kontikiName).join(", ")}
+                          {record.user?.userCode ?? record.userCode ?? "—"}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <Badge className={getStatusColor(getActualStatus(record))}>
+                        <Badge className={getStepColor(record.shiftNumber)}>
+                          Shift {record.shift?.shiftNumber ?? record.shiftNumber}
+                        </Badge>
+                        <div className="text-sm text-muted-foreground">
+                          {getKontikiRecords(record)
+                            .map((k) => getKontikiName(k))
+                            .join(", ")}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <Badge
+                          className={getStatusColor(getActualStatus(record))}
+                        >
                           {getActualStatus(record).replace("_", " ")}
                         </Badge>
                         <div className="text-xs text-muted-foreground">
@@ -482,7 +603,8 @@ export default function BiocharProduction() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredRecords.length)} of{" "}
+            Showing {startIndex + 1} to{" "}
+            {Math.min(endIndex, filteredRecords.length)} of{" "}
             {filteredRecords.length} records
           </p>
           <div className="flex items-center gap-2">
@@ -502,9 +624,7 @@ export default function BiocharProduction() {
                 size="sm"
                 onClick={() => setCurrentPage(page)}
                 className={
-                  currentPage === page
-                    ? "bg-[#295F58] hover:bg-[#1e4540]"
-                    : ""
+                  currentPage === page ? "bg-[#295F58] hover:bg-[#1e4540]" : ""
                 }
               >
                 {page}
@@ -550,53 +670,90 @@ export default function BiocharProduction() {
               <div className="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Date</Label>
-                  <div className="text-sm font-medium">{selectedRecord.recordDate}</div>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.recordDate}
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Time</Label>
-                  <div className="text-sm font-medium">{selectedRecord.recordTime}</div>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.recordTime}
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Site</Label>
-                  <div className="text-sm font-medium">{selectedRecord.siteCode} - {selectedRecord.siteName}</div>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.site?.siteCode ?? selectedRecord.siteCode} - {selectedRecord.site?.siteName ?? selectedRecord.siteName}
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">User</Label>
-                  <div className="text-sm font-medium">{selectedRecord.userCode} - {selectedRecord.userName}</div>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.user?.userCode ?? selectedRecord.userCode} - {selectedRecord.userName}
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Location</Label>
-                  <div className="text-sm font-mono">{selectedRecord.latitude}, {selectedRecord.longitude}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    Location
+                  </Label>
+                  <div className="text-sm font-mono">
+                    {selectedRecord.latitude}, {selectedRecord.longitude}
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Shift No.</Label>
-                  <div className="text-sm font-medium">Shift {selectedRecord.shiftNumber}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    Shift No.
+                  </Label>
+                  <div className="text-sm font-medium">
+                    Shift {selectedRecord.shift?.shiftNumber ?? selectedRecord.shiftNumber}
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Ken tiki used</Label>
-                  <div className="text-sm font-medium">{selectedRecord.kontikis.map(k => k.kontikiName).join(", ")}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    Kon-tiki used
+                  </Label>
+                  <div className="text-sm font-medium">
+                    {getKontikiRecords(selectedRecord)
+                      .map((k) => getKontikiName(k))
+                      .join(", ")}
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Device</Label>
-                  <div className="text-sm font-medium">{selectedRecord.deviceInfo || "N/A"}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    Device
+                  </Label>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.deviceInfo || "N/A"}
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">App Version</Label>
-                  <div className="text-sm font-medium">{selectedRecord.appVersion || "N/A"}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    App Version
+                  </Label>
+                  <div className="text-sm font-medium">
+                    {selectedRecord.appVersion || "N/A"}
+                  </div>
                 </div>
               </div>
 
               {/* Kontiki Sections */}
-              {selectedRecord.kontikis.map((kontiki, index) => (
-                <div key={kontiki.kontikiId} className="border border-gray-200 rounded-lg p-6 space-y-6">
+              {getKontikiRecords(selectedRecord).map((kontiki) => (
+                <div
+                  key={kontiki.id ?? kontiki.kontikiId}
+                  className="border border-gray-200 rounded-lg p-6 space-y-6"
+                >
                   {/* Kontiki Header with Accept/Reject Buttons */}
                   <div className="flex items-center justify-between pb-4 border-b">
-                    <h3 className="text-lg font-semibold text-[#295F58]">{kontiki.kontikiName}</h3>
+                    <h3 className="text-lg font-semibold text-[#295F58]">
+                      {getKontikiName(kontiki)}
+                    </h3>
                     {kontiki.status === "SUBMITTED" && (
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          onClick={() => handleVerifyKontiki(selectedRecord, kontiki)}
+                          onClick={() =>
+                            handleVerifyKontiki(selectedRecord, kontiki)
+                          }
                           className="bg-green-600 hover:bg-green-700 text-white"
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
@@ -605,7 +762,9 @@ export default function BiocharProduction() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleRejectKontiki(selectedRecord, kontiki)}
+                          onClick={() =>
+                            handleRejectKontiki(selectedRecord, kontiki)
+                          }
                           className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors"
                         >
                           <XCircle className="h-4 w-4 mr-2" />
@@ -630,8 +789,12 @@ export default function BiocharProduction() {
                   {/* Rejection Note */}
                   {kontiki.status === "REJECTED" && kontiki.rejectionNote && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <Label className="text-xs text-red-800 font-medium">Rejection Note:</Label>
-                      <p className="text-sm text-red-700 mt-1">{kontiki.rejectionNote}</p>
+                      <Label className="text-xs text-red-800 font-medium">
+                        Rejection Note:
+                      </Label>
+                      <p className="text-sm text-red-700 mt-1">
+                        {kontiki.rejectionNote}
+                      </p>
                     </div>
                   )}
 
@@ -641,21 +804,33 @@ export default function BiocharProduction() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">1</span>
-                          <Label className="text-sm font-medium">Moisture Photo</Label>
+                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                            1
+                          </span>
+                          <Label className="text-sm font-medium">
+                            Moisture Photo
+                          </Label>
                         </div>
                         {kontiki.moisturePhoto && (
                           <div className="border rounded-lg overflow-hidden">
-                            <img src={kontiki.moisturePhoto} alt="Moisture meter" className="w-full h-auto" />
+                            <img
+                              src={kontiki.moisturePhoto}
+                              alt="Moisture meter"
+                              className="w-full h-auto"
+                            />
                           </div>
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Moisture Percentage</Label>
+                        <Label className="text-sm font-medium">
+                          Moisture Percentage
+                        </Label>
                         {kontiki.moisturePercent && (
                           <div className="flex items-center gap-2 mt-8">
                             <Droplets className="h-5 w-5 text-blue-600" />
-                            <span className="text-lg font-semibold">{kontiki.moisturePercent}%</span>
+                            <span className="text-lg font-semibold">
+                              {kontiki.moisturePercent}%
+                            </span>
                           </div>
                         )}
                       </div>
@@ -664,12 +839,20 @@ export default function BiocharProduction() {
                     {/* 2. Start (25%) */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">2</span>
-                        <Label className="text-sm font-medium">Start (25% fill)</Label>
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                          2
+                        </span>
+                        <Label className="text-sm font-medium">
+                          Start (25% fill)
+                        </Label>
                       </div>
                       {kontiki.startPhoto && (
                         <div className="border rounded-lg overflow-hidden max-w-md">
-                          <img src={kontiki.startPhoto} alt="Start phase" className="w-full h-auto" />
+                          <img
+                            src={kontiki.startPhoto}
+                            alt="Start phase"
+                            className="w-full h-auto"
+                          />
                         </div>
                       )}
                     </div>
@@ -677,12 +860,20 @@ export default function BiocharProduction() {
                     {/* 3. Middle (50%) */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">3</span>
-                        <Label className="text-sm font-medium">Middle (50% fill)</Label>
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                          3
+                        </span>
+                        <Label className="text-sm font-medium">
+                          Middle (50% fill)
+                        </Label>
                       </div>
                       {kontiki.middlePhoto && (
                         <div className="border rounded-lg overflow-hidden max-w-md">
-                          <img src={kontiki.middlePhoto} alt="Middle phase" className="w-full h-auto" />
+                          <img
+                            src={kontiki.middlePhoto}
+                            alt="Middle phase"
+                            className="w-full h-auto"
+                          />
                         </div>
                       )}
                     </div>
@@ -690,12 +881,20 @@ export default function BiocharProduction() {
                     {/* 4. End (90%) */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">4</span>
-                        <Label className="text-sm font-medium">End (90% fill)</Label>
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                          4
+                        </span>
+                        <Label className="text-sm font-medium">
+                          End (90% fill)
+                        </Label>
                       </div>
                       {kontiki.endPhoto && (
                         <div className="border rounded-lg overflow-hidden max-w-md">
-                          <img src={kontiki.endPhoto} alt="End phase" className="w-full h-auto" />
+                          <img
+                            src={kontiki.endPhoto}
+                            alt="End phase"
+                            className="w-full h-auto"
+                          />
                         </div>
                       )}
                     </div>
@@ -703,27 +902,47 @@ export default function BiocharProduction() {
                     {/* 5. Final Biochar with AI Estimate */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">5</span>
-                        <Label className="text-sm font-medium">Final Biochar</Label>
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                          5
+                        </span>
+                        <Label className="text-sm font-medium">
+                          Final Biochar
+                        </Label>
                       </div>
                       {kontiki.finalPhoto && (
                         <div className="border rounded-lg overflow-hidden max-w-md">
-                          <img src={kontiki.finalPhoto} alt="Final biochar" className="w-full h-auto" />
+                          <img
+                            src={kontiki.finalPhoto}
+                            alt="Final biochar"
+                            className="w-full h-auto"
+                          />
                         </div>
                       )}
                       {kontiki.aiVolumeEstimate && (
                         <div className="grid grid-cols-3 gap-4 bg-purple-50 border border-purple-200 rounded-lg p-3 max-w-2xl">
                           <div className="space-y-1">
-                            <Label className="text-muted-foreground text-xs">AI Volume Estimate</Label>
-                            <div className="font-medium text-sm">{kontiki.aiVolumeEstimate}</div>
+                            <Label className="text-muted-foreground text-xs">
+                              AI Volume Estimate
+                            </Label>
+                            <div className="font-medium text-sm">
+                              {kontiki.aiVolumeEstimate}
+                            </div>
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-muted-foreground text-xs">Confidence</Label>
-                            <div className="font-medium text-sm">{kontiki.aiConfidenceScore}</div>
+                            <Label className="text-muted-foreground text-xs">
+                              Confidence
+                            </Label>
+                            <div className="font-medium text-sm">
+                              {kontiki.aiConfidenceScore}
+                            </div>
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-muted-foreground text-xs">Model Version</Label>
-                            <div className="font-medium text-sm">{kontiki.aiModelVersion}</div>
+                            <Label className="text-muted-foreground text-xs">
+                              Model Version
+                            </Label>
+                            <div className="font-medium text-sm">
+                              {kontiki.aiModelVersion}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -737,13 +956,17 @@ export default function BiocharProduction() {
       </Dialog>
 
       {/* Verify Dialog */}
-      <AlertDialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
+      <AlertDialog
+        open={isVerifyDialogOpen}
+        onOpenChange={setIsVerifyDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Accept Kon-tiki</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to accept {selectedKontiki?.kontikiName}? This action will mark
-              this Kon-tiki as verified.
+              Are you sure you want to accept
+              {selectedKontiki ? ` ${getKontikiName(selectedKontiki)}` : " this Kon-tiki"}?
+              This action will mark this Kon-tiki as verified.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -765,7 +988,8 @@ export default function BiocharProduction() {
           <DialogHeader>
             <DialogTitle>Reject Kon-tiki</DialogTitle>
             <DialogDescription>
-              Provide a reason for rejecting {selectedKontiki?.kontikiName}
+              Provide a reason for rejecting
+              {selectedKontiki ? ` ${getKontikiName(selectedKontiki)}` : " this Kon-tiki"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -781,7 +1005,10 @@ export default function BiocharProduction() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsRejectDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button
@@ -795,7 +1022,6 @@ export default function BiocharProduction() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
