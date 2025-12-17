@@ -1,35 +1,71 @@
 export interface KontikiActivationData {
+  id: string;
+  activationId: string;
   kontikiId: string;
-  kontikiName: string;
+
   tractorPhoto?: string;
   mixingVideo?: string;
+
+  createdAt?: string;
+  updatedAt?: string;
+
+  kontiki?: {
+    id: string;
+    kontikiCode: string;
+    kontikiName: string;
+  };
 }
 
 export interface BiocharActivationRecord {
   id: string;
   userId: string;
-  userName: string;
-  userCode: string;
   siteId: string;
-  siteName: string;
-  siteCode: string;
+
   recordDate: string;
   recordTime: string;
+
   latitude: string;
   longitude: string;
   gpsAccuracy?: string;
+
   mixingAgent: string;
+
   shiftId: string;
-  shiftName: string;
-  shiftNumber: number;
-  kontikis: KontikiActivationData[];
+
   capturedAt: string;
   deviceInfo?: string;
   appVersion?: string;
+
+  status: "SUBMITTED" | "VERIFIED" | "REJECTED" | "IN_PROGRESS";
+
   submittedAt: string;
   createdAt?: string;
   updatedAt?: string;
+
+  user?: {
+    id: string;
+    userCode: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+  };
+
+  site?: {
+    id: string;
+    siteCode: string;
+    siteName: string;
+  };
+
+  shift?: {
+    id: string;
+    shiftName: string;
+    startTime?: string;
+    endTime?: string;
+  };
+
+  kontikiRecords: KontikiActivationData[];
 }
+
 
 export interface PaginationMeta {
   total: number;

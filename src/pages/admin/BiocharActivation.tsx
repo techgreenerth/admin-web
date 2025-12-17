@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Eye,
@@ -12,6 +12,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { useBiocharActivation } from "@/contexts/biocharActivationContext";
+import { useSites } from "@/contexts/siteContext";
+import { userService, User as UserType } from "@/lib/api/user.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,8 +43,12 @@ import { Badge } from "@/components/ui/badge";
 import { BiocharActivationRecord } from "@/types/biocharActivation.types";
 
 export default function BiocharActivation() {
-  // Use context hook
+  // Use context hooks
   const { records, isLoading } = useBiocharActivation();
+  const { sites: allSites, fetchSites } = useSites();
+
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
@@ -58,18 +64,39 @@ export default function BiocharActivation() {
   const [selectedRecord, setSelectedRecord] =
     useState<BiocharActivationRecord | null>(null);
 
-  // Mock data for filters
-  const sites = [
-    { id: "1", code: "SITE-001" },
-    { id: "2", code: "SITE-002" },
-  ];
+  // Load dropdown data
+  useEffect(() => {
+    // NOTE: fetchSites isn't memoized in the context, so don't add it as a dependency
+    // or this effect can refire on every provider re-render.
+    fetchSites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const users = [
-    { id: "1", code: "USER-001" },
-    { id: "2", code: "USER-002" },
-  ];
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setIsUsersLoading(true);
+        const resp = await userService.getAll({ page: 1, limit: 200, status: "ACTIVE" });
+        setUsers(resp.data);
+      } catch (error) {
+        console.error("Failed to fetch users for filter dropdown:", error);
+      } finally {
+        setIsUsersLoading(false);
+      }
+    };
 
-  const getShiftColor = (shiftNumber: number) => {
+    loadUsers();
+  }, []);
+
+  const getShiftNumber = (shiftName?: string) => {
+    if (!shiftName) return 1;
+    const match = shiftName.match(/\d+/);
+    const n = match ? parseInt(match[0], 10) : NaN;
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  };
+
+  const getShiftColor = (shiftName?: string) => {
+    const shiftNumber = getShiftNumber(shiftName);
     const colors = [
       "bg-blue-100 text-blue-800", // Shift 1
       "bg-purple-100 text-purple-800", // Shift 2
@@ -86,16 +113,38 @@ export default function BiocharActivation() {
     return String(value).toLowerCase();
   };
 
+  const getKontikiRecords = (record: BiocharActivationRecord) =>
+    record.kontikiRecords ?? [];
+
+  const hasAnyTractorPhoto = (record: BiocharActivationRecord) =>
+    getKontikiRecords(record).some((k) => !!k.tractorPhoto);
+
+  const hasAnyMixingVideo = (record: BiocharActivationRecord) =>
+    getKontikiRecords(record).some((k) => !!k.mixingVideo);
+
   // Filter records
   const filteredRecords = records.filter((record) => {
     const q = searchQuery.trim().toLowerCase();
+    const kontikiRecords = getKontikiRecords(record);
 
     const matchesSearch =
       q.length === 0 ||
-      normalizeLower(record.userName).includes(q) ||
-      normalizeLower(record.userCode).includes(q) ||
-      normalizeLower(record.siteCode).includes(q) ||
-      normalizeLower(record.mixingAgent).includes(q);
+      // User fields
+      normalizeLower(record.user?.userCode).includes(q) ||
+      normalizeLower(record.user?.firstName).includes(q) ||
+      normalizeLower(record.user?.lastName).includes(q) ||
+      // Site fields
+      normalizeLower(record.site?.siteCode).includes(q) ||
+      normalizeLower(record.site?.siteName).includes(q) ||
+      // Activation fields
+      normalizeLower(record.mixingAgent).includes(q) ||
+      normalizeLower(record.shift?.shiftName).includes(q) ||
+      // Kontiki fields
+      kontikiRecords.some((k) =>
+        normalizeLower(k.kontikiId).includes(q) ||
+        normalizeLower(k.kontiki?.kontikiCode).includes(q) ||
+        normalizeLower(k.kontiki?.kontikiName).includes(q)
+      );
 
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
@@ -166,14 +215,18 @@ export default function BiocharActivation() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sites</SelectItem>
-                    {sites.map((site) => (
+                    {allSites.map((site) => (
                       <SelectItem key={site.id} value={site.id}>
-                        {site.code}
+                        {site.siteCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={userFilter} onValueChange={setUserFilter}>
+                <Select
+                  value={userFilter}
+                  onValueChange={setUserFilter}
+                  disabled={isUsersLoading}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="User" />
                   </SelectTrigger>
@@ -181,7 +234,7 @@ export default function BiocharActivation() {
                     <SelectItem value="all">All Users</SelectItem>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
-                        {user.code}
+                        {user.userCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -275,17 +328,17 @@ export default function BiocharActivation() {
                     <TableCell>
                       <div className="space-y-1">
                         <div className="text-sm font-medium">
-                          {record.siteCode}
+                          {record.site?.siteCode ?? "—"}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {record.userCode}
+                          {record.user?.userCode ?? "—"}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <Badge className={getShiftColor(record.shiftNumber)}>
-                          Shift {record.shiftNumber}
+                        <Badge className={getShiftColor(record.shift?.shiftName)}>
+                          {record.shift?.shiftName ?? "Shift"}
                         </Badge>
                         <div className="text-sm text-muted-foreground">
                           {record.mixingAgent}
@@ -294,8 +347,12 @@ export default function BiocharActivation() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        <Video className="h-4 w-4 text-muted-foreground" />
+                        {hasAnyTractorPhoto(record) && (
+                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        {hasAnyMixingVideo(record) && (
+                          <Video className="h-4 w-4 text-muted-foreground" />
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -393,13 +450,13 @@ export default function BiocharActivation() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Site</Label>
                   <div className="text-sm font-medium">
-                    {selectedRecord.siteCode} - {selectedRecord.siteName}
+                    {selectedRecord.site?.siteCode ?? "—"} - {selectedRecord.site?.siteName ?? "—"}
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">User</Label>
                   <div className="text-sm font-medium">
-                    {selectedRecord.userCode} - {selectedRecord.userName}
+                    {selectedRecord.user?.userCode ?? "—"} - {selectedRecord.user ? `${selectedRecord.user.firstName} ${selectedRecord.user.lastName}` : "—"}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -415,7 +472,7 @@ export default function BiocharActivation() {
                     Shift No.
                   </Label>
                   <div className="text-sm font-medium">
-                    Shift {selectedRecord.shiftNumber}
+                    {selectedRecord.shift?.shiftName ?? "—"}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -428,11 +485,11 @@ export default function BiocharActivation() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    Ken tiki used
+                    Kon-tiki used
                   </Label>
                   <div className="text-sm font-medium">
-                    {selectedRecord.kontikis
-                      .map((k) => k.kontikiName)
+                    {getKontikiRecords(selectedRecord)
+                      .map((k) => k.kontiki?.kontikiName ?? "—")
                       .join(", ")}
                   </div>
                 </div>
@@ -454,16 +511,16 @@ export default function BiocharActivation() {
                 </div>
               </div>
 
-              {/* Kontiki Sections */}
-              {selectedRecord.kontikis.map((kontiki) => (
+              {/* Kon-tiki Sections */}
+              {getKontikiRecords(selectedRecord).map((kontiki) => (
                 <div
-                  key={kontiki.kontikiId}
+                  key={kontiki.id ?? kontiki.kontikiId}
                   className="border border-gray-200 rounded-lg p-6 space-y-6"
                 >
-                  {/* Kontiki Header */}
+                  {/* Kon-tiki Header */}
                   <div className="pb-4 border-b">
                     <h3 className="text-lg font-semibold text-[#295F58]">
-                      {kontiki.kontikiName}
+                      {kontiki.kontiki?.kontikiName ?? "—"}
                     </h3>
                   </div>
 
