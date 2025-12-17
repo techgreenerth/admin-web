@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Eye,
@@ -10,7 +10,11 @@ import {
   Truck,
   Package,
   Download,
+  CheckCircle,
+  XCircle,
+  Loader2,
 } from "lucide-react";
+import { useBiomassSourcing } from "@/contexts/biomassSourcingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,38 +42,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-
-interface BiomassSourcingRecord {
-  id: string;
-  userId: string;
-  userName: string;
-  userCode: string;
-  siteId: string;
-  siteName: string;
-  siteCode: string;
-  recordDate: string;
-  recordTime: string;
-  latitude: string;
-  longitude: string;
-  gpsAccuracy?: string;
-  distanceKm: string;
-  tripNumber: string;
-  farmerName: string;
-  farmerMobile: string;
-  farmAreaAcres: string;
-  tractorPhoto: string;
-  capturedAt: string;
-  deviceInfo?: string;
-  appVersion?: string;
-  status: string;
-  submittedAt: string;
-  verifiedAt?: string;
-  verifiedById?: string;
-  verifiedByName?: string;
-  rejectionNote?: string;
-}
+import { BiomassSourcingRecord } from "@/types/biomassSourcing.types";
 
 export default function BiomassSourcing() {
+  // Use context hook
+  const { records, isLoading, fetchRecords } = useBiomassSourcing();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
@@ -83,87 +61,6 @@ export default function BiomassSourcing() {
   // Dialog states
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BiomassSourcingRecord | null>(null);
-
-  // Mock data - Replace with API call
-  const records: BiomassSourcingRecord[] = [
-    {
-      id: "1",
-      userId: "u1",
-      userName: "John Doe",
-      userCode: "USER-001",
-      siteId: "site1",
-      siteName: "Green Valley Production Site",
-      siteCode: "AP-001",
-      recordDate: "2024-11-20",
-      recordTime: "09:30",
-      latitude: "28.61394",
-      longitude: "77.20902",
-      gpsAccuracy: "5.2",
-      distanceKm: "12.5",
-      tripNumber: "1",
-      farmerName: "Ramesh Kumar",
-      farmerMobile: "+919876543210",
-      farmAreaAcres: "5.5",
-      tractorPhoto: "https://via.placeholder.com/400",
-      capturedAt: "2024-11-20T09:30:00Z",
-      deviceInfo: "Android 12, Samsung Galaxy A52",
-      appVersion: "1.2.3",
-      status: "SUBMITTED",
-      submittedAt: "2024-11-20T09:35:00Z",
-    },
-    {
-      id: "2",
-      userId: "u2",
-      userName: "Jane Smith",
-      userCode: "USER-002",
-      siteId: "site1",
-      siteName: "Green Valley Production Site",
-      siteCode: "AP-001",
-      recordDate: "2024-11-21",
-      recordTime: "14:15",
-      latitude: "28.61500",
-      longitude: "77.21000",
-      gpsAccuracy: "3.8",
-      distanceKm: "8.3",
-      tripNumber: "2",
-      farmerName: "Suresh Patel",
-      farmerMobile: "+919876543211",
-      farmAreaAcres: "8.0",
-      tractorPhoto: "https://via.placeholder.com/400",
-      capturedAt: "2024-11-21T14:15:00Z",
-      deviceInfo: "iOS 16, iPhone 13",
-      appVersion: "1.2.3",
-      status: "VERIFIED",
-      submittedAt: "2024-11-21T14:20:00Z",
-      verifiedAt: "2024-11-21T16:00:00Z",
-      verifiedById: "admin1",
-      verifiedByName: "Admin User",
-    },
-    {
-      id: "3",
-      userId: "u1",
-      userName: "John Doe",
-      userCode: "USER-001",
-      siteId: "site2",
-      siteName: "Eco Farm Biochar Unit",
-      siteCode: "AP-002",
-      recordDate: "2024-11-22",
-      recordTime: "11:00",
-      latitude: "19.07609",
-      longitude: "72.87766",
-      gpsAccuracy: "7.1",
-      distanceKm: "15.7",
-      tripNumber: "3",
-      farmerName: "Vijay Singh",
-      farmerMobile: "+919876543212",
-      farmAreaAcres: "3.2",
-      tractorPhoto: "https://via.placeholder.com/400",
-      capturedAt: "2024-11-22T11:00:00Z",
-      status: "REJECTED",
-      submittedAt: "2024-11-22T11:05:00Z",
-      rejectionNote: "Tractor photo is blurry, please resubmit with clear image",
-    },
-  ];
 
   // Mock sites and users for filters
   const sites = [
@@ -351,7 +248,23 @@ export default function BiomassSourcing() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedRecords.map((record) => (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Loading biomass sourcing records...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : paginatedRecords.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                    No records found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedRecords.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -397,7 +310,8 @@ export default function BiomassSourcing() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

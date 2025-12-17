@@ -29,6 +29,8 @@ import NotFound from "./pages/NotFound";
 import Profile from "./pages/admin/Profile";
 import { SitesProvider } from "./contexts/siteContext";
 import { KontikiProvider } from "./contexts/kontikisContext";
+import { BiomassSourcingProvider } from "./contexts/biomassSourcingContext";
+import { BiocharProductionProvider } from "./contexts/biocharProductionContext";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,8 @@ const App = () => (
         <AuthProvider>
           <SitesProvider>
             <KontikiProvider>
+              <BiomassSourcingProvider>
+                <BiocharProductionProvider>
           <Routes>
             {/* Auth routes - No layout */}
             <Route path="/login" element={<Login />} />
@@ -86,6 +90,8 @@ const App = () => (
               }
             />
           </Routes>
+                </BiocharProductionProvider>
+              </BiomassSourcingProvider>
           </KontikiProvider>
           </SitesProvider>
         </AuthProvider>

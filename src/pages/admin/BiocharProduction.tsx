@@ -15,7 +15,9 @@ import {
   Flame,
   Droplets,
   Download,
+  Loader2,
 } from "lucide-react";
+import { useBiocharProduction } from "@/contexts/biocharProductionContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,51 +63,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
-
-interface KontikiData {
-  kontikiId: string;
-  kontikiName: string;
-  moisturePercent?: string;
-  moisturePhoto?: string;
-  startPhoto?: string;
-  middlePhoto?: string;
-  endPhoto?: string;
-  finalPhoto?: string;
-  aiVolumeEstimate?: string;
-  aiConfidenceScore?: string;
-  aiModelVersion?: string;
-  status: string; // SUBMITTED, VERIFIED, REJECTED
-  verifiedAt?: string;
-  verifiedById?: string;
-  verifiedByName?: string;
-  rejectionNote?: string;
-}
-
-interface BiocharProductionRecord {
-  id: string;
-  userId: string;
-  userName: string;
-  userCode: string;
-  siteId: string;
-  siteName: string;
-  siteCode: string;
-  recordDate: string;
-  recordTime: string;
-  latitude: string;
-  longitude: string;
-  gpsAccuracy?: string;
-  shiftId: string;
-  shiftName: string;
-  shiftNumber: number;
-  kontikis: KontikiData[];
-  capturedAt: string;
-  deviceInfo?: string;
-  appVersion?: string;
-  status: string; // Overall status: SUBMITTED, VERIFIED (all kontikis verified), PARTIALLY_VERIFIED, REJECTED
-  submittedAt: string;
-}
+import {
+  BiocharProductionRecord,
+  KontikiData,
+} from "@/types/biocharProduction.types";
 
 export default function BiocharProduction() {
+  // Use context hook
+  const { records, isLoading, verifyKontiki, rejectKontiki } = useBiocharProduction();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [siteFilter, setSiteFilter] = useState("all");
@@ -134,212 +100,6 @@ export default function BiocharProduction() {
   const users = [
     { id: "1", code: "USER-001" },
     { id: "2", code: "USER-002" },
-  ];
-
-  // Mock data - TODO: Replace with actual API call
-  const records: BiocharProductionRecord[] = [
-    {
-      id: "1",
-      userId: "1",
-      userName: "Rajesh Kumar",
-      userCode: "USER-001",
-      siteId: "1",
-      siteName: "Kothapally Site",
-      siteCode: "SITE-001",
-      recordDate: "2024-01-15",
-      recordTime: "14:30",
-      latitude: "28.61394",
-      longitude: "77.20902",
-      gpsAccuracy: "5m",
-      shiftId: "1",
-      shiftName: "Shift 1",
-      shiftNumber: 1,
-      kontikis: [
-        {
-          kontikiId: "1",
-          kontikiName: "Kon-tiki 1",
-          moisturePercent: "12.5",
-          moisturePhoto: "https://via.placeholder.com/400x300?text=K1+Moisture+Meter",
-          startPhoto: "https://via.placeholder.com/400x300?text=K1+Start+25%25",
-          middlePhoto: "https://via.placeholder.com/400x300?text=K1+Middle+50%25",
-          endPhoto: "https://via.placeholder.com/400x300?text=K1+End+90%25",
-          finalPhoto: "https://via.placeholder.com/400x300?text=K1+Final+Biochar",
-          aiVolumeEstimate: "450 liters",
-          aiConfidenceScore: "0.94",
-          aiModelVersion: "v2.1.0",
-          status: "VERIFIED",
-          verifiedAt: "2024-01-15T16:20:00Z",
-          verifiedById: "admin1",
-          verifiedByName: "Admin User",
-        },
-        {
-          kontikiId: "2",
-          kontikiName: "Kon-tiki 2",
-          moisturePercent: "11.8",
-          moisturePhoto: "https://via.placeholder.com/400x300?text=K2+Moisture+Meter",
-          startPhoto: "https://via.placeholder.com/400x300?text=K2+Start+25%25",
-          middlePhoto: "https://via.placeholder.com/400x300?text=K2+Middle+50%25",
-          endPhoto: "https://via.placeholder.com/400x300?text=K2+End+90%25",
-          finalPhoto: "https://via.placeholder.com/400x300?text=K2+Final+Biochar",
-          aiVolumeEstimate: "420 liters",
-          aiConfidenceScore: "0.91",
-          aiModelVersion: "v2.1.0",
-          status: "VERIFIED",
-          verifiedAt: "2024-01-15T16:22:00Z",
-          verifiedById: "admin1",
-          verifiedByName: "Admin User",
-        },
-      ],
-      capturedAt: "2024-01-15T14:30:00Z",
-      deviceInfo: "Samsung Galaxy A52",
-      appVersion: "1.2.0",
-      status: "VERIFIED",
-      submittedAt: "2024-01-15T14:35:00Z",
-    },
-    {
-      id: "2",
-      userId: "2",
-      userName: "Priya Sharma",
-      userCode: "USER-002",
-      siteId: "2",
-      siteName: "Dharampur Site",
-      siteCode: "SITE-002",
-      recordDate: "2024-01-16",
-      recordTime: "10:15",
-      latitude: "28.62394",
-      longitude: "77.21902",
-      gpsAccuracy: "4m",
-      shiftId: "2",
-      shiftName: "Shift 2",
-      shiftNumber: 2,
-      kontikis: [
-        {
-          kontikiId: "3",
-          kontikiName: "Kon-tiki 3",
-          moisturePercent: "11.8",
-          moisturePhoto: "https://via.placeholder.com/400x300?text=K3+Moisture+Meter",
-          startPhoto: "https://via.placeholder.com/400x300?text=K3+Start+25%25",
-          middlePhoto: "https://via.placeholder.com/400x300?text=K3+Middle+50%25",
-          endPhoto: "https://via.placeholder.com/400x300?text=K3+End+90%25",
-          finalPhoto: "https://via.placeholder.com/400x300?text=K3+Final+Biochar",
-          aiVolumeEstimate: "380 liters",
-          aiConfidenceScore: "0.89",
-          aiModelVersion: "v2.1.0",
-          status: "SUBMITTED",
-        },
-      ],
-      capturedAt: "2024-01-16T10:15:00Z",
-      deviceInfo: "Xiaomi Redmi Note 10",
-      appVersion: "1.2.0",
-      status: "SUBMITTED",
-      submittedAt: "2024-01-16T10:20:00Z",
-    },
-    {
-      id: "3",
-      userId: "1",
-      userName: "Rajesh Kumar",
-      userCode: "USER-001",
-      siteId: "1",
-      siteName: "Kothapally Site",
-      siteCode: "SITE-001",
-      recordDate: "2024-01-14",
-      recordTime: "09:00",
-      latitude: "28.61494",
-      longitude: "77.21002",
-      gpsAccuracy: "6m",
-      shiftId: "1",
-      shiftName: "Shift 1",
-      shiftNumber: 1,
-      kontikis: [
-        {
-          kontikiId: "1",
-          kontikiName: "Kon-tiki 1",
-          moisturePercent: "13.2",
-          moisturePhoto: "https://via.placeholder.com/400x300?text=K1+Moisture+Meter",
-          startPhoto: "https://via.placeholder.com/400x300?text=K1+Start+25%25",
-          middlePhoto: "https://via.placeholder.com/400x300?text=K1+Middle+50%25",
-          endPhoto: "https://via.placeholder.com/400x300?text=K1+End+90%25",
-          finalPhoto: "https://via.placeholder.com/400x300?text=K1+Final+Biochar",
-          status: "REJECTED",
-          rejectionNote: "Moisture reading too high. Please dry the biomass further before production.",
-        },
-      ],
-      capturedAt: "2024-01-14T09:00:00Z",
-      deviceInfo: "Samsung Galaxy A52",
-      appVersion: "1.2.0",
-      status: "REJECTED",
-      submittedAt: "2024-01-14T09:05:00Z",
-    },
-    {
-      id: "4",
-      userId: "2",
-      userName: "Priya Sharma",
-      userCode: "USER-002",
-      siteId: "2",
-      siteName: "Dharampur Site",
-      siteCode: "SITE-002",
-      recordDate: "2024-01-17",
-      recordTime: "15:45",
-      latitude: "28.62494",
-      longitude: "77.22002",
-      gpsAccuracy: "3m",
-      shiftId: "3",
-      shiftName: "Shift 3",
-      shiftNumber: 3,
-      kontikis: [
-        {
-          kontikiId: "4",
-          kontikiName: "Kon-tiki 4",
-          moisturePercent: "12.0",
-          moisturePhoto: "https://via.placeholder.com/400x300?text=K4+Moisture+Meter",
-          startPhoto: "https://via.placeholder.com/400x300?text=K4+Start+25%25",
-          middlePhoto: "https://via.placeholder.com/400x300?text=K4+Middle+50%25",
-          endPhoto: "https://via.placeholder.com/400x300?text=K4+End+90%25",
-          finalPhoto: "https://via.placeholder.com/400x300?text=K4+Final+Biochar",
-          aiVolumeEstimate: "410 liters",
-          aiConfidenceScore: "0.92",
-          aiModelVersion: "v2.1.0",
-          status: "VERIFIED",
-          verifiedAt: "2024-01-17T16:10:00Z",
-          verifiedById: "admin1",
-          verifiedByName: "Admin User",
-        },
-        {
-          kontikiId: "5",
-          kontikiName: "Kon-tiki 5",
-          moisturePercent: "11.5",
-          moisturePhoto: "https://via.placeholder.com/400x300?text=K5+Moisture+Meter",
-          startPhoto: "https://via.placeholder.com/400x300?text=K5+Start+25%25",
-          middlePhoto: "https://via.placeholder.com/400x300?text=K5+Middle+50%25",
-          endPhoto: "https://via.placeholder.com/400x300?text=K5+End+90%25",
-          finalPhoto: "https://via.placeholder.com/400x300?text=K5+Final+Biochar",
-          aiVolumeEstimate: "395 liters",
-          aiConfidenceScore: "0.88",
-          aiModelVersion: "v2.1.0",
-          status: "SUBMITTED",
-        },
-        {
-          kontikiId: "6",
-          kontikiName: "Kon-tiki 6",
-          moisturePercent: "13.5",
-          moisturePhoto: "https://via.placeholder.com/400x300?text=K6+Moisture+Meter",
-          startPhoto: "https://via.placeholder.com/400x300?text=K6+Start+25%25",
-          middlePhoto: "https://via.placeholder.com/400x300?text=K6+Middle+50%25",
-          endPhoto: "https://via.placeholder.com/400x300?text=K6+End+90%25",
-          finalPhoto: "https://via.placeholder.com/400x300?text=K6+Final+Biochar",
-          aiVolumeEstimate: "370 liters",
-          aiConfidenceScore: "0.85",
-          aiModelVersion: "v2.1.0",
-          status: "REJECTED",
-          rejectionNote: "Moisture content too high, needs re-drying.",
-        },
-      ],
-      capturedAt: "2024-01-17T15:45:00Z",
-      deviceInfo: "Xiaomi Redmi Note 10",
-      appVersion: "1.2.0",
-      status: "IN_PROGRESS",
-      submittedAt: "2024-01-17T15:50:00Z",
-    },
   ];
 
   const getStatusColor = (status: string) => {
@@ -462,18 +222,34 @@ export default function BiocharProduction() {
     setIsRejectDialogOpen(true);
   };
 
-  const handleConfirmVerify = () => {
-    // TODO: Add API call to verify kontiki
-    console.log("Verifying kontiki:", selectedKontiki?.kontikiName, "in record:", selectedRecord?.id);
-    setIsVerifyDialogOpen(false);
-    setSelectedKontiki(null);
+  const handleConfirmVerify = async () => {
+    if (!selectedRecord || !selectedKontiki) return;
+    
+    try {
+      await verifyKontiki(selectedRecord.id, { kontikiId: selectedKontiki.kontikiId });
+      setIsVerifyDialogOpen(false);
+      setSelectedKontiki(null);
+      setIsViewDialogOpen(false); // Close the view dialog to refresh
+    } catch (error) {
+      console.error("Error verifying kontiki:", error);
+    }
   };
 
-  const handleConfirmReject = () => {
-    // TODO: Add API call to reject kontiki
-    console.log("Rejecting kontiki:", selectedKontiki?.kontikiName, "in record:", selectedRecord?.id, "Note:", rejectionNote);
-    setIsRejectDialogOpen(false);
-    setSelectedKontiki(null);
+  const handleConfirmReject = async () => {
+    if (!selectedRecord || !selectedKontiki || !rejectionNote.trim()) return;
+    
+    try {
+      await rejectKontiki(selectedRecord.id, {
+        kontikiId: selectedKontiki.kontikiId,
+        rejectionNote,
+      });
+      setIsRejectDialogOpen(false);
+      setSelectedKontiki(null);
+      setRejectionNote("");
+      setIsViewDialogOpen(false); // Close the view dialog to refresh
+    } catch (error) {
+      console.error("Error rejecting kontiki:", error);
+    }
   };
 
   // Calculate statistics
@@ -627,7 +403,16 @@ export default function BiocharProduction() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedRecords.length === 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Loading biochar production records...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : paginatedRecords.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No records found
