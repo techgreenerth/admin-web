@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Eye,
@@ -8,6 +8,7 @@ import {
   CheckCircle,
   Image as ImageIcon,
   Download,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,37 +36,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-
-interface KontikiSamplingData {
-  kontikiId: string;
-  kontikiName: string;
-  samplePhoto: string;
-}
-
-interface BiocharSamplingRecord {
-  id: string;
-  userId: string;
-  userName: string;
-  userCode: string;
-  siteId: string;
-  siteName: string;
-  siteCode: string;
-  recordDate: string;
-  recordTime: string;
-  latitude: string;
-  longitude: string;
-  gpsAccuracy?: string;
-  shiftId: string;
-  shiftName: string;
-  shiftNumber: number;
-  kontikis: KontikiSamplingData[];
-  capturedAt: string;
-  deviceInfo?: string;
-  appVersion?: string;
-  submittedAt: string;
-}
+import { useBiocharSampling } from "@/contexts/biocharSamplingContext";
+import { BiocharSamplingRecord as BiocharSamplingRecordType } from "@/types/biocharSampling.types";
 
 export default function BiocharSampling() {
+  const { records, meta, isLoading, fetchRecords } = useBiocharSampling();
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
@@ -78,111 +53,32 @@ export default function BiocharSampling() {
 
   // Dialog states
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<BiocharSamplingRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<BiocharSamplingRecordType | null>(null);
 
-  // Mock data for filters
-  const sites = [
-    { id: "1", code: "SITE-001" },
-    { id: "2", code: "SITE-002" },
-  ];
+  // Fetch records when filters change
+  useEffect(() => {
+    const params: any = {
+      page: currentPage,
+      limit: itemsPerPage,
+    };
 
-  const users = [
-    { id: "1", code: "USER-001" },
-    { id: "2", code: "USER-002" },
-  ];
+    if (searchQuery) params.search = searchQuery;
+    if (siteFilter !== "all") params.siteId = siteFilter;
+    if (userFilter !== "all") params.userId = userFilter;
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
 
-  // Mock data - TODO: Replace with actual API call
-  const records: BiocharSamplingRecord[] = [
-    {
-      id: "1",
-      userId: "1",
-      userName: "Rajesh Kumar",
-      userCode: "USER-001",
-      siteId: "1",
-      siteName: "Kothapally Site",
-      siteCode: "SITE-001",
-      recordDate: "2024-01-15",
-      recordTime: "17:30",
-      latitude: "28.61394",
-      longitude: "77.20902",
-      gpsAccuracy: "5m",
-      shiftId: "1",
-      shiftName: "Shift 1",
-      shiftNumber: 1,
-      kontikis: [
-        {
-          kontikiId: "1",
-          kontikiName: "Kon-tiki 1",
-          samplePhoto: "https://via.placeholder.com/400x300?text=K1+Sample",
-        },
-        {
-          kontikiId: "2",
-          kontikiName: "Kon-tiki 2",
-          samplePhoto: "https://via.placeholder.com/400x300?text=K2+Sample",
-        },
-      ],
-      capturedAt: "2024-01-15T17:30:00Z",
-      deviceInfo: "Samsung Galaxy A52",
-      appVersion: "1.2.0",
-      submittedAt: "2024-01-15T17:35:00Z",
-    },
-    {
-      id: "2",
-      userId: "2",
-      userName: "Priya Sharma",
-      userCode: "USER-002",
-      siteId: "2",
-      siteName: "Dharampur Site",
-      siteCode: "SITE-002",
-      recordDate: "2024-01-16",
-      recordTime: "12:15",
-      latitude: "28.62394",
-      longitude: "77.21902",
-      gpsAccuracy: "4m",
-      shiftId: "2",
-      shiftName: "Shift 2",
-      shiftNumber: 2,
-      kontikis: [
-        {
-          kontikiId: "3",
-          kontikiName: "Kon-tiki 3",
-          samplePhoto: "https://via.placeholder.com/400x300?text=K3+Sample",
-        },
-      ],
-      capturedAt: "2024-01-16T12:15:00Z",
-      deviceInfo: "Xiaomi Redmi Note 10",
-      appVersion: "1.2.0",
-      submittedAt: "2024-01-16T12:20:00Z",
-    },
-    {
-      id: "3",
-      userId: "1",
-      userName: "Rajesh Kumar",
-      userCode: "USER-001",
-      siteId: "1",
-      siteName: "Kothapally Site",
-      siteCode: "SITE-001",
-      recordDate: "2024-01-14",
-      recordTime: "15:00",
-      latitude: "28.61494",
-      longitude: "77.21002",
-      gpsAccuracy: "6m",
-      shiftId: "1",
-      shiftName: "Shift 1",
-      shiftNumber: 1,
-      kontikis: [
-        {
-          kontikiId: "1",
-          kontikiName: "Kon-tiki 1",
-          samplePhoto: "https://via.placeholder.com/400x300?text=K1+Sample",
-        },
-      ],
-      capturedAt: "2024-01-14T15:00:00Z",
-      deviceInfo: "Samsung Galaxy A52",
-      appVersion: "1.2.0",
-      submittedAt: "2024-01-14T15:05:00Z",
-    },
-  ];
+    fetchRecords(params);
+  }, [currentPage, searchQuery, siteFilter, userFilter, startDate, endDate]);
+
+  // Extract unique sites and users from records for filters
+  const sites = Array.from(
+    new Map(records.map(r => [r.siteId, { id: r.siteId, code: r.siteCode }])).values()
+  );
+
+  const users = Array.from(
+    new Map(records.map(r => [r.userId, { id: r.userId, code: r.userCode }])).values()
+  );
 
   const getShiftColor = (shiftNumber: number) => {
     const colors = [
@@ -195,34 +91,14 @@ export default function BiocharSampling() {
     return colors[shiftNumber - 1] || "bg-gray-100 text-gray-800";
   };
 
-  // Filter records
-  const filteredRecords = records.filter((record) => {
-    const matchesSearch =
-      record.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.kontikis.some(k => k.kontikiName.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
-    const matchesUser = userFilter === "all" || record.userId === userFilter;
-
-    // Date range filter
-    let matchesDateRange = true;
-    if (startDate && endDate) {
-      const recordDate = new Date(record.recordDate);
-      matchesDateRange = recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
-    }
-
-    return matchesSearch && matchesSite && matchesUser && matchesDateRange;
-  });
-
-  // Pagination
-  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
+  // Pagination from meta
+  const totalPages = meta?.totalPages || 1;
+  const totalRecords = meta?.total || 0;
+  const startIndex = ((meta?.page || 1) - 1) * (meta?.limit || itemsPerPage);
+  const endIndex = Math.min(startIndex + (meta?.limit || itemsPerPage), totalRecords);
 
   // Handlers
-  const handleViewRecord = (record: BiocharSamplingRecord) => {
+  const handleViewRecord = (record: BiocharSamplingRecordType) => {
     setSelectedRecord(record);
     setIsViewDialogOpen(true);
   };
@@ -323,14 +199,23 @@ export default function BiocharSampling() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedRecords.length === 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Loading records...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : records.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No records found
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedRecords.map((record) => (
+                records.map((record) => (
                   <TableRow key={record.id}>
                     <TableCell>
                       <div className="space-y-1">
@@ -391,8 +276,8 @@ export default function BiocharSampling() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredRecords.length)} of{" "}
-            {filteredRecords.length} records
+            Showing {startIndex + 1} to {endIndex} of{" "}
+            {totalRecords} records
           </p>
           <div className="flex items-center gap-2">
             <Button

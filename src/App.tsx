@@ -32,6 +32,7 @@ import { KontikiProvider } from "./contexts/kontikisContext";
 import { BiomassSourcingProvider } from "./contexts/biomassSourcingContext";
 import { BiocharProductionProvider } from "./contexts/biocharProductionContext";
 import { BiocharActivationProvider } from "./contexts/biocharActivationContext";
+import { BiocharSamplingProvider } from "./contexts/biocharSamplingContext";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
               <BiomassSourcingProvider>
                 <BiocharProductionProvider>
                   <BiocharActivationProvider>
+                    <BiocharSamplingProvider>
           <Routes>
             {/* Auth routes - No layout */}
             <Route path="/login" element={<Login />} />
@@ -92,6 +94,7 @@ const App = () => (
               }
             />
           </Routes>
+                    </BiocharSamplingProvider>
                   </BiocharActivationProvider>
                 </BiocharProductionProvider>
               </BiomassSourcingProvider>
