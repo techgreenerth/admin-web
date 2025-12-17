@@ -1,36 +1,52 @@
 export type BiomassSourcingStatus = "SUBMITTED" | "VERIFIED" | "REJECTED";
 
+export interface SourcingUser {
+  id: string;
+  userCode: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface SourcingSite {
+  id: string;
+  siteCode: string;
+  siteName: string;
+}
+
 export interface BiomassSourcingRecord {
   id: string;
+
   userId: string;
-  userName: string;
-  userCode: string;
   siteId: string;
-  siteName: string;
-  siteCode: string;
+
   recordDate: string;
   recordTime: string;
+
   latitude: string;
   longitude: string;
   gpsAccuracy?: string;
-  distanceKm: string;
+
   tripNumber: string;
   farmerName: string;
   farmerMobile: string;
   farmAreaAcres: string;
+
   tractorPhoto: string;
+
   capturedAt: string;
   deviceInfo?: string;
   appVersion?: string;
+
   status: BiomassSourcingStatus;
+
   submittedAt: string;
-  verifiedAt?: string;
-  verifiedById?: string;
-  verifiedByName?: string;
-  rejectionNote?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+
+  user: SourcingUser;
+  site: SourcingSite;
 }
+
 
 export interface PaginationMeta {
   total: number;
