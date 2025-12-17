@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -46,6 +47,7 @@ interface EditSiteDialogProps {
 
   onCancel: () => void;
   onSubmit: () => void;
+  isSubmitting?: boolean;
 }
 
 export function EditSiteDialog({
@@ -56,6 +58,7 @@ export function EditSiteDialog({
   errors,
   onCancel,
   onSubmit,
+  isSubmitting = false,
 }: EditSiteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -193,14 +196,26 @@ export function EditSiteDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
           <Button
             className="bg-[#295F58] hover:bg-[#295F58]/90"
             onClick={onSubmit}
+            disabled={isSubmitting}
           >
-            Update Site
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Updating Site...
+              </>
+            ) : (
+              "Update Site"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -29,6 +29,11 @@ import NotFound from "./pages/NotFound";
 import Profile from "./pages/admin/Profile";
 import { SitesProvider } from "./contexts/siteContext";
 import { KontikiProvider } from "./contexts/kontikisContext";
+import { BiomassSourcingProvider } from "./contexts/biomassSourcingContext";
+import { BiocharProductionProvider } from "./contexts/biocharProductionContext";
+import { BiocharActivationProvider } from "./contexts/biocharActivationContext";
+import { BiocharSamplingProvider } from "./contexts/biocharSamplingContext";
+import { BulkDensityProvider } from "./contexts/bulkDensityContext";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +46,11 @@ const App = () => (
         <AuthProvider>
           <SitesProvider>
             <KontikiProvider>
+              <BiomassSourcingProvider>
+                <BiocharProductionProvider>
+                  <BiocharActivationProvider>
+                    <BiocharSamplingProvider>
+                      <BulkDensityProvider>
           <Routes>
             {/* Auth routes - No layout */}
             <Route path="/login" element={<Login />} />
@@ -86,6 +96,11 @@ const App = () => (
               }
             />
           </Routes>
+                      </BulkDensityProvider>
+                    </BiocharSamplingProvider>
+                  </BiocharActivationProvider>
+                </BiocharProductionProvider>
+              </BiomassSourcingProvider>
           </KontikiProvider>
           </SitesProvider>
         </AuthProvider>

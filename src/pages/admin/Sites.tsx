@@ -89,6 +89,7 @@ export default function Sites() {
   const [errors, setErrors] = useState<any>({});
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
   const [selectedUserId, setSelectedUserId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
 
@@ -100,7 +101,13 @@ export default function Sites() {
     assignUserToSite,
     revokeUserFromSite,
     updateSite,
+    fetchSites,
   } = useSites();
+
+  // Refresh data when navigating to this page
+  useEffect(() => {
+    fetchSites();
+  }, []);
 
   // Fetch Users in Drop Down for Assigning
   const fetchUsersForAssignment = async () => {
@@ -196,14 +203,23 @@ export default function Sites() {
     }
   };
 
+  const normalizeLower = (value: unknown) => {
+    if (typeof value === "string") return value.toLowerCase();
+    if (value == null) return "";
+    return String(value).toLowerCase();
+  };
+
   // Filter sites
   const filteredSites = sites.filter((site) => {
+    const q = searchQuery.trim().toLowerCase();
+
     const matchesSearch =
-      site.siteName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      site.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      site.address.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || site.status === statusFilter;
+      q.length === 0 ||
+      normalizeLower(site.siteName).includes(q) ||
+      normalizeLower(site.siteCode).includes(q) ||
+      normalizeLower(site.address).includes(q);
+
+    const matchesStatus = statusFilter === "all" || site.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -261,6 +277,7 @@ export default function Sites() {
 
   const handleSubmitEdit = async () => {
     if (!validateForm()) return;
+    setIsSubmitting(true);
     try {
       await updateSite(selectedSite.id, {
         siteName: formData.siteName,
@@ -279,8 +296,11 @@ export default function Sites() {
 
       setIsEditDialogOpen(false);
       setSelectedSite(null);
+      // Page will auto-refresh via context
     } catch (error: any) {
       console.error(error.response?.data?.message || "Failed to update site");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -303,12 +323,16 @@ export default function Sites() {
 
   const handleSubmitCreate = async () => {
     if (!validateForm()) return;
+    setIsSubmitting(true);
     try {
       await createSite(formData);
       setIsCreateDialogOpen(false);
       setErrors({});
+      // Page will auto-refresh via context
     } catch (error) {
       console.error("Failed to create site", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -591,6 +615,7 @@ export default function Sites() {
         setFormData={setFormData}
         errors={errors}
         onSubmit={handleSubmitCreate}
+        isSubmitting={isSubmitting}
       />
 
       {/* Edit Site Dialog  */}
@@ -602,6 +627,7 @@ export default function Sites() {
         errors={errors}
         onCancel={() => setIsEditDialogOpen(false)}
         onSubmit={handleSubmitEdit}
+        isSubmitting={isSubmitting}
       />
 
       {/* View Site Details Dialog */}

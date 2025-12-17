@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -71,13 +71,20 @@ export default function Kontikis() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedKontiki, setSelectedKontiki] = useState<Kontiki | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { kontikis, createKontiki, updateKontiki, deleteKontiki, isLoading } =
+  const { kontikis, createKontiki, updateKontiki, deleteKontiki, isLoading, fetchKontikis } =
     useKontikis();
 
 
-  const { sites, isLoading: isSitesLoading } = useSites();
+  const { sites, isLoading: isSitesLoading, fetchSites } = useSites();
   const [errors, setErrors] = useState<any>({});
+
+  // Refresh data when navigating to this page
+  useEffect(() => {
+    fetchKontikis();
+    fetchSites();
+  }, []);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -124,14 +131,23 @@ export default function Kontikis() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const normalizeLower = (value: unknown) => {
+    if (typeof value === "string") return value.toLowerCase();
+    if (value == null) return "";
+    return String(value).toLowerCase();
+  };
+
   // Filter kontikis
   const filteredKontikis = kontikis.filter((kontiki) => {
+    const q = searchQuery.trim().toLowerCase();
+
     const matchesSearch =
-      kontiki.kontikiName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      kontiki.kontikiCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      kontiki.site.siteName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || kontiki.status === statusFilter;
+      q.length === 0 ||
+      normalizeLower(kontiki.kontikiName).includes(q) ||
+      normalizeLower(kontiki.kontikiCode).includes(q) ||
+      normalizeLower(kontiki.site?.siteName).includes(q);
+
+    const matchesStatus = statusFilter === "all" || kontiki.status === statusFilter;
     const matchesSite = siteFilter === "all" || kontiki.siteId === siteFilter;
     return matchesSearch && matchesStatus && matchesSite;
   });
@@ -182,6 +198,7 @@ export default function Kontikis() {
 
   const handleSubmitCreate = async () => {
     if (!validateForm()) return;
+    setIsSubmitting(true);
     try {
       await createKontiki({
         siteId: formData.siteId,
@@ -192,14 +209,17 @@ export default function Kontikis() {
       });
 
       setIsCreateDialogOpen(false);
+      // Page will auto-refresh via context
     } catch (error) {
       console.error("Failed to create kontiki", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleSubmitEdit = async () => {
     if (!validateForm()) return;
-
+    setIsSubmitting(true);
     try {
       await updateKontiki(selectedKontiki.id, {
         kontikiName: formData.kontikiName,
@@ -210,8 +230,11 @@ export default function Kontikis() {
 
       setIsEditDialogOpen(false);
       setSelectedKontiki(null);
+      // Page will auto-refresh via context
     } catch (error) {
       console.error("Failed to update kontiki", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -460,6 +483,7 @@ export default function Kontikis() {
         sites={sites}
         isSitesLoading={isSitesLoading}
         onSubmit={handleSubmitCreate}
+        isSubmitting={isSubmitting}
       />
       {/* Edit Kontiki Dialog */}
       <EditKontikiDialog
@@ -470,6 +494,7 @@ export default function Kontikis() {
         errors={errors}
         sites={sites}
         onSubmit={handleSubmitEdit}
+        isSubmitting={isSubmitting}
         />
 
       {/* View Kontiki Details Dialog */}

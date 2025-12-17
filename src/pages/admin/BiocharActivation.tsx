@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Eye,
@@ -9,7 +9,11 @@ import {
   CheckCircle,
   ImageIcon,
   Download,
+  Loader2,
 } from "lucide-react";
+import { useBiocharActivation } from "@/contexts/biocharActivationContext";
+import { useSites } from "@/contexts/siteContext";
+import { userService, User as UserType } from "@/lib/api/user.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,38 +40,15 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-
-interface KontikiActivationData {
-  kontikiId: string;
-  kontikiName: string;
-  mixingVideo: string;
-}
-
-interface BiocharActivationRecord {
-  id: string;
-  userId: string;
-  userName: string;
-  userCode: string;
-  siteId: string;
-  siteName: string;
-  siteCode: string;
-  recordDate: string;
-  recordTime: string;
-  latitude: string;
-  longitude: string;
-  gpsAccuracy?: string;
-  mixingAgent: string;
-  shiftId: string;
-  shiftName: string;
-  shiftNumber: number;
-  kontikis: KontikiActivationData[];
-  capturedAt: string;
-  deviceInfo?: string;
-  appVersion?: string;
-  submittedAt: string;
-}
+import { BiocharActivationRecord } from "@/types/biocharActivation.types";
 
 export default function BiocharActivation() {
+  // Use context hooks
+  const { records, isLoading } = useBiocharActivation();
+  const { sites: allSites, fetchSites } = useSites();
+
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
@@ -83,114 +64,39 @@ export default function BiocharActivation() {
   const [selectedRecord, setSelectedRecord] =
     useState<BiocharActivationRecord | null>(null);
 
-  // Mock data for filters
-  const sites = [
-    { id: "1", code: "SITE-001" },
-    { id: "2", code: "SITE-002" },
-  ];
+  // Load dropdown data
+  useEffect(() => {
+    // NOTE: fetchSites isn't memoized in the context, so don't add it as a dependency
+    // or this effect can refire on every provider re-render.
+    fetchSites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const users = [
-    { id: "1", code: "USER-001" },
-    { id: "2", code: "USER-002" },
-  ];
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setIsUsersLoading(true);
+        const resp = await userService.getAll({ page: 1, limit: 200, status: "ACTIVE" });
+        setUsers(resp.data);
+      } catch (error) {
+        console.error("Failed to fetch users for filter dropdown:", error);
+      } finally {
+        setIsUsersLoading(false);
+      }
+    };
 
-  // Mock data - TODO: Replace with actual API call
-  const records: BiocharActivationRecord[] = [
-    {
-      id: "1",
-      userId: "1",
-      userName: "Rajesh Kumar",
-      userCode: "USER-001",
-      siteId: "1",
-      siteName: "Kothapally Site",
-      siteCode: "SITE-001",
-      recordDate: "2024-01-15",
-      recordTime: "16:30",
-      latitude: "28.61394",
-      longitude: "77.20902",
-      gpsAccuracy: "5m",
-      mixingAgent: "Potassium Hydroxide (KOH)",
-      shiftId: "1",
-      shiftName: "Shift 1",
-      shiftNumber: 1,
-      kontikis: [
-        {
-          kontikiId: "1",
-          kontikiName: "Kon-tiki 1",
-          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-        },
-        {
-          kontikiId: "2",
-          kontikiName: "Kon-tiki 2",
-          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-        },
-      ],
-      capturedAt: "2024-01-15T16:30:00Z",
-      deviceInfo: "Samsung Galaxy A52",
-      appVersion: "1.2.0",
-      submittedAt: "2024-01-15T16:35:00Z",
-    },
-    {
-      id: "2",
-      userId: "2",
-      userName: "Priya Sharma",
-      userCode: "USER-002",
-      siteId: "2",
-      siteName: "Dharampur Site",
-      siteCode: "SITE-002",
-      recordDate: "2024-01-16",
-      recordTime: "11:15",
-      latitude: "28.62394",
-      longitude: "77.21902",
-      gpsAccuracy: "4m",
-      mixingAgent: "Sodium Hydroxide (NaOH)",
-      shiftId: "2",
-      shiftName: "Shift 2",
-      shiftNumber: 2,
-      kontikis: [
-        {
-          kontikiId: "3",
-          kontikiName: "Kon-tiki 3",
-          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-        },
-      ],
-      capturedAt: "2024-01-16T11:15:00Z",
-      deviceInfo: "Xiaomi Redmi Note 10",
-      appVersion: "1.2.0",
-      submittedAt: "2024-01-16T11:20:00Z",
-    },
-    {
-      id: "3",
-      userId: "1",
-      userName: "Rajesh Kumar",
-      userCode: "USER-001",
-      siteId: "1",
-      siteName: "Kothapally Site",
-      siteCode: "SITE-001",
-      recordDate: "2024-01-14",
-      recordTime: "14:00",
-      latitude: "28.61494",
-      longitude: "77.21002",
-      gpsAccuracy: "6m",
-      mixingAgent: "Potassium Hydroxide (KOH)",
-      shiftId: "1",
-      shiftName: "Shift 1",
-      shiftNumber: 1,
-      kontikis: [
-        {
-          kontikiId: "1",
-          kontikiName: "Kon-tiki 1",
-          mixingVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-        },
-      ],
-      capturedAt: "2024-01-14T14:00:00Z",
-      deviceInfo: "Samsung Galaxy A52",
-      appVersion: "1.2.0",
-      submittedAt: "2024-01-14T14:05:00Z",
-    },
-  ];
+    loadUsers();
+  }, []);
 
-  const getShiftColor = (shiftNumber: number) => {
+  const getShiftNumber = (shiftName?: string) => {
+    if (!shiftName) return 1;
+    const match = shiftName.match(/\d+/);
+    const n = match ? parseInt(match[0], 10) : NaN;
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  };
+
+  const getShiftColor = (shiftName?: string) => {
+    const shiftNumber = getShiftNumber(shiftName);
     const colors = [
       "bg-blue-100 text-blue-800", // Shift 1
       "bg-purple-100 text-purple-800", // Shift 2
@@ -201,22 +107,57 @@ export default function BiocharActivation() {
     return colors[shiftNumber - 1] || "bg-gray-100 text-gray-800";
   };
 
+  const normalizeLower = (value: unknown) => {
+    if (typeof value === "string") return value.toLowerCase();
+    if (value == null) return "";
+    return String(value).toLowerCase();
+  };
+
+  const getKontikiRecords = (record: BiocharActivationRecord) =>
+    record.kontikiRecords ?? [];
+
+  const hasAnyTractorPhoto = (record: BiocharActivationRecord) =>
+    getKontikiRecords(record).some((k) => !!k.tractorPhoto);
+
+  const hasAnyMixingVideo = (record: BiocharActivationRecord) =>
+    getKontikiRecords(record).some((k) => !!k.mixingVideo);
+
   // Filter records
   const filteredRecords = records.filter((record) => {
+    const q = searchQuery.trim().toLowerCase();
+    const kontikiRecords = getKontikiRecords(record);
+
     const matchesSearch =
-      record.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.mixingAgent.toLowerCase().includes(searchQuery.toLowerCase());
+      q.length === 0 ||
+      // User fields
+      normalizeLower(record.user?.userCode).includes(q) ||
+      normalizeLower(record.user?.firstName).includes(q) ||
+      normalizeLower(record.user?.lastName).includes(q) ||
+      // Site fields
+      normalizeLower(record.site?.siteCode).includes(q) ||
+      normalizeLower(record.site?.siteName).includes(q) ||
+      // Activation fields
+      normalizeLower(record.mixingAgent).includes(q) ||
+      normalizeLower(record.shift?.shiftName).includes(q) ||
+      // Kontiki fields
+      kontikiRecords.some((k) =>
+        normalizeLower(k.kontikiId).includes(q) ||
+        normalizeLower(k.kontiki?.kontikiCode).includes(q) ||
+        normalizeLower(k.kontiki?.kontikiName).includes(q)
+      );
+
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
-    // Date range filter
+    // Date range filter (treat endDate as inclusive, end-of-day)
     let matchesDateRange = true;
     if (startDate && endDate) {
-      const recordDate = new Date(record.recordDate);
-      matchesDateRange =
-        recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
+      const recordDate = record.recordDate ? new Date(record.recordDate) : null;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      matchesDateRange = !!recordDate && recordDate >= start && recordDate <= end;
     }
 
     return matchesSearch && matchesSite && matchesUser && matchesDateRange;
@@ -274,14 +215,18 @@ export default function BiocharActivation() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sites</SelectItem>
-                    {sites.map((site) => (
+                    {allSites.map((site) => (
                       <SelectItem key={site.id} value={site.id}>
-                        {site.code}
+                        {site.siteCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={userFilter} onValueChange={setUserFilter}>
+                <Select
+                  value={userFilter}
+                  onValueChange={setUserFilter}
+                  disabled={isUsersLoading}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="User" />
                   </SelectTrigger>
@@ -289,7 +234,7 @@ export default function BiocharActivation() {
                     <SelectItem value="all">All Users</SelectItem>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
-                        {user.code}
+                        {user.userCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -342,7 +287,16 @@ export default function BiocharActivation() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedRecords.length === 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Loading biochar activation records...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : paginatedRecords.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={5}
@@ -374,17 +328,17 @@ export default function BiocharActivation() {
                     <TableCell>
                       <div className="space-y-1">
                         <div className="text-sm font-medium">
-                          {record.siteCode}
+                          {record.site?.siteCode ?? "—"}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {record.userCode}
+                          {record.user?.userCode ?? "—"}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <Badge className={getShiftColor(record.shiftNumber)}>
-                          Shift {record.shiftNumber}
+                        <Badge className={getShiftColor(record.shift?.shiftName)}>
+                          {record.shift?.shiftName ?? "Shift"}
                         </Badge>
                         <div className="text-sm text-muted-foreground">
                           {record.mixingAgent}
@@ -393,8 +347,12 @@ export default function BiocharActivation() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        <Video className="h-4 w-4 text-muted-foreground" />
+                        {hasAnyTractorPhoto(record) && (
+                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        {hasAnyMixingVideo(record) && (
+                          <Video className="h-4 w-4 text-muted-foreground" />
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -492,13 +450,13 @@ export default function BiocharActivation() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Site</Label>
                   <div className="text-sm font-medium">
-                    {selectedRecord.siteCode} - {selectedRecord.siteName}
+                    {selectedRecord.site?.siteCode ?? "—"} - {selectedRecord.site?.siteName ?? "—"}
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">User</Label>
                   <div className="text-sm font-medium">
-                    {selectedRecord.userCode} - {selectedRecord.userName}
+                    {selectedRecord.user?.userCode ?? "—"} - {selectedRecord.user ? `${selectedRecord.user.firstName} ${selectedRecord.user.lastName}` : "—"}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -514,7 +472,7 @@ export default function BiocharActivation() {
                     Shift No.
                   </Label>
                   <div className="text-sm font-medium">
-                    Shift {selectedRecord.shiftNumber}
+                    {selectedRecord.shift?.shiftName ?? "—"}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -527,11 +485,11 @@ export default function BiocharActivation() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    Ken tiki used
+                    Kon-tiki used
                   </Label>
                   <div className="text-sm font-medium">
-                    {selectedRecord.kontikis
-                      .map((k) => k.kontikiName)
+                    {getKontikiRecords(selectedRecord)
+                      .map((k) => k.kontiki?.kontikiName ?? "—")
                       .join(", ")}
                   </div>
                 </div>
@@ -553,35 +511,54 @@ export default function BiocharActivation() {
                 </div>
               </div>
 
-              {/* Kontiki Sections */}
-              {selectedRecord.kontikis.map((kontiki) => (
+              {/* Kon-tiki Sections */}
+              {getKontikiRecords(selectedRecord).map((kontiki) => (
                 <div
-                  key={kontiki.kontikiId}
+                  key={kontiki.id ?? kontiki.kontikiId}
                   className="border border-gray-200 rounded-lg p-6 space-y-6"
                 >
-                  {/* Kontiki Header */}
+                  {/* Kon-tiki Header */}
                   <div className="pb-4 border-b">
                     <h3 className="text-lg font-semibold text-[#295F58]">
-                      {kontiki.kontikiName}
+                      {kontiki.kontiki?.kontikiName ?? "—"}
                     </h3>
                   </div>
 
-                  {/* Mixing Video */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <Video className="h-5 w-5 text-[#295F58]" />
-                      Mixing Video
-                    </Label>
-                    <div className="border rounded-lg overflow-hidden max-w-2xl">
-                      <video
-                        controls
-                        className="w-full h-auto"
-                        src={kontiki.mixingVideo}
-                      >
-                        Your browser does not support the video tag.
-                      </video>
+                  {/* Tractor Photo */}
+                  {kontiki.tractorPhoto && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <ImageIcon className="h-5 w-5 text-[#295F58]" />
+                        Tractor Photo
+                      </Label>
+                      <div className="border rounded-lg overflow-hidden max-w-md">
+                        <img
+                          src={kontiki.tractorPhoto}
+                          alt="Tractor"
+                          className="w-full h-auto"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Mixing Video */}
+                  {kontiki.mixingVideo && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <Video className="h-5 w-5 text-[#295F58]" />
+                        Mixing Video
+                      </Label>
+                      <div className="border rounded-lg overflow-hidden max-w-2xl">
+                        <video
+                          controls
+                          className="w-full h-auto"
+                          src={kontiki.mixingVideo}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

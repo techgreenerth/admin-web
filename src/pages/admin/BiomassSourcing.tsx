@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Eye,
@@ -7,10 +7,13 @@ import {
   Leaf,
   MapPin,
   User,
-  Truck,
   Package,
   Download,
+  Loader2,
 } from "lucide-react";
+import { useBiomassSourcing } from "@/contexts/biomassSourcingContext";
+import { useSites } from "@/contexts/siteContext";
+import { userService, User as UserType } from "@/lib/api/user.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,38 +41,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-
-interface BiomassSourcingRecord {
-  id: string;
-  userId: string;
-  userName: string;
-  userCode: string;
-  siteId: string;
-  siteName: string;
-  siteCode: string;
-  recordDate: string;
-  recordTime: string;
-  latitude: string;
-  longitude: string;
-  gpsAccuracy?: string;
-  distanceKm: string;
-  tripNumber: string;
-  farmerName: string;
-  farmerMobile: string;
-  farmAreaAcres: string;
-  tractorPhoto: string;
-  capturedAt: string;
-  deviceInfo?: string;
-  appVersion?: string;
-  status: string;
-  submittedAt: string;
-  verifiedAt?: string;
-  verifiedById?: string;
-  verifiedByName?: string;
-  rejectionNote?: string;
-}
+import { BiomassSourcingRecord } from "@/types/biomassSourcing.types";
 
 export default function BiomassSourcing() {
+  // Use context hooks
+  const { records, isLoading } = useBiomassSourcing();
+  const { sites: allSites, fetchSites } = useSites();
+
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [isUsersLoading, setIsUsersLoading] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
@@ -84,112 +65,66 @@ export default function BiomassSourcing() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BiomassSourcingRecord | null>(null);
 
-  // Mock data - Replace with API call
-  const records: BiomassSourcingRecord[] = [
-    {
-      id: "1",
-      userId: "u1",
-      userName: "John Doe",
-      userCode: "USER-001",
-      siteId: "site1",
-      siteName: "Green Valley Production Site",
-      siteCode: "AP-001",
-      recordDate: "2024-11-20",
-      recordTime: "09:30",
-      latitude: "28.61394",
-      longitude: "77.20902",
-      gpsAccuracy: "5.2",
-      distanceKm: "12.5",
-      tripNumber: "1",
-      farmerName: "Ramesh Kumar",
-      farmerMobile: "+919876543210",
-      farmAreaAcres: "5.5",
-      tractorPhoto: "https://via.placeholder.com/400",
-      capturedAt: "2024-11-20T09:30:00Z",
-      deviceInfo: "Android 12, Samsung Galaxy A52",
-      appVersion: "1.2.3",
-      status: "SUBMITTED",
-      submittedAt: "2024-11-20T09:35:00Z",
-    },
-    {
-      id: "2",
-      userId: "u2",
-      userName: "Jane Smith",
-      userCode: "USER-002",
-      siteId: "site1",
-      siteName: "Green Valley Production Site",
-      siteCode: "AP-001",
-      recordDate: "2024-11-21",
-      recordTime: "14:15",
-      latitude: "28.61500",
-      longitude: "77.21000",
-      gpsAccuracy: "3.8",
-      distanceKm: "8.3",
-      tripNumber: "2",
-      farmerName: "Suresh Patel",
-      farmerMobile: "+919876543211",
-      farmAreaAcres: "8.0",
-      tractorPhoto: "https://via.placeholder.com/400",
-      capturedAt: "2024-11-21T14:15:00Z",
-      deviceInfo: "iOS 16, iPhone 13",
-      appVersion: "1.2.3",
-      status: "VERIFIED",
-      submittedAt: "2024-11-21T14:20:00Z",
-      verifiedAt: "2024-11-21T16:00:00Z",
-      verifiedById: "admin1",
-      verifiedByName: "Admin User",
-    },
-    {
-      id: "3",
-      userId: "u1",
-      userName: "John Doe",
-      userCode: "USER-001",
-      siteId: "site2",
-      siteName: "Eco Farm Biochar Unit",
-      siteCode: "AP-002",
-      recordDate: "2024-11-22",
-      recordTime: "11:00",
-      latitude: "19.07609",
-      longitude: "72.87766",
-      gpsAccuracy: "7.1",
-      distanceKm: "15.7",
-      tripNumber: "3",
-      farmerName: "Vijay Singh",
-      farmerMobile: "+919876543212",
-      farmAreaAcres: "3.2",
-      tractorPhoto: "https://via.placeholder.com/400",
-      capturedAt: "2024-11-22T11:00:00Z",
-      status: "REJECTED",
-      submittedAt: "2024-11-22T11:05:00Z",
-      rejectionNote: "Tractor photo is blurry, please resubmit with clear image",
-    },
-  ];
+  // Load dropdown data
+  useEffect(() => {
+    // NOTE: fetchSites isn't memoized in the context, so don't add it as a dependency
+    // or this effect can refire on every provider re-render.
+    fetchSites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Mock sites and users for filters
-  const sites = [
-    { id: "site1", name: "Green Valley Production Site", code: "AP-001" },
-    { id: "site2", name: "Eco Farm Biochar Unit", code: "AP-002" },
-  ];
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setIsUsersLoading(true);
+        const resp = await userService.getAll({ page: 1, limit: 200, status: "ACTIVE" });
+        setUsers(resp.data);
+      } catch (error) {
+        console.error("Failed to fetch users for filter dropdown:", error);
+      } finally {
+        setIsUsersLoading(false);
+      }
+    };
 
-  const users = [
-    { id: "u1", name: "John Doe", code: "USER-001" },
-    { id: "u2", name: "Jane Smith", code: "USER-002" },
-  ];
+    loadUsers();
+  }, []);
+
+  const normalizeLower = (value: unknown) => {
+    if (typeof value === "string") return value.toLowerCase();
+    if (value == null) return "";
+    return String(value).toLowerCase();
+  };
 
   // Filter records
   const filteredRecords = records.filter((record) => {
+    const q = searchQuery.trim().toLowerCase();
+
     const matchesSearch =
-      record.farmerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.tripNumber.includes(searchQuery) ||
-      record.userName.toLowerCase().includes(searchQuery.toLowerCase());
+      q.length === 0 ||
+      // Trip / farmer
+      normalizeLower(record.tripNumber).includes(q) ||
+      normalizeLower(record.farmerName).includes(q) ||
+      normalizeLower(record.farmerMobile).includes(q) ||
+      normalizeLower(record.farmAreaAcres).includes(q) ||
+      // Nested user/site (per types)
+      normalizeLower(record.user?.userCode).includes(q) ||
+      normalizeLower(record.user?.firstName).includes(q) ||
+      normalizeLower(record.user?.lastName).includes(q) ||
+      normalizeLower(record.site?.siteCode).includes(q) ||
+      normalizeLower(record.site?.siteName).includes(q);
+
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
-    // Date range filter
+    // Date range filter (treat endDate as inclusive, end-of-day)
     let matchesDateRange = true;
     if (startDate && endDate) {
-      const recordDate = new Date(record.recordDate);
-      matchesDateRange = recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
+      const recordDate = record.recordDate ? new Date(record.recordDate) : null;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      matchesDateRange = !!recordDate && recordDate >= start && recordDate <= end;
     }
 
     return matchesSearch && matchesSite && matchesUser && matchesDateRange;
@@ -209,10 +144,11 @@ export default function BiomassSourcing() {
 
   // Calculate statistics
   const totalTrips = filteredRecords.length;
-  const totalBiomassKg = totalTrips * 500; // Each trip = 500 kg
-  const totalDistanceKm = filteredRecords.reduce((sum, record) => {
-    return sum + parseFloat(record.distanceKm || "0");
+  const totalFarmAreaAcres = filteredRecords.reduce((sum, record) => {
+    const acres = parseFloat(record.farmAreaAcres || "0");
+    return sum + (isNaN(acres) ? 0 : acres);
   }, 0);
+  const uniqueFarmers = new Set(filteredRecords.map((r) => r.farmerMobile || r.farmerName)).size;
 
   return (
     <div className="space-y-6">
@@ -240,9 +176,10 @@ export default function BiomassSourcing() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Biomass Weight</p>
-                <h3 className="text-3xl font-bold text-[#295F58] mt-2">{totalBiomassKg.toLocaleString()} kg</h3>
-                <p className="text-xs text-muted-foreground mt-1">{totalTrips} trips × 500 kg</p>
+                <p className="text-sm font-medium text-muted-foreground">Total Farm Area</p>
+                <h3 className="text-3xl font-bold text-[#295F58] mt-2">
+                  {totalFarmAreaAcres.toFixed(1)} acres
+                </h3>
               </div>
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
                 <Package className="h-6 w-6 text-[#295F58]" />
@@ -255,11 +192,11 @@ export default function BiomassSourcing() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Distance Travelled</p>
-                <h3 className="text-3xl font-bold text-[#295F58] mt-2">{totalDistanceKm.toFixed(1)} km</h3>
+                <p className="text-sm font-medium text-muted-foreground">Unique Farmers</p>
+                <h3 className="text-3xl font-bold text-[#295F58] mt-2">{uniqueFarmers}</h3>
               </div>
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
-                <Truck className="h-6 w-6 text-[#295F58]" />
+                <User className="h-6 w-6 text-[#295F58]" />
               </div>
             </div>
           </CardContent>
@@ -293,14 +230,18 @@ export default function BiomassSourcing() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sites</SelectItem>
-                    {sites.map((site) => (
+                    {allSites.map((site) => (
                       <SelectItem key={site.id} value={site.id}>
-                        {site.code}
+                        {site.siteCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={userFilter} onValueChange={setUserFilter}>
+                <Select
+                  value={userFilter}
+                  onValueChange={setUserFilter}
+                  disabled={isUsersLoading}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="User" />
                   </SelectTrigger>
@@ -308,7 +249,7 @@ export default function BiomassSourcing() {
                     <SelectItem value="all">All Users</SelectItem>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
-                        {user.code}
+                        {user.userCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -346,12 +287,28 @@ export default function BiomassSourcing() {
                 <TableHead>Record Info</TableHead>
                 <TableHead>Farmer Details</TableHead>
                 <TableHead>Site & User</TableHead>
-                <TableHead>Distance Travelled</TableHead>
+                <TableHead>Media</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedRecords.map((record) => (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Loading biomass sourcing records...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : paginatedRecords.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                    No records found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedRecords.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -375,15 +332,25 @@ export default function BiomassSourcing() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      <div className="font-medium">{record.siteName}</div>
-                      <div className="text-xs text-muted-foreground font-mono">{record.siteCode}</div>
-                      <div className="text-xs text-muted-foreground">{record.userName}</div>
+                      <div className="font-medium">{record.site?.siteName ?? "—"}</div>
+                      <div className="text-xs text-muted-foreground font-mono">
+                        {record.site?.siteCode ?? "—"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {record.user
+                          ? `${record.user.firstName} ${record.user.lastName} (${record.user.userCode})`
+                          : "—"}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Truck className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{record.distanceKm} km</span>
+                      {record.tractorPhoto ? (
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                      ) : null}
+                      <span className="text-sm text-muted-foreground">
+                        {record.tractorPhoto ? "Tractor photo" : "—"}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
@@ -397,7 +364,8 @@ export default function BiomassSourcing() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -457,16 +425,20 @@ export default function BiomassSourcing() {
           {selectedRecord && (
             <div className="space-y-6 py-4">
               {/* Tractor Photo */}
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Tractor Photo</Label>
-                <div className="border rounded-lg overflow-hidden">
-                  <img
-                    src={selectedRecord.tractorPhoto}
-                    alt="Tractor with biomass"
-                    className="w-full h-auto"
-                  />
+              {selectedRecord.tractorPhoto ? (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Tractor Photo</Label>
+                  <div className="border rounded-lg overflow-hidden">
+                    <img
+                      src={selectedRecord.tractorPhoto}
+                      alt="Tractor with biomass"
+                      className="w-full h-auto"
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">No tractor photo</div>
+              )}
 
               {/* Record Information */}
               <div className="grid grid-cols-2 gap-6">
@@ -534,49 +506,29 @@ export default function BiomassSourcing() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Site</Label>
-                  <p className="font-medium">{selectedRecord.siteName}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{selectedRecord.siteCode}</p>
+                  <p className="font-medium">{selectedRecord.site?.siteName ?? "—"}</p>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {selectedRecord.site?.siteCode ?? "—"}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Recorded By</Label>
-                  <p className="font-medium">{selectedRecord.userName}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{selectedRecord.userCode}</p>
+                  <p className="font-medium">
+                    {selectedRecord.user
+                      ? `${selectedRecord.user.firstName} ${selectedRecord.user.lastName}`
+                      : "—"}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {selectedRecord.user?.userCode ?? "—"}
+                  </p>
                 </div>
               </div>
 
-              {/* Verification Details */}
-              {selectedRecord.status === "VERIFIED" && selectedRecord.verifiedAt && (
-                <div className="space-y-3 p-4 bg-green-50 rounded-lg">
-                  <h3 className="font-semibold flex items-center gap-2 text-green-800">
-                    <CheckCircle className="h-4 w-4" />
-                    Verification Details
-                  </h3>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-1">
-                      <Label className="text-muted-foreground">Verified At</Label>
-                      <p className="font-medium">{new Date(selectedRecord.verifiedAt).toLocaleString()}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-muted-foreground">Verified By</Label>
-                      <p className="font-medium">{selectedRecord.verifiedByName || "Admin"}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Rejection Details */}
-              {selectedRecord.status === "REJECTED" && selectedRecord.rejectionNote && (
-                <div className="space-y-3 p-4 bg-red-50 rounded-lg">
-                  <h3 className="font-semibold flex items-center gap-2 text-red-800">
-                    <XCircle className="h-4 w-4" />
-                    Rejection Details
-                  </h3>
-                  <div className="space-y-1">
-                    <Label className="text-muted-foreground">Rejection Note</Label>
-                    <p className="font-medium">{selectedRecord.rejectionNote}</p>
-                  </div>
-                </div>
-              )}
+              {/* Status */}
+              <div className="space-y-1">
+                <Label className="text-muted-foreground">Status</Label>
+                <p className="font-medium">{selectedRecord.status}</p>
+              </div>
 
               {/* Metadata */}
               <div className="grid grid-cols-2 gap-6 pt-4 border-t">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Eye,
@@ -13,7 +13,11 @@ import {
   Box,
   Weight,
   Download,
+  Loader2,
 } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { useSites } from "@/contexts/siteContext";
+import { userService, User as UserType } from "@/lib/api/user.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,39 +44,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-
-interface BulkDensityRecord {
-  id: string;
-  userId: string;
-  userName: string;
-  userCode: string;
-  siteId: string;
-  siteName: string;
-  siteCode: string;
-  recordDate: string;
-  recordTime: string;
-  latitude: string;
-  longitude: string;
-  gpsAccuracy?: string;
-  measuringBoxVolume: string;
-  emptyBoxPhoto: string;
-  filledBoxPhoto: string;
-  recordedWeightKg: string;
-  measurementVideo: string;
-  bulkDensityCalculated: string;
-  capturedAt: string;
-  deviceInfo?: string;
-  appVersion?: string;
-  status: string;
-  submittedAt: string;
-  verifiedAt?: string;
-  verifiedById?: string;
-  verifiedByName?: string;
-  rejectionNote?: string;
-}
+import { useBulkDensity } from "@/contexts/bulkDensityContext";
+import { BulkDensityRecord as BulkDensityRecordType } from "@/types/bulkDensity.types";
 
 export default function BulkDensity() {
+  const location = useLocation();
+  const { records, meta, isLoading, fetchRecords } = useBulkDensity();
+  const { sites: allSites, fetchSites } = useSites();
+
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [isUsersLoading, setIsUsersLoading] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
@@ -85,150 +67,68 @@ export default function BulkDensity() {
 
   // Dialog states
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<BulkDensityRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<BulkDensityRecordType | null>(null);
 
-  // Mock data for filters
-  const sites = [
-    { id: "1", code: "SITE-001" },
-    { id: "2", code: "SITE-002" },
-  ];
+  // Load dropdown data
+  useEffect(() => {
+    // NOTE: fetchSites isn't memoized in the context, so don't add it as a dependency
+    // or this effect can refire on every provider re-render.
+    fetchSites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const users = [
-    { id: "1", code: "USER-001" },
-    { id: "2", code: "USER-002" },
-  ];
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setIsUsersLoading(true);
+        const resp = await userService.getAll({ page: 1, limit: 200, status: "ACTIVE" });
+        setUsers(resp.data);
+      } catch (error) {
+        console.error("Failed to fetch users for filter dropdown:", error);
+      } finally {
+        setIsUsersLoading(false);
+      }
+    };
 
-  // Mock data - TODO: Replace with actual API call
-  const records: BulkDensityRecord[] = [
-    {
-      id: "1",
-      userId: "1",
-      userName: "Rajesh Kumar",
-      userCode: "USER-001",
-      siteId: "1",
-      siteName: "Kothapally Site",
-      siteCode: "SITE-001",
-      recordDate: "2024-01-15",
-      recordTime: "18:00",
-      latitude: "28.61394",
-      longitude: "77.20902",
-      gpsAccuracy: "5m",
-      measuringBoxVolume: "10",
-      emptyBoxPhoto: "https://via.placeholder.com/400x300?text=Empty+Box",
-      filledBoxPhoto: "https://via.placeholder.com/400x300?text=Filled+Box",
-      recordedWeightKg: "3.148",
-      measurementVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-      bulkDensityCalculated: "314.8",
-      capturedAt: "2024-01-15T18:00:00Z",
-      deviceInfo: "Samsung Galaxy A52",
-      appVersion: "1.2.0",
-      status: "VERIFIED",
-      submittedAt: "2024-01-15T18:05:00Z",
-      verifiedAt: "2024-01-15T19:45:00Z",
-      verifiedById: "admin1",
-      verifiedByName: "Admin User",
-    },
-    {
-      id: "2",
-      userId: "2",
-      userName: "Priya Sharma",
-      userCode: "USER-002",
-      siteId: "2",
-      siteName: "Dharampur Site",
-      siteCode: "SITE-002",
-      recordDate: "2024-01-16",
-      recordTime: "13:30",
-      latitude: "28.62394",
-      longitude: "77.21902",
-      gpsAccuracy: "4m",
-      measuringBoxVolume: "10",
-      emptyBoxPhoto: "https://via.placeholder.com/400x300?text=Empty+Box",
-      filledBoxPhoto: "https://via.placeholder.com/400x300?text=Filled+Box",
-      recordedWeightKg: "2.950",
-      measurementVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-      bulkDensityCalculated: "295.0",
-      capturedAt: "2024-01-16T13:30:00Z",
-      deviceInfo: "Xiaomi Redmi Note 10",
-      appVersion: "1.2.0",
-      status: "SUBMITTED",
-      submittedAt: "2024-01-16T13:35:00Z",
-    },
-    {
-      id: "3",
-      userId: "1",
-      userName: "Rajesh Kumar",
-      userCode: "USER-001",
-      siteId: "1",
-      siteName: "Kothapally Site",
-      siteCode: "SITE-001",
-      recordDate: "2024-01-14",
-      recordTime: "16:00",
-      latitude: "28.61494",
-      longitude: "77.21002",
-      gpsAccuracy: "6m",
-      measuringBoxVolume: "10",
-      emptyBoxPhoto: "https://via.placeholder.com/400x300?text=Empty+Box",
-      filledBoxPhoto: "https://via.placeholder.com/400x300?text=Filled+Box",
-      recordedWeightKg: "3.320",
-      measurementVideo: "https://www.w3schools.com/html/mov_bbb.mp4",
-      bulkDensityCalculated: "332.0",
-      capturedAt: "2024-01-14T16:00:00Z",
-      deviceInfo: "Samsung Galaxy A52",
-      appVersion: "1.2.0",
-      status: "REJECTED",
-      submittedAt: "2024-01-14T16:05:00Z",
-      rejectionNote: "Measurement video is unclear. Please record the weighing process again with steady camera.",
-    },
-  ];
+    loadUsers();
+  }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "DRAFT":
-        return "bg-gray-100 text-gray-800";
-      case "SUBMITTED":
-        return "bg-blue-100 text-blue-800";
-      case "VERIFIED":
-        return "bg-green-100 text-green-800";
-      case "REJECTED":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  // Fetch records when filters change OR when user navigates back to this page.
+  useEffect(() => {
+    const params: any = {
+      page: currentPage,
+      limit: itemsPerPage,
+    };
 
-  // Filter records
-  const filteredRecords = records.filter((record) => {
-    const matchesSearch =
-      record.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.userCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.siteCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.bulkDensityCalculated.includes(searchQuery);
-    const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
-    const matchesUser = userFilter === "all" || record.userId === userFilter;
+    if (searchQuery) params.search = searchQuery;
+    if (siteFilter !== "all") params.siteId = siteFilter;
+    if (userFilter !== "all") params.userId = userFilter;
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
 
-    // Date range filter
-    let matchesDateRange = true;
-    if (startDate && endDate) {
-      const recordDate = new Date(record.recordDate);
-      matchesDateRange = recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
-    }
+    fetchRecords(params);
+    // fetchRecords isn't memoized in the context; avoid it in deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key, currentPage, searchQuery, siteFilter, userFilter, startDate, endDate]);
 
-    return matchesSearch && matchesSite && matchesUser && matchesDateRange;
-  });
-
-  // Pagination
-  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
-
-  // Calculate average bulk density from filtered records
-  const averageBulkDensity = filteredRecords.length > 0
-    ? (filteredRecords.reduce((sum, record) => sum + parseFloat(record.bulkDensityCalculated), 0) / filteredRecords.length).toFixed(2)
+  // Calculate average bulk density from records
+  const averageBulkDensity = records.length > 0
+    ? (
+        records.reduce((sum, record) => {
+          const v = parseFloat(record.bulkDensityCalculated);
+          return sum + (isNaN(v) ? 0 : v);
+        }, 0) / records.length
+      ).toFixed(2)
     : "0.00";
 
+  // Pagination from meta
+  const totalPages = meta?.totalPages || 1;
+  const totalRecords = meta?.total || 0;
+  const startIndex = ((meta?.page || 1) - 1) * (meta?.limit || itemsPerPage);
+  const endIndex = Math.min(startIndex + (meta?.limit || itemsPerPage), totalRecords);
+
   // Handlers
-  const handleViewRecord = (record: BulkDensityRecord) => {
+  const handleViewRecord = (record: BulkDensityRecordType) => {
     setSelectedRecord(record);
     setIsViewDialogOpen(true);
   };
@@ -249,7 +149,7 @@ export default function BulkDensity() {
             <div>
               <p className="text-sm font-medium text-muted-foreground">Average Bulk Density</p>
               <h3 className="text-3xl font-bold text-[#295F58] mt-2">{averageBulkDensity} kg/m³</h3>
-              <p className="text-xs text-muted-foreground mt-1">Based on {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''}</p>
+              <p className="text-xs text-muted-foreground mt-1">Based on {records.length} record{records.length !== 1 ? 's' : ''}</p>
             </div>
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
               <Scale className="h-6 w-6 text-[#295F58]" />
@@ -285,14 +185,18 @@ export default function BulkDensity() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sites</SelectItem>
-                    {sites.map((site) => (
+                    {allSites.map((site) => (
                       <SelectItem key={site.id} value={site.id}>
-                        {site.code}
+                        {site.siteCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={userFilter} onValueChange={setUserFilter}>
+                <Select
+                  value={userFilter}
+                  onValueChange={setUserFilter}
+                  disabled={isUsersLoading}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="User" />
                   </SelectTrigger>
@@ -300,7 +204,7 @@ export default function BulkDensity() {
                     <SelectItem value="all">All Users</SelectItem>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
-                        {user.code}
+                        {user.userCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -343,14 +247,23 @@ export default function BulkDensity() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedRecords.length === 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Loading records...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : records.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No records found
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedRecords.map((record) => (
+                records.map((record) => (
                   <TableRow key={record.id}>
                     <TableCell>
                       <div className="space-y-1">
@@ -367,8 +280,12 @@ export default function BulkDensity() {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="text-sm font-medium">{record.siteCode}</div>
-                        <div className="text-sm text-muted-foreground">{record.userCode}</div>
+                        <div className="text-sm font-medium">
+                          {record.site?.siteCode ?? "—"}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {record.user?.userCode ?? "—"}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -410,8 +327,8 @@ export default function BulkDensity() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredRecords.length)} of{" "}
-            {filteredRecords.length} records
+            Showing {startIndex + 1} to {endIndex} of{" "}
+            {totalRecords} records
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -481,7 +398,7 @@ export default function BulkDensity() {
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Site</Label>
                   <div className="font-medium">
-                    {selectedRecord.siteCode} - {selectedRecord.siteName}
+                    {selectedRecord.site?.siteCode ?? "—"} - {selectedRecord.site?.siteName ?? "—"}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -489,7 +406,7 @@ export default function BulkDensity() {
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <div className="font-medium">
-                      {selectedRecord.userCode} - {selectedRecord.userName}
+                      {selectedRecord.user?.userCode ?? "—"} - {selectedRecord.user ? `${selectedRecord.user.firstName} ${selectedRecord.user.lastName}` : "—"}
                     </div>
                   </div>
                 </div>
@@ -551,49 +468,61 @@ export default function BulkDensity() {
                 <Label className="text-muted-foreground">Media</Label>
                 <div className="grid grid-cols-3 gap-4">
                   {/* Empty Box Photo */}
-                  <div className="space-y-2">
-                    <Label className="text-sm flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4" />
-                      Empty Box
-                    </Label>
-                    <div className="border rounded-lg overflow-hidden">
-                      <img
-                        src={selectedRecord.emptyBoxPhoto}
-                        alt="Empty measuring box"
-                        className="w-full h-auto"
-                      />
+                  {selectedRecord.emptyBoxPhoto ? (
+                    <div className="space-y-2">
+                      <Label className="text-sm flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4" />
+                        Empty Box
+                      </Label>
+                      <div className="border rounded-lg overflow-hidden">
+                        <img
+                          src={selectedRecord.emptyBoxPhoto}
+                          alt="Empty measuring box"
+                          className="w-full h-auto"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No empty box photo</div>
+                  )}
                   {/* Filled Box Photo */}
-                  <div className="space-y-2">
-                    <Label className="text-sm flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4" />
-                      Filled Box
-                    </Label>
-                    <div className="border rounded-lg overflow-hidden">
-                      <img
-                        src={selectedRecord.filledBoxPhoto}
-                        alt="Box filled with biochar"
-                        className="w-full h-auto"
-                      />
+                  {selectedRecord.filledBoxPhoto ? (
+                    <div className="space-y-2">
+                      <Label className="text-sm flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4" />
+                        Filled Box
+                      </Label>
+                      <div className="border rounded-lg overflow-hidden">
+                        <img
+                          src={selectedRecord.filledBoxPhoto}
+                          alt="Box filled with biochar"
+                          className="w-full h-auto"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No filled box photo</div>
+                  )}
                   {/* Measurement Video */}
-                  <div className="space-y-2">
-                    <Label className="text-sm flex items-center gap-2">
-                      <Video className="h-4 w-4" />
-                      Weighing Video
-                    </Label>
-                    <div className="border rounded-lg overflow-hidden">
-                      <video
-                        controls
-                        className="w-full h-auto"
-                        src={selectedRecord.measurementVideo}
-                      >
-                        Your browser does not support the video tag.
-                      </video>
+                  {selectedRecord.measurementVideo ? (
+                    <div className="space-y-2">
+                      <Label className="text-sm flex items-center gap-2">
+                        <Video className="h-4 w-4" />
+                        Weighing Video
+                      </Label>
+                      <div className="border rounded-lg overflow-hidden">
+                        <video
+                          controls
+                          className="w-full h-auto"
+                          src={selectedRecord.measurementVideo}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No weighing video</div>
+                  )}
                 </div>
               </div>
 
