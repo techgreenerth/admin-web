@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useSites } from "@/contexts/siteContext";
+import { userService, User as UserType } from "@/lib/api/user.service";
 import {
   Search,
   Eye,
@@ -35,12 +37,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { useBiocharSampling } from "@/contexts/biocharSamplingContext";
 import { BiocharSamplingRecord as BiocharSamplingRecordType } from "@/types/biocharSampling.types";
 
 export default function BiocharSampling() {
   const { records, meta, isLoading, fetchRecords } = useBiocharSampling();
+  const { sites: allSites, fetchSites } = useSites();
+
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [isUsersLoading, setIsUsersLoading] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [siteFilter, setSiteFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
@@ -54,6 +60,30 @@ export default function BiocharSampling() {
   // Dialog states
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BiocharSamplingRecordType | null>(null);
+
+  // Load dropdown data
+  useEffect(() => {
+    // NOTE: fetchSites isn't memoized in the context, so don't add it as a dependency
+    // or this effect can refire on every provider re-render.
+    fetchSites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setIsUsersLoading(true);
+        const resp = await userService.getAll({ page: 1, limit: 200, status: "ACTIVE" });
+        setUsers(resp.data);
+      } catch (error) {
+        console.error("Failed to fetch users for filter dropdown:", error);
+      } finally {
+        setIsUsersLoading(false);
+      }
+    };
+
+    loadUsers();
+  }, []);
 
   // Fetch records when filters change
   useEffect(() => {
@@ -69,27 +99,20 @@ export default function BiocharSampling() {
     if (endDate) params.endDate = endDate;
 
     fetchRecords(params);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, searchQuery, siteFilter, userFilter, startDate, endDate]);
 
-  // Extract unique sites and users from records for filters
-  const sites = Array.from(
-    new Map(records.map(r => [r.siteId, { id: r.siteId, code: r.siteCode }])).values()
-  );
+  const getKontikiRecords = (record: BiocharSamplingRecordType) =>
+    record.kontikiRecords ?? [];
 
-  const users = Array.from(
-    new Map(records.map(r => [r.userId, { id: r.userId, code: r.userCode }])).values()
-  );
+  const getKontikiName = (kontikiRecord: BiocharSamplingRecordType["kontikiRecords"][number]) =>
+    kontikiRecord.kontiki?.kontikiName ?? "—";
 
-  const getShiftColor = (shiftNumber: number) => {
-    const colors = [
-      "bg-blue-100 text-blue-800", // Shift 1
-      "bg-purple-100 text-purple-800", // Shift 2
-      "bg-orange-100 text-orange-800", // Shift 3
-      "bg-pink-100 text-pink-800", // Shift 4
-      "bg-cyan-100 text-cyan-800", // Shift 5
-    ];
-    return colors[shiftNumber - 1] || "bg-gray-100 text-gray-800";
-  };
+  const getTotalSamplePhotosCount = (record: BiocharSamplingRecordType) =>
+    getKontikiRecords(record).reduce((sum, k) => sum + (k.samplePhotos?.length ?? 0), 0);
+
+  const hasAnySamplePhoto = (record: BiocharSamplingRecordType) =>
+    getKontikiRecords(record).some((k) => (k.samplePhotos?.length ?? 0) > 0);
 
   // Pagination from meta
   const totalPages = meta?.totalPages || 1;
@@ -141,14 +164,18 @@ export default function BiocharSampling() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sites</SelectItem>
-                    {sites.map((site) => (
+                    {allSites.map((site) => (
                       <SelectItem key={site.id} value={site.id}>
-                        {site.code}
+                        {site.siteCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={userFilter} onValueChange={setUserFilter}>
+                <Select
+                  value={userFilter}
+                  onValueChange={setUserFilter}
+                  disabled={isUsersLoading}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="User" />
                   </SelectTrigger>
@@ -156,7 +183,7 @@ export default function BiocharSampling() {
                     <SelectItem value="all">All Users</SelectItem>
                     {users.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
-                        {user.code}
+                        {user.userCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -193,7 +220,7 @@ export default function BiocharSampling() {
               <TableRow>
                 <TableHead>Record Info</TableHead>
                 <TableHead>Site & User</TableHead>
-                <TableHead>Shift & Kontikis</TableHead>
+                <TableHead>Kon-tikis</TableHead>
                 <TableHead>Samples</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -232,25 +259,28 @@ export default function BiocharSampling() {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="text-sm font-medium">{record.siteCode}</div>
-                        <div className="text-sm text-muted-foreground">{record.userCode}</div>
+                        <div className="text-sm font-medium">{record.site?.siteCode ?? "—"}</div>
+                        <div className="text-sm text-muted-foreground">{record.user?.userCode ?? "—"}</div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <Badge className={getShiftColor(record.shiftNumber)}>
-                          Shift {record.shiftNumber}
-                        </Badge>
                         <div className="text-sm text-muted-foreground">
-                          {record.kontikis.map(k => k.kontikiName).join(", ")}
+                          {getKontikiRecords(record)
+                            .map((k) => getKontikiName(k))
+                            .join(", ")}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        {hasAnySamplePhoto(record) && (
+                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        )}
                         <span className="text-sm text-muted-foreground">
-                          {record.kontikis.length} {record.kontikis.length === 1 ? 'photo' : 'photos'}
+                          {getTotalSamplePhotosCount(record)}
+                          {" "}
+                          {getTotalSamplePhotosCount(record) === 1 ? "photo" : "photos"}
                         </span>
                       </div>
                     </TableCell>
@@ -345,23 +375,19 @@ export default function BiocharSampling() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Site</Label>
-                  <div className="text-sm font-medium">{selectedRecord.siteCode} - {selectedRecord.siteName}</div>
+                  <div className="text-sm font-medium">{selectedRecord.site?.siteCode ?? "—"} - {selectedRecord.site?.siteName ?? "—"}</div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">User</Label>
-                  <div className="text-sm font-medium">{selectedRecord.userCode} - {selectedRecord.userName}</div>
+                  <div className="text-sm font-medium">{selectedRecord.user?.userCode ?? "—"} - {selectedRecord.user ? `${selectedRecord.user.firstName} ${selectedRecord.user.lastName}` : "—"}</div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Location</Label>
                   <div className="text-sm font-mono">{selectedRecord.latitude}, {selectedRecord.longitude}</div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Shift No.</Label>
-                  <div className="text-sm font-medium">Shift {selectedRecord.shiftNumber}</div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Ken tiki used</Label>
-                  <div className="text-sm font-medium">{selectedRecord.kontikis.map(k => k.kontikiName).join(", ")}</div>
+                  <Label className="text-muted-foreground text-xs">Kon-tiki used</Label>
+                  <div className="text-sm font-medium">{getKontikiRecords(selectedRecord).map((k) => k.kontiki?.kontikiName ?? "—").join(", ")}</div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Device</Label>
@@ -373,28 +399,37 @@ export default function BiocharSampling() {
                 </div>
               </div>
 
-              {/* Kontiki Sections */}
-              {selectedRecord.kontikis.map((kontiki) => (
-                <div key={kontiki.kontikiId} className="border border-gray-200 rounded-lg p-6 space-y-6">
-                  {/* Kontiki Header */}
+              {/* Kon-tiki Sections */}
+              {getKontikiRecords(selectedRecord).map((kontiki) => (
+                <div key={kontiki.id ?? kontiki.kontikiId} className="border border-gray-200 rounded-lg p-6 space-y-6">
+                  {/* Kon-tiki Header */}
                   <div className="pb-4 border-b">
-                    <h3 className="text-lg font-semibold text-[#295F58]">{kontiki.kontikiName}</h3>
-                  </div>
-
-                  {/* Sample Photo */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <ImageIcon className="h-5 w-5 text-[#295F58]" />
-                      Sample Photo
-                    </Label>
-                    <div className="border rounded-lg overflow-hidden max-w-md">
-                      <img
-                        src={kontiki.samplePhoto}
-                        alt={`${kontiki.kontikiName} Sample`}
-                        className="w-full h-auto"
-                      />
+                    <h3 className="text-lg font-semibold text-[#295F58]">
+                      {kontiki.kontiki?.kontikiName ?? "—"}
+                    </h3>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {kontiki.productionBatches ? `Batches: ${kontiki.productionBatches}` : ""}
                     </div>
                   </div>
+
+                  {/* Sample Photos */}
+                  {(kontiki.samplePhotos ?? []).length > 0 ? (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <ImageIcon className="h-5 w-5 text-[#295F58]" />
+                        Sample Photos ({kontiki.samplePhotos.length})
+                      </Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {kontiki.samplePhotos.map((src, idx) => (
+                          <div key={`${kontiki.id}-${idx}`} className="border rounded-lg overflow-hidden">
+                            <img src={src} alt={`Sample ${idx + 1}`} className="w-full h-auto" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No sample photos</div>
+                  )}
                 </div>
               ))}
             </div>
