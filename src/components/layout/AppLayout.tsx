@@ -22,7 +22,7 @@ export function AppLayout({ children, userRole = "admin" }: AppLayoutProps) {
       <div className="h-full flex w-full overflow-hidden">
         <AppSidebar userRole={userRole} />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
-          <Header userRole={userRole} userName={userName} />
+          <Header />
           <main className="flex-1 p-6 overflow-auto bg-gray-50">
             {children}
           </main>

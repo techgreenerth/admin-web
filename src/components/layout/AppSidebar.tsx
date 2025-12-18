@@ -1,9 +1,9 @@
+
 import {
   Home,
   Users,
   MapPin,
   Flame,
-  Clock,
   Leaf,
   Factory,
   FlaskConical,
@@ -13,7 +13,6 @@ import {
   HelpCircle,
   Shield,
 } from "lucide-react";
-import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +23,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { SidebarNavItem } from "./SidebarNavItem";
 
 interface AppSidebarProps {
   userRole?: "admin" | "partner" | "verifier";
@@ -31,18 +31,26 @@ interface AppSidebarProps {
 
 export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
   return (
-    <Sidebar className="border-r bg-[#295F58] text-white !h-full !min-h-full" collapsible="none" style={{ height: '100vh' }}>
-      <SidebarContent className="py-4 flex flex-col !h-full overflow-y-auto">
+    <Sidebar
+      collapsible="icon"
+      className="border-r bg-[#295F58] text-white"
+    >
+      <SidebarContent className="py-4 flex flex-col h-full overflow-y-auto">
+
         {/* Dashboard */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <Home className="h-5 w-5" />
                     <span className="text-base">Dashboard</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -51,98 +59,141 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
 
         {/* Production Modules */}
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-xs uppercase text-white/70">Production Modules</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-xs uppercase text-white/70">
+            Production Modules
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/biomass-sourcing" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/biomass-sourcing"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <Leaf className="h-5 w-5" />
                     <span className="text-base">Biomass Sourcing</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/biochar-production" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/biochar-production"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <Factory className="h-5 w-5" />
                     <span className="text-base">Biochar Production</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/biochar-activation" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/biochar-activation"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <FlaskConical className="h-5 w-5" />
                     <span className="text-base">Biochar Activation</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/biochar-sampling" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/biochar-sampling"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <TestTube className="h-5 w-5" />
                     <span className="text-base">Biochar Sampling</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/bulk-density" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/bulk-density"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <Weight className="h-5 w-5" />
                     <span className="text-base">Bulk Density</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* Management */}
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-xs uppercase text-white/70">Management</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-xs uppercase text-white/70">
+            Management
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/admins" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/admins"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <Shield className="h-5 w-5" />
                     <span className="text-base">Admins</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/users" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/users"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <Users className="h-5 w-5" />
                     <span className="text-base">Users</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/sites" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/sites"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <MapPin className="h-5 w-5" />
                     <span className="text-base">Artisan Pro Sites</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/kontikis" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/kontikis"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <Flame className="h-5 w-5" />
                     <span className="text-base">Kontikis</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {/* <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/shifts" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
-                    <Clock className="h-5 w-5" />
-                    <span className="text-base">Production Shifts</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem> */}
+
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -151,25 +202,36 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/settings" className="hover:bg-white/10 transition-colors" activeClassName="bg-white/20 font-medium">
+                  <SidebarNavItem
+                    to="/settings"
+                    className="hover:bg-white/10 transition-colors"
+                    activeClassName="bg-white/20 font-medium"
+                  >
                     <Settings className="h-5 w-5" />
                     <span className="text-base">Settings</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/help" className="hover:bg-white/10 transition-colors">
+                  <SidebarNavItem
+                    to="/help"
+                    className="hover:bg-white/10 transition-colors"
+                  >
                     <HelpCircle className="h-5 w-5" />
                     <span className="text-base">Help & Support</span>
-                  </NavLink>
+                  </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
       </SidebarContent>
     </Sidebar>
   );
