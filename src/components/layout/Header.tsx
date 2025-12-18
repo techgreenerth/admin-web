@@ -13,18 +13,18 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useProfile } from "@/contexts/ProfileContext";
 
-interface HeaderProps {
-  userRole?: "admin" | "partner" | "verifier";
-  userName?: string;
-}
-
-export function Header({
-  userRole = "admin",
-  userName = "Admin User",
-}: HeaderProps) {
+export function Header() {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { profile, isLoading } = useProfile();
+
+  const userName = profile
+    ? `${profile.firstName} ${profile.lastName}`
+    : "Loading...";
+
+  const userRole = profile?.role ?? "ADMIN";
 
   const handleLogout = async () => {
     try {
@@ -59,13 +59,17 @@ export function Header({
               <button className="flex items-center gap-2 outline-none">
                 <Avatar className="h-9 w-9">
                   <AvatarFallback className="bg-[#295F58] text-white font-semibold">
-                    {userName.substring(0, 2).toUpperCase()}
+                    {userName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:flex flex-col items-start">
                   <span className="font-medium text-sm">{userName}</span>
                   <span className="text-xs text-muted-foreground">
-                    {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                    {userRole.replace("_", " ")}
                   </span>
                 </div>
               </button>

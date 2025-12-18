@@ -280,9 +280,18 @@ export default function SiteDetails() {
   };
 
   if (isLoading || !site) {
-    return <div className="p-6">Loading site details...</div>;
+        return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading site details...</p>
+        </div>
+      </div>
+    );
   }
 
+   
+  
   return (
     <div className="space-y-6">
       {/* Header */}

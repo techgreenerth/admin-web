@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { User, Mail, Phone, Briefcase, Calendar, Save, Edit2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  User,
+  Mail,
+  Phone,
+  Briefcase,
+  Calendar,
+  Save,
+  Edit2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,34 +15,67 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "../../contexts/ProfileContext";
 
 export default function Profile() {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-
-  // Profile state
+  const [isSaving, setIsSaving] = useState(false);
+  const { profile, isLoading, updateProfile, fetchProfile } = useProfile();
   const [profileData, setProfileData] = useState({
-    firstName: "Admin",
-    lastName: "User",
-    email: "admin@techgreenerth.com",
-    phone: "+91 123 456 7890",
-    role: "SUPER_ADMIN",
-    status: "ACTIVE",
-    organization: "Greenerth",
-    joinedDate: "2024-01-15",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    role: "",
+    status: "",
+    joinedDate: "",
   });
 
-  const handleSaveProfile = () => {
-    // TODO: Add API call to update profile
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been updated successfully.",
+  useEffect(() => {
+    if (!profile) return;
+
+    setProfileData({
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: profile.email,
+      phone: profile.phone,
+      role: profile.role,
+      status: profile.status,
+      joinedDate: profile.createdAt,
     });
-    setIsEditing(false);
+  }, [profile]);
+
+  const handleSaveProfile = async () => {
+    try {
+      setIsSaving(true);
+      await updateProfile({
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        phone: profileData.phone,
+      });
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
+      });
+
+      setIsEditing(false);
+    } catch {
+      toast({
+        title: "Update failed",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getInitials = () => {
-    return `${profileData.firstName.charAt(0)}${profileData.lastName.charAt(0)}`;
+    return `${profileData.firstName.charAt(0)}${profileData.lastName.charAt(
+      0
+    )}`;
   };
 
   const getRoleBadge = (role: string) => {
@@ -46,6 +87,17 @@ export default function Profile() {
     };
     return roleColors[role] || "bg-gray-100 text-gray-800";
   };
+
+  if (isLoading && !profile) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -91,10 +143,6 @@ export default function Profile() {
               </div>
               <div className="flex flex-col md:flex-row gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4" />
-                  {profileData.organization}
-                </div>
-                <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
                   Joined {new Date(profileData.joinedDate).toLocaleDateString()}
                 </div>
@@ -130,7 +178,10 @@ export default function Profile() {
                     id="firstName"
                     value={profileData.firstName}
                     onChange={(e) =>
-                      setProfileData({ ...profileData, firstName: e.target.value })
+                      setProfileData({
+                        ...profileData,
+                        firstName: e.target.value,
+                      })
                     }
                   />
                 </div>
@@ -140,7 +191,10 @@ export default function Profile() {
                     id="lastName"
                     value={profileData.lastName}
                     onChange={(e) =>
-                      setProfileData({ ...profileData, lastName: e.target.value })
+                      setProfileData({
+                        ...profileData,
+                        lastName: e.target.value,
+                      })
                     }
                   />
                 </div>
@@ -168,22 +222,23 @@ export default function Profile() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="organization">Organization</Label>
-                <Input
-                  id="organization"
-                  value={profileData.organization}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, organization: e.target.value })
-                  }
-                />
-              </div>
+
               <Button
                 onClick={handleSaveProfile}
+                disabled={isSaving}
                 className="bg-[#295F58] hover:bg-[#1e4540]"
               >
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
+                {isSaving ? (
+                  <>
+                    <div className="h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
               </Button>
             </div>
           ) : (
@@ -210,12 +265,10 @@ export default function Profile() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground">Organization</Label>
-                  <p className="font-medium">{profileData.organization}</p>
-                </div>
-                <div className="space-y-1">
                   <Label className="text-muted-foreground">Role</Label>
-                  <p className="font-medium">{profileData.role.replace("_", " ")}</p>
+                  <p className="font-medium">
+                    {profileData.role.replace("_", " ")}
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
