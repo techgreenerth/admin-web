@@ -130,8 +130,8 @@ export default function BiocharSampling() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#295F58]">Biochar Sampling</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl  font-bold text-[#295F58]">Biochar Sampling</h1>
+          <p className=" text-sm text-muted-foreground mt-1">
             Track and verify biochar sample collection records
           </p>
         </div>

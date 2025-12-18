@@ -351,7 +351,7 @@ export default function BiocharProduction() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#295F58]">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#295F58]">
             Biochar Production
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -497,106 +497,139 @@ export default function BiocharProduction() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Record Info</TableHead>
-                <TableHead>Site & User</TableHead>
-                <TableHead>Shift & Kontikis</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12">
-                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Loading biochar production records...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : paginatedRecords.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-muted-foreground py-8"
-                  >
-                    No records found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedRecords.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE]">
-                            <Factory className="h-4 w-4 text-[#295F58]" />
-                          </div>
-                          <div>
-                            <div className="font-medium">
-                              {record.recordDate}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {record.recordTime}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium">
-                          {record.site?.siteCode ?? record.siteCode ?? "—"}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {record.user?.userCode ?? record.userCode ?? "—"}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <Badge className={getStepColor(record.shiftNumber)}>
-                          Shift {record.shift?.shiftNumber ?? record.shiftNumber}
-                        </Badge>
-                        <div className="text-sm text-muted-foreground">
-                          {getKontikiRecords(record)
-                            .map((k) => getKontikiName(k))
-                            .join(", ")}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <Badge
-                          className={getStatusColor(getActualStatus(record))}
-                        >
-                          {getActualStatus(record).replace("_", " ")}
-                        </Badge>
-                        <div className="text-xs text-muted-foreground">
-                          {getStatusSubtext(record)}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleViewRecord(record)}
-                        className="hover:bg-[#295F58]/10"
-                      >
-                        <Eye className="h-4 w-4 text-[#295F58]" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
+       <CardContent className="p-0">
+  {/* DESKTOP & TABLET VIEW: Hidden on small screens (max-sm) */}
+  <div className="hidden sm:block overflow-x-auto">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Record Info</TableHead>
+          <TableHead>Site & User</TableHead>
+          <TableHead>Shift & Kontikis</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {isLoading ? (
+          <TableRow>
+            <TableCell colSpan={5} className="text-center py-12">
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading biochar production records...</span>
+              </div>
+            </TableCell>
+          </TableRow>
+        ) : paginatedRecords.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+              No records found
+            </TableCell>
+          </TableRow>
+        ) : (
+          paginatedRecords.map((record) => (
+            <TableRow key={record.id}>
+              {/* Your existing TableCell content remains exactly the same here */}
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE] shrink-0">
+                    <Factory className="h-4 w-4 text-[#295F58]" />
+                  </div>
+                  <div>
+                    <div className="font-medium">{record.recordDate}</div>
+                    <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="text-sm font-medium">{record.site?.siteCode ?? "—"}</div>
+                <div className="text-sm text-muted-foreground">{record.user?.userCode ?? "—"}</div>
+              </TableCell>
+              <TableCell>
+                <Badge className={getStepColor(record.shiftNumber)}>Shift {record.shift.shiftNumber}</Badge>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {getKontikiRecords(record).map(k => getKontikiName(k)).join(", ")}
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge className={getStatusColor(getActualStatus(record))}>
+                  {getActualStatus(record).replace("_", " ")}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <Button variant="ghost" size="icon" onClick={() => handleViewRecord(record)}>
+                  <Eye className="h-4 w-4 text-[#295F58]" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  </div>
+
+  {/* MOBILE VIEW: Hidden on larger screens (min-sm) */}
+  <div className="sm:hidden divide-y divide-border">
+    {isLoading ? (
+      <div className="p-8 text-center flex flex-col items-center gap-2">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">Loading records...</span>
+      </div>
+    ) : paginatedRecords.length === 0 ? (
+      <div className="p-8 text-center text-muted-foreground text-sm">No records found</div>
+    ) : (
+      paginatedRecords.map((record) => (
+        <div key={record.id} className="p-4 space-y-4">
+          <div className="flex justify-between items-start">
+            <div className="flex gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
+                <Factory className="h-5 w-5 text-[#295F58]" />
+              </div>
+              <div>
+                <div className="font-bold text-base">{record.recordDate}</div>
+                <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleViewRecord(record)}
+              className="border-[#295F58]/20 text-[#295F58]"
+            >
+              <Eye className="h-4 w-4 mr-2" /> View
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Site/User</p>
+              <p className="text-sm font-medium">{record.site?.siteCode ?? "—"}</p>
+              <p className="text-xs text-muted-foreground">{record.user?.userCode ?? "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Shift & Kontikis</p>
+              <Badge className={`${getStepColor(record.shiftNumber)} text-[10px] px-1.5 py-0`}>
+                Shift {record.shift.shiftNumber}
+              </Badge>
+              <p className="text-xs text-muted-foreground mt-1 truncate">
+                 {getKontikiRecords(record).map(k => getKontikiName(k)).join(", ")}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
+            <Badge className={getStatusColor(getActualStatus(record))}>
+              {getActualStatus(record).replace("_", " ")}
+            </Badge>
+            <span className="text-[11px] text-muted-foreground italic">
+              {getStatusSubtext(record)}
+            </span>
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+</CardContent>
       </Card>
 
       {/* Pagination */}
