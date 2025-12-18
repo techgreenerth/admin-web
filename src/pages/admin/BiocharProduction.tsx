@@ -114,7 +114,11 @@ export default function BiocharProduction() {
     const loadUsers = async () => {
       try {
         setIsUsersLoading(true);
-        const resp = await userService.getAll({ page: 1, limit: 200, status: "ACTIVE" });
+        const resp = await userService.getAll({
+          page: 1,
+          limit: 200,
+          status: "ACTIVE",
+        });
         setUsers(resp.data);
       } catch (error) {
         console.error("Failed to fetch users for filter dropdown:", error);
@@ -162,9 +166,15 @@ export default function BiocharProduction() {
     const kontikiRecords = getKontikiRecords(record);
     if (kontikiRecords.length === 0) return "IN_PROGRESS";
 
-    const verifiedCount = kontikiRecords.filter((k) => k.status === "VERIFIED").length;
-    const rejectedCount = kontikiRecords.filter((k) => k.status === "REJECTED").length;
-    const submittedCount = kontikiRecords.filter((k) => k.status === "SUBMITTED").length;
+    const verifiedCount = kontikiRecords.filter(
+      (k) => k.status === "VERIFIED"
+    ).length;
+    const rejectedCount = kontikiRecords.filter(
+      (k) => k.status === "REJECTED"
+    ).length;
+    const submittedCount = kontikiRecords.filter(
+      (k) => k.status === "SUBMITTED"
+    ).length;
 
     // All submitted, none reviewed
     if (submittedCount === kontikiRecords.length) {
@@ -183,9 +193,15 @@ export default function BiocharProduction() {
   // Helper function to get status subtext
   const getStatusSubtext = (record: BiocharProductionRecord) => {
     const kontikiRecords = getKontikiRecords(record);
-    const verifiedCount = kontikiRecords.filter((k) => k.status === "VERIFIED").length;
-    const rejectedCount = kontikiRecords.filter((k) => k.status === "REJECTED").length;
-    const submittedCount = kontikiRecords.filter((k) => k.status === "SUBMITTED").length;
+    const verifiedCount = kontikiRecords.filter(
+      (k) => k.status === "VERIFIED"
+    ).length;
+    const rejectedCount = kontikiRecords.filter(
+      (k) => k.status === "REJECTED"
+    ).length;
+    const submittedCount = kontikiRecords.filter(
+      (k) => k.status === "SUBMITTED"
+    ).length;
     const actualStatus = getActualStatus(record);
 
     if (actualStatus === "SUBMITTED") {
@@ -199,7 +215,9 @@ export default function BiocharProduction() {
     if (actualStatus === "IN_PROGRESS") {
       // If some are still submitted, show review progress.
       if (submittedCount > 0) {
-        return `Reviewed ${verifiedCount + rejectedCount} / ${kontikiRecords.length}`;
+        return `Reviewed ${verifiedCount + rejectedCount} / ${
+          kontikiRecords.length
+        }`;
       }
       return "Complete Review";
     }
@@ -237,10 +255,11 @@ export default function BiocharProduction() {
       normalizeLower(record.site?.siteCode).includes(q) ||
       normalizeLower(record.site?.siteName).includes(q) ||
       // Kontiki fields
-      kontikiRecords.some((k) =>
-        normalizeLower(k.kontikiId).includes(q) ||
-        normalizeLower(k.kontiki?.kontikiCode).includes(q) ||
-        normalizeLower(k.kontiki?.kontikiName).includes(q)
+      kontikiRecords.some(
+        (k) =>
+          normalizeLower(k.kontikiId).includes(q) ||
+          normalizeLower(k.kontiki?.kontikiCode).includes(q) ||
+          normalizeLower(k.kontiki?.kontikiName).includes(q)
       );
 
     const matchesStatus =
@@ -256,7 +275,8 @@ export default function BiocharProduction() {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
 
-      matchesDateRange = !!recordDate && recordDate >= start && recordDate <= end;
+      matchesDateRange =
+        !!recordDate && recordDate >= start && recordDate <= end;
     }
 
     return (
@@ -338,7 +358,9 @@ export default function BiocharProduction() {
 
     const recordTotal = kontikiRecords.reduce((sum, kontiki) => {
       if (kontiki.aiVolumeEstimate) {
-        const volume = parseFloat(kontiki.aiVolumeEstimate.replace(/[^0-9.]/g, ""));
+        const volume = parseFloat(
+          kontiki.aiVolumeEstimate.replace(/[^0-9.]/g, "")
+        );
         return sum + (isNaN(volume) ? 0 : volume);
       }
       return sum;
@@ -497,7 +519,7 @@ export default function BiocharProduction() {
             </div>
           </div>
         </CardHeader>
-       <CardContent className="p-0">
+        <CardContent className="p-0">
   {/* DESKTOP & TABLET VIEW: Hidden on small screens (max-sm) */}
   <div className="hidden sm:block overflow-x-auto">
     <Table>
@@ -529,7 +551,6 @@ export default function BiocharProduction() {
         ) : (
           paginatedRecords.map((record) => (
             <TableRow key={record.id}>
-              {/* Your existing TableCell content remains exactly the same here */}
               <TableCell>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE] shrink-0">
@@ -569,7 +590,7 @@ export default function BiocharProduction() {
   </div>
 
   {/* MOBILE VIEW: Hidden on larger screens (min-sm) */}
-  <div className="sm:hidden divide-y divide-border">
+  <div className="sm:hidden">
     {isLoading ? (
       <div className="p-8 text-center flex flex-col items-center gap-2">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -578,55 +599,57 @@ export default function BiocharProduction() {
     ) : paginatedRecords.length === 0 ? (
       <div className="p-8 text-center text-muted-foreground text-sm">No records found</div>
     ) : (
-      paginatedRecords.map((record) => (
-        <div key={record.id} className="p-4 space-y-4">
-          <div className="flex justify-between items-start">
-            <div className="flex gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
-                <Factory className="h-5 w-5 text-[#295F58]" />
+      <div className="divide-y divide-border">
+        {paginatedRecords.map((record) => (
+          <div key={record.id} className="p-4 pb-8 space-y-4">
+            <div className="flex justify-between items-start">
+              <div className="flex gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
+                  <Factory className="h-5 w-5 text-[#295F58]" />
+                </div>
+                <div>
+                  <div className="font-bold text-base">{record.recordDate}</div>
+                  <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleViewRecord(record)}
+                className="border-[#295F58]/20 text-[#295F58]"
+              >
+                <Eye className="h-4 w-4 mr-2" /> View
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Site/User</p>
+                <p className="text-sm font-medium">{record.site?.siteCode ?? "—"}</p>
+                <p className="text-xs text-muted-foreground">{record.user?.userCode ?? "—"}</p>
               </div>
               <div>
-                <div className="font-bold text-base">{record.recordDate}</div>
-                <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Shift & Kontikis</p>
+                <Badge className={`${getStepColor(record.shiftNumber)} text-[10px] px-1.5 py-0`}>
+                  Shift {record.shift.shiftNumber}
+                </Badge>
+                <p className="text-xs text-muted-foreground mt-1 truncate">
+                  {getKontikiRecords(record).map(k => getKontikiName(k)).join(", ")}
+                </p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => handleViewRecord(record)}
-              className="border-[#295F58]/20 text-[#295F58]"
-            >
-              <Eye className="h-4 w-4 mr-2" /> View
-            </Button>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Site/User</p>
-              <p className="text-sm font-medium">{record.site?.siteCode ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">{record.user?.userCode ?? "—"}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Shift & Kontikis</p>
-              <Badge className={`${getStepColor(record.shiftNumber)} text-[10px] px-1.5 py-0`}>
-                Shift {record.shift.shiftNumber}
+            <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
+              <Badge className={getStatusColor(getActualStatus(record))}>
+                {getActualStatus(record).replace("_", " ")}
               </Badge>
-              <p className="text-xs text-muted-foreground mt-1 truncate">
-                 {getKontikiRecords(record).map(k => getKontikiName(k)).join(", ")}
-              </p>
+              <span className="text-[11px] text-muted-foreground italic">
+                {getStatusSubtext(record)}
+              </span>
             </div>
           </div>
-
-          <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
-            <Badge className={getStatusColor(getActualStatus(record))}>
-              {getActualStatus(record).replace("_", " ")}
-            </Badge>
-            <span className="text-[11px] text-muted-foreground italic">
-              {getStatusSubtext(record)}
-            </span>
-          </div>
-        </div>
-      ))
+        ))}
+      </div>
     )}
   </div>
 </CardContent>
@@ -716,13 +739,15 @@ export default function BiocharProduction() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Site</Label>
                   <div className="text-sm font-medium">
-                    {selectedRecord.site?.siteCode ?? selectedRecord.siteCode} - {selectedRecord.site?.siteName ?? selectedRecord.siteName}
+                    {selectedRecord.site?.siteCode ?? selectedRecord.siteCode} -{" "}
+                    {selectedRecord.site?.siteName ?? selectedRecord.siteName}
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">User</Label>
                   <div className="text-sm font-medium">
-                    {selectedRecord.user?.userCode ?? selectedRecord.userCode} - {selectedRecord.userName}
+                    {selectedRecord.user?.userCode ?? selectedRecord.userCode} -{" "}
+                    {selectedRecord.userName}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -738,7 +763,9 @@ export default function BiocharProduction() {
                     Shift No.
                   </Label>
                   <div className="text-sm font-medium">
-                    Shift {selectedRecord.shift?.shiftNumber ?? selectedRecord.shiftNumber}
+                    Shift{" "}
+                    {selectedRecord.shift?.shiftNumber ??
+                      selectedRecord.shiftNumber}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -998,8 +1025,10 @@ export default function BiocharProduction() {
             <AlertDialogTitle>Accept Kon-tiki</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to accept
-              {selectedKontiki ? ` ${getKontikiName(selectedKontiki)}` : " this Kon-tiki"}?
-              This action will mark this Kon-tiki as verified.
+              {selectedKontiki
+                ? ` ${getKontikiName(selectedKontiki)}`
+                : " this Kon-tiki"}
+              ? This action will mark this Kon-tiki as verified.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1022,7 +1051,9 @@ export default function BiocharProduction() {
             <DialogTitle>Reject Kon-tiki</DialogTitle>
             <DialogDescription>
               Provide a reason for rejecting
-              {selectedKontiki ? ` ${getKontikiName(selectedKontiki)}` : " this Kon-tiki"}
+              {selectedKontiki
+                ? ` ${getKontikiName(selectedKontiki)}`
+                : " this Kon-tiki"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
