@@ -320,20 +320,34 @@ export default function BiocharProduction() {
     setIsRejectDialogOpen(true);
   };
 
-  const handleConfirmVerify = async () => {
-    if (!selectedRecord || !selectedKontiki) return;
+  // const handleConfirmVerify = async () => {
+  //   if (!selectedRecord || !selectedKontiki) return;
 
-    try {
-      await verifyKontiki(selectedRecord.id, {
-        kontikiId: selectedKontiki.kontikiId,
-      });
-      setIsVerifyDialogOpen(false);
-      setSelectedKontiki(null);
-      setIsViewDialogOpen(false); // Close the view dialog to refresh
-    } catch (error) {
-      console.error("Error verifying kontiki:", error);
-    }
-  };
+  //   try {
+  //     await verifyKontiki(selectedRecord.id, {
+  //       kontikiId: selectedKontiki.kontikiId,
+  //     });
+  //     setIsVerifyDialogOpen(false);
+  //     setSelectedKontiki(null);
+  //     setIsViewDialogOpen(false); // Close the view dialog to refresh
+  //   } catch (error) {
+  //     console.error("Error verifying kontiki:", error);
+  //   }
+  // };
+  const handleConfirmVerify = async () => {
+  if (!selectedKontiki) return;
+
+  try {
+    await verifyKontiki(selectedKontiki.id);
+
+    setIsVerifyDialogOpen(false);
+    setSelectedKontiki(null);
+    setIsViewDialogOpen(false);
+  } catch (error) {
+    console.error("Error verifying kontiki:", error);
+  }
+};
+
 
   const handleConfirmReject = async () => {
     if (!selectedRecord || !selectedKontiki || !rejectionNote.trim()) return;
@@ -558,8 +572,8 @@ export default function BiocharProduction() {
                     <Factory className="h-4 w-4 text-[#295F58]" />
                   </div>
                   <div>
-                    <div className="font-medium">{formatDate(record.recordDate)}</div>
-                    <div className="text-sm text-muted-foreground">{formatTime(record.recordTime)}</div>
+                    <div className="font-medium">{(record.recordDate)}</div>
+                    <div className="text-sm text-muted-foreground">{(record.recordTime)}</div>
                   </div>
                 </div>
               </TableCell>
@@ -609,8 +623,8 @@ export default function BiocharProduction() {
                   <Factory className="h-5 w-5 text-[#295F58]" />
                 </div>
                 <div>
-                  <div className="font-bold text-base">{formatDate(record.recordDate)}</div>
-                  <div className="text-sm text-muted-foreground">{formatTime(record.recordTime)}</div>
+                  <div className="font-bold text-base">{(record.recordDate)}</div>
+                  <div className="text-sm text-muted-foreground">{(record.recordTime)}</div>
                 </div>
               </div>
               <Button 
@@ -728,7 +742,7 @@ export default function BiocharProduction() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Date</Label>
                   <div className="text-sm font-medium">
-                    {formatDate(selectedRecord.recordDate)}
+                    {(selectedRecord.recordDate)}
                   </div>
                 </div>
                 <div className="space-y-1">

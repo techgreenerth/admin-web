@@ -40,7 +40,7 @@ import { DashboardProvider } from "./contexts/DashboardContext";
 import { ROLES } from "@/constrants/roles";
 import { RoleGate } from "./pages/auth/RoleGate";
 import CsiVerifiedRecords from "./pages/Csi/CsiVerifiedRecords";
-import { CsiLayout } from "./components/layout/CsiLayout";
+
 
 const queryClient = new QueryClient();
 
