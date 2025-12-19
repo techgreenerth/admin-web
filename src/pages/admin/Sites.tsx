@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSites } from "@/contexts/siteContext";
 import { userService } from "@/lib/api/user.service";
-import { Site } from "@/types/site.types";
+import { Site, AssignedUser } from "@/types/site.types";
 import {
   Plus,
   Search,
@@ -43,15 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,6 +60,7 @@ import { ViewSiteDetailsDialog } from "@/components/sites/ViewSiteDetailsDialog"
 import { EditSiteDialog } from "@/components/sites/EditSiteDialog";
 import { CreateSiteDialog } from "@/components/sites/CreateSiteDialog";
 import { RevokeUserDialog } from "@/components/sites/RevokeUserDialog";
+import { log } from "console";
 
 export default function Sites() {
   const navigate = useNavigate();
@@ -91,6 +84,9 @@ export default function Sites() {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fixed: Changed type to match AssignedUser interface
+  const [assignedUsers, setAssignedUsers] = useState<AssignedUser[]>([]);
+
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
 
   const {
@@ -102,6 +98,7 @@ export default function Sites() {
     revokeUserFromSite,
     updateSite,
     fetchSites,
+    getSiteById
   } = useSites();
 
   // Refresh data when navigating to this page
@@ -124,11 +121,32 @@ export default function Sites() {
     }
   };
 
+  // Fixed: Changed setAssignedUsers(user) to setAssignedUsers(users)
+  const fetchAssignedUsers = async (siteId: string) => {
+    try {
+      const site = await getSiteById(siteId);
+
+      const users =
+        site.userAssignments?.map((ua) => ua.user) ?? [];
+
+      setAssignedUsers(users);
+      console.log("Mapped users:", users);
+      console.log(assignedUsers) // Fixed: was setAssignedUsers(user)
+    } catch (error: any) {
+      console.error(
+        error.response?.data?.message || "Failed to fetch assigned users"
+      );
+    }
+  };
+
+ 
   useEffect(() => {
     if (isAssignUserDialogOpen) {
       fetchUsersForAssignment();
     }
   }, [isAssignUserDialogOpen]);
+
+
 
   const validateForm = () => {
     const newErrors: any = {};
@@ -315,9 +333,10 @@ export default function Sites() {
     setIsAssignUserDialogOpen(true);
   };
 
-  const handleRevokeUser = (site: Site) => {
+  const handleRevokeUser = async (site: Site) => {
     setSelectedSite(site);
     setSelectedUserId("");
+    await fetchAssignedUsers(site.id);
     setIsRevokeUserDialogOpen(true);
   };
 
@@ -341,14 +360,18 @@ export default function Sites() {
       await deleteSite(selectedSite.id);
       setIsDeleteDialogOpen(false);
       setSelectedSite(null);
-    } catch (error) {
-      console.error("Failed to delete site", error);
-    }
-    console.log("Deleting site:", selectedSite?.id);
-    setIsDeleteDialogOpen(false);
+    } catch (error: any) {
+    console.error("Failed to delete site:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+  }
   };
+
   const handleConfirmAssignUser = async () => {
     try {
+      setIsSubmitting(true);
       await assignUserToSite(selectedSite.id, {
         userId: selectedUserId,
       });
@@ -358,18 +381,28 @@ export default function Sites() {
     } catch (error) {
       console.error("Failed to assign user", error);
     }
+    finally {
+    setIsSubmitting(false);
+  }
   };
+
   const handleConfirmRevokeUser = async () => {
     try {
+      setIsSubmitting(true);
       await revokeUserFromSite(selectedSite.id, {
         userId: selectedUserId,
       });
       setIsRevokeUserDialogOpen(false);
       setSelectedUserId("");
       setSelectedSite(null);
+      // Refresh sites to update the count
+      await fetchSites();
     } catch (error) {
       console.error("Failed to revoke user", error);
     }
+    finally {
+    setIsSubmitting(false);
+  }
   };
 
   return (
@@ -385,12 +418,13 @@ export default function Sites() {
           </p>
         </div>
 
+        {/* Fixed: Changed button text from "Add User" to "Add Site" */}
         <Button
           onClick={handleCreateSite}
           className="w-full md:w-auto bg-[#295F58] hover:bg-[#295F58]/90"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add User
+          Add Site
         </Button>
       </div>
 
@@ -441,7 +475,7 @@ export default function Sites() {
               {isLoading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-8 text-muted-foreground"
                   >
                     Loading Sites...
@@ -450,7 +484,7 @@ export default function Sites() {
               ) : sites.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-8 text-muted-foreground"
                   >
                     No Sites found
@@ -530,8 +564,7 @@ export default function Sites() {
                             <UserPlus className="h-4 w-4 mr-2" />
                             Assign User
                           </DropdownMenuItem>
-                          {site.assignedUsers &&
-                            site.assignedUsers.length > 0 && (
+                          {site._count?.userAssignments > 0 && (
                               <DropdownMenuItem
                                 onClick={() => handleRevokeUser(site)}
                               >
@@ -676,7 +709,6 @@ export default function Sites() {
       </AlertDialog>
 
       {/* Assign User Dialog */}
-      
       <AssignUserDialog
         open={isAssignUserDialogOpen}
         onOpenChange={setIsAssignUserDialogOpen}
@@ -686,18 +718,20 @@ export default function Sites() {
         onUserChange={setSelectedUserId}
         onCancel={() => setIsAssignUserDialogOpen(false)}
         onConfirm={handleConfirmAssignUser}
+        isSubmitting={isSubmitting}
       />
 
       {/* Revoke User Dialog */}
-
       <RevokeUserDialog
-  open={isRevokeUserDialogOpen}
-  onOpenChange={setIsRevokeUserDialogOpen}
-  selectedSite={selectedSite}
-  selectedUserId={selectedUserId}
-  setSelectedUserId={setSelectedUserId}
-  onConfirm={handleConfirmRevokeUser}
-/>
+        open={isRevokeUserDialogOpen}
+        onOpenChange={setIsRevokeUserDialogOpen}
+        selectedSite={selectedSite}
+        assignedUsers={assignedUsers} 
+        selectedUserId={selectedUserId}
+        setSelectedUserId={setSelectedUserId}
+        onConfirm={handleConfirmRevokeUser}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

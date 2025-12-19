@@ -61,15 +61,18 @@ export function SitesProvider({ children }: { children: ReactNode }) {
   };
 
   //   Delete a Site
-  const deleteSite = async (siteId: string) => {
-    try {
-      setIsLoading(true);
-      await sitesService.deleteSite(siteId);
-      await fetchSites(); // refresh list after delete
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const deleteSite = async (siteId: string) => {
+  try {
+    setIsLoading(true);
+    await sitesService.deleteSite(siteId);
+    await fetchSites();
+  } catch (error) {
+    console.error("deleteSite failed:", error);
+    throw error; // 👈 VERY IMPORTANT
+  } finally {
+    setIsLoading(false);
+  }
+};
 
 //   assign a user
   const assignUserToSite = async (siteId: string,payload: AssignUserPayload) => {

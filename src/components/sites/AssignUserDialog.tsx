@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -16,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 interface AssignUserDialogProps {
   open: boolean;
@@ -35,6 +35,7 @@ interface AssignUserDialogProps {
 
   onCancel: () => void;
   onConfirm: () => void;
+  isSubmitting?: boolean;
 }
 
 export function AssignUserDialog({
@@ -46,6 +47,7 @@ export function AssignUserDialog({
   onUserChange,
   onCancel,
   onConfirm,
+  isSubmitting = false,
 }: AssignUserDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -76,15 +78,22 @@ export function AssignUserDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
             className="bg-[#295F58] hover:bg-[#295F58]/90"
             onClick={onConfirm}
-            disabled={!selectedUserId}
+            disabled={!selectedUserId || isSubmitting}
           >
-            Assign User
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Assigning User...
+              </>
+            ) : (
+              "Assign User"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
