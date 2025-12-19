@@ -34,6 +34,7 @@ import { BiocharProductionProvider } from "./contexts/biocharProductionContext";
 import { BiocharActivationProvider } from "./contexts/biocharActivationContext";
 import { BiocharSamplingProvider } from "./contexts/biocharSamplingContext";
 import { BulkDensityProvider } from "./contexts/bulkDensityContext";
+import { ProfileProvider } from "./contexts/ProfileContext";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ProfileProvider>
           <SitesProvider>
             <KontikiProvider>
               <BiomassSourcingProvider>
@@ -103,6 +105,7 @@ const App = () => (
               </BiomassSourcingProvider>
           </KontikiProvider>
           </SitesProvider>
+          </ProfileProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

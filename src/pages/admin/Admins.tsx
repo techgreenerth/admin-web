@@ -243,18 +243,24 @@ export default function Admins() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#295F58]">Admin Management</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage platform administrators and permissions
-          </p>
-        </div>
-        <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleCreateAdmin}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Admin
-        </Button>
-      </div>
+<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+  <div>
+    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#295F58]">
+      Admin Management
+    </h1>
+    <p className="text-sm sm:text-base text-muted-foreground mt-1">
+      Manage platform administrators and permissions
+    </p>
+  </div>
+
+  <Button
+    onClick={handleCreateAdmin}
+    className="w-full md:w-auto bg-[#295F58] hover:bg-[#295F58]/90"
+  >
+    <Plus className="h-4 w-4 mr-2" />
+    Add Admin
+  </Button>
+</div>
 
       <Card>
         <CardHeader className="border-b">

@@ -179,10 +179,10 @@ export default function BiocharActivation() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#295F58]">
+          <h1 className="text-2xl md:text-3xl  font-bold text-[#295F58]">
             Biochar Activation
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className=" text-sm text-muted-foreground mt-1">
             Track and verify biochar mixing and activation records
           </p>
         </div>
@@ -275,102 +275,151 @@ export default function BiocharActivation() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Record Info</TableHead>
-                <TableHead>Site & User</TableHead>
-                <TableHead>Shift & Agent</TableHead>
-                <TableHead>Media</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12">
-                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Loading biochar activation records...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : paginatedRecords.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-muted-foreground py-8"
-                  >
-                    No records found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedRecords.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE]">
-                            <FlaskConical className="h-4 w-4 text-[#295F58]" />
-                          </div>
-                          <div>
-                            <div className="font-medium">
-                              {record.recordDate}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {record.recordTime}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium">
-                          {record.site?.siteCode ?? "—"}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {record.user?.userCode ?? "—"}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <Badge className={getShiftColor(record.shift?.shiftName)}>
-                          {record.shift?.shiftName ?? "Shift"}
-                        </Badge>
-                        <div className="text-sm text-muted-foreground">
-                          {record.mixingAgent}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {hasAnyTractorPhoto(record) && (
-                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        {hasAnyMixingVideo(record) && (
-                          <Video className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleViewRecord(record)}
-                        className="hover:bg-[#295F58]/10"
-                      >
-                        <Eye className="h-4 w-4 text-[#295F58]" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
+       <CardContent className="p-0">
+  {/* DESKTOP VIEW: Hidden on mobile, shown on tablet/desktop */}
+  <div className="hidden sm:block overflow-x-auto">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Record Info</TableHead>
+          <TableHead>Site & User</TableHead>
+          <TableHead>Shift & Agent</TableHead>
+          <TableHead>Media</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {isLoading ? (
+          <TableRow>
+            <TableCell colSpan={5} className="text-center py-12">
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading biochar activation records...</span>
+              </div>
+            </TableCell>
+          </TableRow>
+        ) : paginatedRecords.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+              No records found
+            </TableCell>
+          </TableRow>
+        ) : (
+          paginatedRecords.map((record) => (
+            <TableRow key={record.id}>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE] shrink-0">
+                    <FlaskConical className="h-4 w-4 text-[#295F58]" />
+                  </div>
+                  <div>
+                    <div className="font-medium">{record.recordDate}</div>
+                    <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="text-sm font-medium">{record.site?.siteCode ?? "—"}</div>
+                <div className="text-sm text-muted-foreground">{record.user?.userCode ?? "—"}</div>
+              </TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  <Badge className={getShiftColor(record.shift?.shiftName)}>
+                    {record.shift?.shiftName ?? "Shift"}
+                  </Badge>
+                  <div className="text-sm text-muted-foreground">{record.mixingAgent}</div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {hasAnyTractorPhoto(record) && <ImageIcon className="h-4 w-4 text-muted-foreground" />}
+                  {hasAnyMixingVideo(record) && <Video className="h-4 w-4 text-muted-foreground" />}
+                </div>
+              </TableCell>
+              <TableCell className="text-right">
+                <Button variant="ghost" size="icon" onClick={() => handleViewRecord(record)} className="hover:bg-[#295F58]/10">
+                  <Eye className="h-4 w-4 text-[#295F58]" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  </div>
+
+  {/* MOBILE VIEW: Card Stack */}
+  <div className="sm:hidden divide-y divide-border">
+    {isLoading ? (
+      <div className="p-8 text-center flex flex-col items-center gap-2">
+        <Loader2 className="h-6 w-6 animate-spin text-[#295F58]" />
+        <span className="text-sm text-muted-foreground">Loading records...</span>
+      </div>
+    ) : paginatedRecords.length === 0 ? (
+      <div className="p-8 text-center text-muted-foreground">No records found</div>
+    ) : (
+      paginatedRecords.map((record) => (
+        <div key={record.id} className="p-4 space-y-4">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE]">
+                <FlaskConical className="h-5 w-5 text-[#295F58]" />
+              </div>
+              <div>
+                <div className="font-bold text-base">{record.recordDate}</div>
+                <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleViewRecord(record)}
+              className="border-[#295F58]/20 text-[#295F58]"
+            >
+              <Eye className="h-4 w-4 mr-2" /> View
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/*Shift & Agent */}
+            <div className="bg-slate-50 p-2 rounded-md border border-slate-100">
+              <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Shift & Agent</p>
+              <p className="text-sm font-semibold text-[#295F58]">{record.mixingAgent || "Not Specified"}</p>
+               <Badge className={`${getShiftColor(record.shift?.shiftName)} text-[10px] px-1.5 py-0 w-fit`}>
+                  {record.shift?.shiftName ?? "Shift"}
+                </Badge>
+            </div>
+            {/* Site and User */}
+            <div className="bg-slate-50 p-2 rounded-md border border-slate-100">
+              <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Assignment</p>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-medium">{record.site?.siteCode ?? "—"}</span>
+                <span className="text-xs font-medium">{record.user?.userCode ?? "—"}</span>
+               
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <ImageIcon className={`h-4 w-4 ${hasAnyTractorPhoto(record) ? 'text-[#295F58]' : 'text-gray-300'}`} />
+                <span className="text-[11px] text-muted-foreground">Photo</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Video className={`h-4 w-4 ${hasAnyMixingVideo(record) ? 'text-[#295F58]' : 'text-gray-300'}`} />
+                <span className="text-[11px] text-muted-foreground">Video</span>
+              </div>
+            </div>
+            <span className="text-[11px] font-mono text-muted-foreground">
+              User: {record.user?.userCode ?? "—"}
+            </span>
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+</CardContent>
       </Card>
 
       {/* Pagination */}

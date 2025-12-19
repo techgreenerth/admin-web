@@ -400,7 +400,7 @@ export default function AdminDashboard() {
               <table className="w-full">
                 <thead className="bg-gray-50/50">
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <th className="text-left  py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Module
                     </th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">

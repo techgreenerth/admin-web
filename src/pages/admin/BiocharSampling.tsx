@@ -130,8 +130,8 @@ export default function BiocharSampling() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#295F58]">Biochar Sampling</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl  font-bold text-[#295F58]">Biochar Sampling</h1>
+          <p className=" text-sm text-muted-foreground mt-1">
             Track and verify biochar sample collection records
           </p>
         </div>
@@ -215,91 +215,161 @@ export default function BiocharSampling() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Record Info</TableHead>
-                <TableHead>Site & User</TableHead>
-                <TableHead>Kon-tikis</TableHead>
-                <TableHead>Samples</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Loading records...</span>
+  {/* DESKTOP & TABLET VIEW: Hidden on small screens (max-sm) */}
+  <div className="hidden sm:block overflow-x-auto">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Record Info</TableHead>
+          <TableHead>Site & User</TableHead>
+          <TableHead>Kon-tikis</TableHead>
+          <TableHead>Samples</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {isLoading ? (
+          <TableRow>
+            <TableCell colSpan={5} className="text-center py-8">
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Loading records...</span>
+              </div>
+            </TableCell>
+          </TableRow>
+        ) : records.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+              No records found
+            </TableCell>
+          </TableRow>
+        ) : (
+          records.map((record) => (
+            <TableRow key={record.id}>
+              <TableCell>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE]">
+                      <Beaker className="h-4 w-4 text-[#295F58]" />
                     </div>
-                  </TableCell>
-                </TableRow>
-              ) : records.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    No records found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                records.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE]">
-                            <Beaker className="h-4 w-4 text-[#295F58]" />
-                          </div>
-                          <div>
-                            <div className="font-medium">{record.recordDate}</div>
-                            <div className="text-sm text-muted-foreground">{record.recordTime}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium">{record.site?.siteCode ?? "—"}</div>
-                        <div className="text-sm text-muted-foreground">{record.user?.userCode ?? "—"}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="text-sm text-muted-foreground">
-                          {getKontikiRecords(record)
-                            .map((k) => getKontikiName(k))
-                            .join(", ")}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {hasAnySamplePhoto(record) && (
-                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span className="text-sm text-muted-foreground">
-                          {getTotalSamplePhotosCount(record)}
-                          {" "}
-                          {getTotalSamplePhotosCount(record) === 1 ? "photo" : "photos"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleViewRecord(record)}
-                        className="hover:bg-[#295F58]/10"
-                      >
-                        <Eye className="h-4 w-4 text-[#295F58]" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
+                    <div>
+                      <div className="font-medium">{record.recordDate}</div>
+                      <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                    </div>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  <div className="text-sm font-medium">{record.site?.siteCode ?? "—"}</div>
+                  <div className="text-sm text-muted-foreground">{record.user?.userCode ?? "—"}</div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="space-y-1">
+                  <div className="text-sm text-muted-foreground">
+                    {getKontikiRecords(record)
+                      .map((k) => getKontikiName(k))
+                      .join(", ")}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {hasAnySamplePhoto(record) && (
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <span className="text-sm text-muted-foreground">
+                    {getTotalSamplePhotosCount(record)}
+                    {" "}
+                    {getTotalSamplePhotosCount(record) === 1 ? "photo" : "photos"}
+                  </span>
+                </div>
+              </TableCell>
+              <TableCell className="text-right">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleViewRecord(record)}
+                  className="hover:bg-[#295F58]/10"
+                >
+                  <Eye className="h-4 w-4 text-[#295F58]" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  </div>
+
+  {/* MOBILE VIEW: Hidden on larger screens (min-sm) */}
+  <div className="sm:hidden">
+    {isLoading ? (
+      <div className="p-8  text-center flex flex-col items-center gap-2">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">Loading records...</span>
+      </div>
+    ) : records.length === 0 ? (
+      <div className="p-8 text-center text-muted-foreground text-sm">No records found</div>
+    ) : (
+      <div className="divide-y divide-border">
+        {records.map((record) => (
+          <div key={record.id} className="p-4 mb-8 space-y-4">
+            <div className="flex justify-between items-start">
+              <div className="flex gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
+                  <Beaker className="h-5 w-5 text-[#295F58]" />
+                </div>
+                <div>
+                  <div className="font-bold text-base">{record.recordDate}</div>
+                  <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleViewRecord(record)}
+                className="border-[#295F58]/20 text-[#295F58]"
+              >
+                <Eye className="h-4 w-4 mr-2" /> View
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Site/User</p>
+                <p className="text-sm font-medium">{record.site?.siteCode ?? "—"}</p>
+                <p className="text-xs text-muted-foreground">{record.user?.userCode ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Kon-tikis</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {getKontikiRecords(record)
+                    .map((k) => getKontikiName(k))
+                    .join(", ") || "—"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
+              <div className="flex items-center gap-2">
+                {hasAnySamplePhoto(record) && (
+                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {getTotalSamplePhotosCount(record)}
+                  {" "}
+                  {getTotalSamplePhotosCount(record) === 1 ? "photo" : "photos"}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</CardContent>
       </Card>
 
       {/* Pagination */}
