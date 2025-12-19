@@ -24,7 +24,7 @@ import BiocharActivation from "./pages/admin/BiocharActivation";
 import BiocharSampling from "./pages/admin/BiocharSampling";
 import BulkDensity from "./pages/admin/BulkDensity";
 import HelpSupport from "./pages/admin/HelpSupport";
-import Settings from "./pages/admin/Settings";
+// import Settings from "./pages/admin/Settings";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/admin/Profile";
 import { SitesProvider } from "./contexts/siteContext";
@@ -89,7 +89,7 @@ const App = () => (
                       />
                       <Route path="bulk-density" element={<BulkDensity />} />
                       <Route path="help" element={<HelpSupport />} />
-                      <Route path="settings" element={<Settings />} />
+                      {/* <Route path="settings" element={<Settings />} /> */}
                       <Route path="profile" element={<Profile />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
