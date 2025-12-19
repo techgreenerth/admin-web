@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,101 +28,50 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Mock data based on schema
-const mockStats = {
-  totalUsers: 45,
-  totalAdmins: 8,
-  totalSites: 12,
-  totalKontikis: 24,
-  totalShifts: 60,
-  pendingVerifications: 127,
-  verifiedRecords: 1854,
-  rejectedRecords: 43,
-  totalBiomassTrips: 49, // Number of biomass sourcing trips
-  totalBiomassSourced: 24500, // 49 trips × 500 kg
-  totalBatches: 156,
-  totalBiocharProduced: 18420,
-};
 
-const mockModuleData = [
-  { module: "Biomass", fullName: "Biomass Sourcing", count: 485, color: "#8B5CF6" },
-  { module: "Production", fullName: "Biochar Production", count: 392, color: "#3B82F6" },
-  { module: "Activation", fullName: "Biochar Activation", count: 318, color: "#F59E0B" },
-  { module: "Sampling", fullName: "Biochar Sampling", count: 267, color: "#EC4899" },
-  { module: "Bulk Density", fullName: "Bulk Density", count: 262, color: "#10B981" },
-];
 
-const mockStatusData = [
-  { name: "Verified", value: 1854, color: "#10B981" },
-  { name: "Pending", value: 127, color: "#F59E0B" },
-  { name: "Rejected", value: 43, color: "#EF4444" },
-];
+import { useDashboard } from "../../contexts/DashboardContext";
+import { formatTime } from "@/lib/utils/date";
 
-const mockSiteData = [
-  { site: "AP-001", count: 384 },
-  { site: "AP-002", count: 342 },
-  { site: "AP-003", count: 298 },
-  { site: "AP-004", count: 256 },
-  { site: "AP-005", count: 234 },
-];
 
-const mockTrendData = [
-  { month: "Jul", records: 145 },
-  { month: "Aug", records: 198 },
-  { month: "Sep", records: 234 },
-  { month: "Oct", records: 312 },
-  { month: "Nov", records: 428 },
-  { month: "Dec", records: 507 },
-];
 
-const mockRecentActivity = [
-  {
-    id: "1",
-    module: "Biomass Sourcing",
-    user: "Rajesh Kumar",
-    site: "AP-001",
-    status: "SUBMITTED",
-    timestamp: "2024-12-01 14:30",
-  },
-  {
-    id: "2",
-    module: "Biochar Production",
-    user: "Priya Sharma",
-    site: "AP-002",
-    status: "VERIFIED",
-    timestamp: "2024-12-01 13:15",
-  },
-  {
-    id: "3",
-    module: "Biochar Activation",
-    user: "Amit Patel",
-    site: "AP-003",
-    status: "SUBMITTED",
-    timestamp: "2024-12-01 12:45",
-  },
-  {
-    id: "4",
-    module: "Bulk Density",
-    user: "Sneha Reddy",
-    site: "AP-001",
-    status: "VERIFIED",
-    timestamp: "2024-12-01 11:20",
-  },
-  {
-    id: "5",
-    module: "Biochar Sampling",
-    user: "Vikram Singh",
-    site: "AP-004",
-    status: "REJECTED",
-    timestamp: "2024-12-01 10:15",
-  },
-];
+
 
 export default function AdminDashboard() {
-  const [trendFilters, setTrendFilters] = useState({
-    startDate: "",
-    endDate: "",
-  });
+
+  const { overview, isLoading ,recordStatus,recentActivity ,recordTrend, fetchRecordTrend} = useDashboard();
+  const [trendFilters, setTrendFilters] = useState({startDate: "",endDate: ""});
+
+  const mockStatusData = recordStatus
+  ? [
+      {
+        name: "Verified",
+        value: recordStatus.verified.count,
+        color: "#10B981",
+      },
+      {
+        name: "submitted",
+        value: recordStatus.submitted.count,
+        color: "#F59E0B",
+      },
+      {
+        name: "Rejected",
+        value: recordStatus.rejected.count,
+        color: "#EF4444",
+      },
+      {
+        name: "Draft",
+        value: recordStatus.draft.count,
+        color: "#6B7280",
+      },
+    ].filter((item) => item.value > 0)
+  : [];
+
+  
+const chartData = (recordTrend ?? []).map(item => ({
+  month: item.month,
+  records: item.count,
+}));
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -136,6 +85,25 @@ export default function AdminDashboard() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+    useEffect(() => {
+  if (trendFilters.startDate && trendFilters.endDate) {
+    fetchRecordTrend(trendFilters.startDate, trendFilters.endDate);
+  }
+}, [trendFilters.startDate, trendFilters.endDate]);
+
+    if (isLoading || !overview ) {
+        return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  
 
   // Custom label for pie chart
   const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
@@ -158,6 +126,7 @@ export default function AdminDashboard() {
     );
   };
 
+
   return (
     <div className="space-y-6 pb-8">
       {/* Page Header */}
@@ -176,7 +145,7 @@ export default function AdminDashboard() {
                   Active Sites
                 </p>
                 <h3 className="text-4xl font-bold text-[#295F58]">
-                  {mockStats.totalSites}
+                  {overview.activeSites}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Production sites
@@ -198,10 +167,10 @@ export default function AdminDashboard() {
                   Total Biomass Sourced
                 </p>
                 <h3 className="text-4xl font-bold text-[#295F58]">
-                  {mockStats.totalBiomassSourced.toLocaleString()} kg
+                  {overview.totalBiomassSourced.value} kg
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  from {mockStats.totalBiomassTrips} trips
+                  from {overview.totalBiomassSourced.fromTrips} trips
                 </p>
               </div>
               <div className="h-16 w-16 bg-gray-100 rounded-xl flex items-center justify-center">
@@ -220,7 +189,7 @@ export default function AdminDashboard() {
                   Total Batches
                 </p>
                 <h3 className="text-4xl font-bold text-[#295F58]">
-                  {mockStats.totalBatches}
+                  {overview.totalBatches}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Production batches
@@ -242,7 +211,7 @@ export default function AdminDashboard() {
                   Total Biochar Produced
                 </p>
                 <h3 className="text-4xl font-bold text-[#295F58]">
-                  {mockStats.totalBiocharProduced.toLocaleString()}
+                  {overview.totalBiocharProduced.value}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Kilograms
@@ -350,7 +319,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={mockTrendData}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
                 <XAxis
                   dataKey="month"
@@ -418,8 +387,8 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockRecentActivity.map((activity) => (
-                    <tr key={activity.id} className="border-b hover:bg-gray-50/50 transition-colors">
+                 {(recentActivity ?? []).map((activity) => (
+                    <tr key={activity.site} className="border-b hover:bg-gray-50/50 transition-colors">
                       <td className="py-3 px-4 text-sm font-medium">
                         {activity.module}
                       </td>
@@ -437,7 +406,7 @@ export default function AdminDashboard() {
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">
-                        {activity.timestamp}
+                        {formatTime(activity.time)}
                       </td>
                     </tr>
                   ))}

@@ -1,6 +1,6 @@
 export type AdminRole = "ADMIN" | "SUPER_ADMIN";
 export type AdminStatus = "ACTIVE" | "SUSPENDED";
-
+import { Role } from ".././constrants/roles";
 
 export interface AdminProfile {
 id: string;
@@ -8,7 +8,7 @@ email: string;
 phone: string;
 firstName: string;
 lastName: string;
-role: AdminRole;
+role: Role;
 status: AdminStatus;
 permissions: string[];
 profileImage: string | null;

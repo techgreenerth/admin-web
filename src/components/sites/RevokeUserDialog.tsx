@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 interface User {
   id: string;
@@ -25,7 +26,6 @@ interface User {
 
 interface Site {
   siteName: string;
-  assignedUsers?: User[];
 }
 
 interface RevokeUserDialogProps {
@@ -33,10 +33,12 @@ interface RevokeUserDialogProps {
   onOpenChange: (open: boolean) => void;
 
   selectedSite: Site | null;
+  assignedUsers: User[];
   selectedUserId: string;
   setSelectedUserId: (id: string) => void;
 
   onConfirm: () => void;
+  isSubmitting?: boolean;
 }
 
 export function RevokeUserDialog({
@@ -45,7 +47,9 @@ export function RevokeUserDialog({
   selectedSite,
   selectedUserId,
   setSelectedUserId,
+  assignedUsers, 
   onConfirm,
+  isSubmitting
 }: RevokeUserDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,7 +69,7 @@ export function RevokeUserDialog({
                 <SelectValue placeholder="Choose a user" />
               </SelectTrigger>
               <SelectContent>
-                {selectedSite?.assignedUsers?.map((user) => (
+                {assignedUsers.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.firstName} {user.lastName} ({user.userCode})
                   </SelectItem>
@@ -84,7 +88,15 @@ export function RevokeUserDialog({
             onClick={onConfirm}
             disabled={!selectedUserId}
           >
-            Revoke User
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Revoking User...
+              </>
+            ) : (
+              "Revoke User"
+            )}
+            
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -82,7 +82,7 @@ export interface BiocharProductionRecord {
 }
 
 export interface VerifyKontikiPayload {
-  kontikiId: string;
+  kontikiRecordId: string;
 }
 
 export interface RejectKontikiPayload {

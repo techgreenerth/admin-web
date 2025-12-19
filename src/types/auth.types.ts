@@ -3,15 +3,17 @@ export enum AdminRole {
   ADMIN = "ADMIN",
   SUPERVISOR = "SUPERVISOR",
   VERIFIER = "VERIFIER",
+  CSI_MANAGER = "CSI_MANAGER"
 }
 
+import { Role } from "../constrants/roles";
 export interface Admin {
   id: string;
   email: string;
   phone?: string;
   firstName: string;
   lastName: string;
-  role: AdminRole;
+  role: Role;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

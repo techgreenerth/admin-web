@@ -19,7 +19,7 @@ interface BiocharProductionContextType {
   isLoading: boolean;
   fetchRecords: () => Promise<void>;
   getRecordById: (id: string) => Promise<BiocharProductionRecord>;
-  verifyKontiki: (recordId: string, payload: VerifyKontikiPayload) => Promise<void>;
+  verifyKontiki: (kontikiRecordId: string) => Promise<void>;
   rejectKontiki: (recordId: string, payload: RejectKontikiPayload) => Promise<void>;
 }
 
@@ -66,19 +66,9 @@ export function BiocharProductionProvider({ children }: { children: ReactNode })
   };
 
   // Verify kontiki
-  const verifyKontiki = async (
-    recordId: string,
-    payload: VerifyKontikiPayload
-  ) => {
-    try {
-      setIsLoading(true);
-      await biocharProductionService.verifyKontiki(recordId, payload);
-      await fetchRecords(); // Refresh the list after verification
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+const verifyKontiki = async (kontikiRecordId: string) => {
+  await biocharProductionService.verifyKontiki(kontikiRecordId);
+};
   // Reject kontiki
   const rejectKontiki = async (
     recordId: string,

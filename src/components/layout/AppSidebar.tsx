@@ -203,7 +203,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
           <SidebarGroupContent>
             <SidebarMenu>
 
-              <SidebarMenuItem>
+              {/* <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <SidebarNavItem
                     to="/settings"
@@ -214,7 +214,7 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
                     <span className="text-base">Settings</span>
                   </SidebarNavItem>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
+              </SidebarMenuItem> */}
 
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>

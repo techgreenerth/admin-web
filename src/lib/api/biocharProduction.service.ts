@@ -30,15 +30,20 @@ export const biocharProductionService = {
   },
 
   // Verify a kontiki in a production record
-  async verifyKontiki(
-    recordId: string,
-    payload: VerifyKontikiPayload
-  ): Promise<void> {
-    await apiClient.post(
-      `/v1/biochar-production/${recordId}/verify-kontiki`,
-      payload
-    );
-  },
+  // async verifyKontiki(
+  //   recordId: string,
+  //   payload: VerifyKontikiPayload
+  // ): Promise<void> {
+  //   await apiClient.post(
+  //     `/v1/biochar-production/${recordId}/verify-kontiki`,
+  //     payload
+  //   );
+  // },
+  async verifyKontiki(kontikiRecordId: string): Promise<void> {
+  await apiClient.patch(
+    `/v1/biochar-production/kontiki/${kontikiRecordId}/verify`
+  );
+},
 
   // Reject a kontiki in a production record
   async rejectKontiki(
