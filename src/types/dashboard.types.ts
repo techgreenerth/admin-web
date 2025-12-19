@@ -21,7 +21,7 @@ export interface StatusMetric {
 
 export interface RecordStatusDistribution {
   verified: StatusMetric;
-  pending: StatusMetric;
+  submitted: StatusMetric;
   rejected: StatusMetric;
   draft: StatusMetric;
   total: number;

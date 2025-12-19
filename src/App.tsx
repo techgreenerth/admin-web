@@ -37,6 +37,11 @@ import { BulkDensityProvider } from "./contexts/bulkDensityContext";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { DashboardProvider } from "./contexts/DashboardContext";
 
+import { ROLES } from "@/constrants/roles";
+import { RoleGate } from "./pages/auth/RoleGate";
+import CsiVerifiedRecords from "./pages/Csi/CsiVerifiedRecords";
+import { CsiLayout } from "./components/layout/CsiLayout";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -45,70 +50,117 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-      <DashboardProvider>
-        <AuthProvider>
-          <ProfileProvider>
-          <SitesProvider>
-            <KontikiProvider>
-              <BiomassSourcingProvider>
-                <BiocharProductionProvider>
-                  <BiocharActivationProvider>
-                    <BiocharSamplingProvider>
-                      <BulkDensityProvider>
-          <Routes>
-            {/* Auth routes - No layout */}
-            <Route path="/login" element={<Login />} />
+        <DashboardProvider>
+          <AuthProvider>
+            <ProfileProvider>
+              <SitesProvider>
+                <KontikiProvider>
+                  <BiomassSourcingProvider>
+                    <BiocharProductionProvider>
+                      <BiocharActivationProvider>
+                        <BiocharSamplingProvider>
+                          <BulkDensityProvider>
+                            <Routes>
+                              {/* Auth routes - No layout */}
+                              <Route path="/login" element={<Login />} />
 
-            {/* Admin routes - With layout and protection */}
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <AppLayout userRole="admin">
-                    <Routes>
-                      <Route path="/" element={<AdminDashboard />} />
-                      <Route path="users" element={<Users />} />
-                      <Route path="admins" element={<Admins />} />
-                      <Route path="sites" element={<Sites />} />
-                      <Route path="sites/:id" element={<SiteDetails />} />
-                      <Route path="kontikis" element={<Kontikis />} />
-                      <Route path="shifts" element={<Shifts />} />
-                      <Route
-                        path="biomass-sourcing"
-                        element={<BiomassSourcing />}
-                      />
-                      <Route
-                        path="biochar-production"
-                        element={<BiocharProduction />}
-                      />
-                      <Route
-                        path="biochar-activation"
-                        element={<BiocharActivation />}
-                      />
-                      <Route
-                        path="biochar-sampling"
-                        element={<BiocharSampling />}
-                      />
-                      <Route path="bulk-density" element={<BulkDensity />} />
-                      <Route path="help" element={<HelpSupport />} />
-                      {/* <Route path="settings" element={<Settings />} /> */}
-                      <Route path="profile" element={<Profile />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </AppLayout>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-                      </BulkDensityProvider>
-                    </BiocharSamplingProvider>
-                  </BiocharActivationProvider>
-                </BiocharProductionProvider>
-              </BiomassSourcingProvider>
-          </KontikiProvider>
-          </SitesProvider>
-          </ProfileProvider>
-        </AuthProvider>
+                              <Route
+                                path="/csi"
+                                element={
+                                  <ProtectedRoute>
+                                   <AppLayout >
+                                    <RoleGate allow={[ROLES.CSI_MANAGER]}>
+                                      <CsiVerifiedRecords/>
+                                    </RoleGate>
+                                    </AppLayout>
+                                  </ProtectedRoute>
+                                }
+                              />
+                              {/* Admin routes - With layout and protection */}
+                              <Route
+                                path="/*"
+                                element={
+                                  <ProtectedRoute>
+                                    <RoleGate allow={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
+                                    <AppLayout >
+                                      <Routes>
+                                        <Route
+                                          path="/"
+                                          element={<AdminDashboard />}
+                                        />
+                                        <Route
+                                          path="users"
+                                          element={<Users />}
+                                        />
+                                        <Route
+                                          path="admins"
+                                          element={<Admins />}
+                                        />
+                                        <Route
+                                          path="sites"
+                                          element={<Sites />}
+                                        />
+                                        <Route
+                                          path="sites/:id"
+                                          element={<SiteDetails />}
+                                        />
+                                        <Route
+                                          path="kontikis"
+                                          element={<Kontikis />}
+                                        />
+                                        <Route
+                                          path="shifts"
+                                          element={<Shifts />}
+                                        />
+                                        <Route
+                                          path="biomass-sourcing"
+                                          element={<BiomassSourcing />}
+                                        />
+                                        <Route
+                                          path="biochar-production"
+                                          element={<BiocharProduction />}
+                                        />
+                                        <Route
+                                          path="biochar-activation"
+                                          element={<BiocharActivation />}
+                                        />
+                                        <Route
+                                          path="biochar-sampling"
+                                          element={<BiocharSampling />}
+                                        />
+                                        <Route
+                                          path="bulk-density"
+                                          element={<BulkDensity />}
+                                        />
+                                        <Route
+                                          path="help"
+                                          element={<HelpSupport />}
+                                        />
+                                        {/* <Route path="settings" element={<Settings />} /> */}
+                                        <Route
+                                          path="profile"
+                                          element={<Profile />}
+                                        />
+                                        <Route
+                                          path="*"
+                                          element={<NotFound />}
+                                        />
+                                      </Routes>
+                                    </AppLayout>
+                                    </RoleGate>
+                                  </ProtectedRoute>
+                                }
+                              />
+                            </Routes>
+                          </BulkDensityProvider>
+                        </BiocharSamplingProvider>
+                      </BiocharActivationProvider>
+                    </BiocharProductionProvider>
+                  </BiomassSourcingProvider>
+                </KontikiProvider>
+              </SitesProvider>
+            </ProfileProvider>
+          </AuthProvider>
         </DashboardProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -118,6 +118,8 @@ export default function Admins() {
         return "bg-cyan-100 text-cyan-800";
       case "VERIFIER":
         return "bg-indigo-100 text-indigo-800";
+      case "CSI_MANAGER":
+        return "bg-indigo-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -286,6 +288,7 @@ export default function Admins() {
                   <SelectItem value="ADMIN">Admin</SelectItem>
                   <SelectItem value="SUPERVISOR">Supervisor</SelectItem>
                   <SelectItem value="VERIFIER">Verifier</SelectItem>
+                  <SelectItem value="CSI_MANAGER">CSI_Manager</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -500,7 +503,7 @@ export default function Admins() {
                   <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
                   <SelectItem value="ADMIN">Admin</SelectItem>
                   <SelectItem value="SUPERVISOR">Supervisor</SelectItem>
-                  <SelectItem value="VERIFIER">Verifier</SelectItem>
+                  <SelectItem value="CSI_MANAGER">CSI_Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -583,7 +586,7 @@ export default function Admins() {
                   <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
                   <SelectItem value="ADMIN">Admin</SelectItem>
                   <SelectItem value="SUPERVISOR">Supervisor</SelectItem>
-                  <SelectItem value="VERIFIER">Verifier</SelectItem>
+                  <SelectItem value="CSI_MANAGER">CSI_Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -50,8 +50,8 @@ export default function AdminDashboard() {
         color: "#10B981",
       },
       {
-        name: "Pending",
-        value: recordStatus.pending.count,
+        name: "submitted",
+        value: recordStatus.submitted.count,
         color: "#F59E0B",
       },
       {
