@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { BiomassSourcingRecord } from "@/types/biomassSourcing.types";
+import { formatDate, formatTime ,formatDateTime} from "../../lib/utils/date";
 
 export default function BiomassSourcing() {
   // Use context hooks
@@ -351,7 +352,7 @@ export default function BiomassSourcing() {
                     <div>
                       <div className="font-medium">Trip {record.tripNumber}</div>
                       <div className="text-xs text-muted-foreground">
-                        {record.recordDate} {record.recordTime}
+                         {formatDate(record.recordDate)} {formatTime(record.recordTime)}
                       </div>
                     </div>
                   </div>
@@ -553,13 +554,14 @@ export default function BiomassSourcing() {
                     Record Date & Time
                   </Label>
                   <p className="font-medium">
-                    {selectedRecord.recordDate} {selectedRecord.recordTime}
+                    
+                    {formatDate(selectedRecord.recordDate)} {formatTime(selectedRecord.recordTime)}
                   </p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Submitted At</Label>
                   <p className="font-medium">
-                    {new Date(selectedRecord.submittedAt).toLocaleString()}
+                    {formatDateTime(selectedRecord.submittedAt)}
                   </p>
                 </div>
               </div>

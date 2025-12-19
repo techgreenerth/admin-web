@@ -69,6 +69,7 @@ import {
   BiocharProductionRecord,
   KontikiData,
 } from "@/types/biocharProduction.types";
+import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BiocharProduction() {
   // Use context hooks
@@ -557,8 +558,8 @@ export default function BiocharProduction() {
                     <Factory className="h-4 w-4 text-[#295F58]" />
                   </div>
                   <div>
-                    <div className="font-medium">{record.recordDate}</div>
-                    <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                    <div className="font-medium">{formatDate(record.recordDate)}</div>
+                    <div className="text-sm text-muted-foreground">{formatTime(record.recordTime)}</div>
                   </div>
                 </div>
               </TableCell>
@@ -608,8 +609,8 @@ export default function BiocharProduction() {
                   <Factory className="h-5 w-5 text-[#295F58]" />
                 </div>
                 <div>
-                  <div className="font-bold text-base">{record.recordDate}</div>
-                  <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                  <div className="font-bold text-base">{formatDate(record.recordDate)}</div>
+                  <div className="text-sm text-muted-foreground">{formatTime(record.recordTime)}</div>
                 </div>
               </div>
               <Button 
@@ -727,13 +728,13 @@ export default function BiocharProduction() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Date</Label>
                   <div className="text-sm font-medium">
-                    {selectedRecord.recordDate}
+                    {formatDate(selectedRecord.recordDate)}
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Time</Label>
                   <div className="text-sm font-medium">
-                    {selectedRecord.recordTime}
+                    {formatTime(selectedRecord.recordTime)}
                   </div>
                 </div>
                 <div className="space-y-1">

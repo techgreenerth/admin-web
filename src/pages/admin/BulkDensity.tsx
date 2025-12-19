@@ -46,6 +46,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useBulkDensity } from "@/contexts/bulkDensityContext";
 import { BulkDensityRecord as BulkDensityRecordType } from "@/types/bulkDensity.types";
+import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BulkDensity() {
   const location = useLocation();
@@ -274,8 +275,8 @@ export default function BulkDensity() {
                       <Scale className="h-4 w-4 text-[#295F58]" />
                     </div>
                     <div>
-                      <div className="font-medium">{record.recordDate}</div>
-                      <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                      <div className="font-medium">{formatDate(record.recordDate)}</div>
+                      <div className="text-sm text-muted-foreground">{formatTime(record.recordTime)}</div>
                     </div>
                   </div>
                 </div>
@@ -343,8 +344,8 @@ export default function BulkDensity() {
                   <Scale className="h-5 w-5 text-[#295F58]" />
                 </div>
                 <div>
-                  <div className="font-bold text-base">{record.recordDate}</div>
-                  <div className="text-sm text-muted-foreground">{record.recordTime}</div>
+                  <div className="font-bold text-base">{formatDate(record.recordDate)}</div>
+                  <div className="text-sm text-muted-foreground">{formatTime(record.recordTime)}</div>
                 </div>
               </div>
               <Button 
@@ -456,7 +457,7 @@ export default function BulkDensity() {
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div className="font-medium">
-                      {selectedRecord.recordDate} at {selectedRecord.recordTime}
+                      {formatDate(selectedRecord.recordDate)} at {formatTime(selectedRecord.recordTime)}
                     </div>
                   </div>
                 </div>
