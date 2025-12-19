@@ -35,6 +35,7 @@ import { BiocharActivationProvider } from "./contexts/biocharActivationContext";
 import { BiocharSamplingProvider } from "./contexts/biocharSamplingContext";
 import { BulkDensityProvider } from "./contexts/bulkDensityContext";
 import { ProfileProvider } from "./contexts/ProfileContext";
+import { DashboardProvider } from "./contexts/DashboardContext";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+      <DashboardProvider>
         <AuthProvider>
           <ProfileProvider>
           <SitesProvider>
@@ -107,6 +109,7 @@ const App = () => (
           </SitesProvider>
           </ProfileProvider>
         </AuthProvider>
+        </DashboardProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
