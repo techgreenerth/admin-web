@@ -15,9 +15,11 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 import { useLocation } from "react-router-dom";
 import { useSites } from "@/contexts/siteContext";
 import { userService, User as UserType } from "@/lib/api/user.service";
+import { bulkDensityService } from "@/lib/api/bulkDensity.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +48,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useBulkDensity } from "@/contexts/bulkDensityContext";
 import { BulkDensityRecord as BulkDensityRecordType } from "@/types/bulkDensity.types";
+import { useMutation } from "@tanstack/react-query";
 // import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BulkDensity() {
@@ -134,6 +137,40 @@ export default function BulkDensity() {
     setIsViewDialogOpen(true);
   };
 
+  const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<
+    Blob,
+    Error
+  >({
+    mutationFn: () =>
+      bulkDensityService.exportToCSV({
+        userId: userFilter !== "all" ? userFilter : undefined,
+        siteId: siteFilter !== "all" ? siteFilter : undefined,
+        // status: statusFilter !== "all" ? (statusFilter as any) : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      }),
+
+    onSuccess: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bulk-density${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("CSV exported successfully!");
+    },
+
+    onError: (error) => {
+      toast.error(error.message || "Failed to export CSV");
+    },
+  });
+
     if (isLoading || !records) {
       return (
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -149,7 +186,9 @@ export default function BulkDensity() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl   font-bold text-[#295F58]">Bulk Density Measurement</h1>
+        <h1 className="text-2xl md:text-3xl   font-bold text-[#295F58]">
+          Bulk Density Measurement
+        </h1>
         <p className="text-sm  text-muted-foreground mt-1">
           Track and verify biochar bulk density measurements
         </p>
@@ -160,9 +199,16 @@ export default function BulkDensity() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Average Bulk Density</p>
-              <h3 className="text-3xl font-bold text-[#295F58] mt-2">{averageBulkDensity} kg/m³</h3>
-              <p className="text-xs text-muted-foreground mt-1">Based on {records.length} record{records.length !== 1 ? 's' : ''}</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Average Bulk Density
+              </p>
+              <h3 className="text-3xl font-bold text-[#295F58] mt-2">
+                {averageBulkDensity} kg/m³
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Based on {records.length} record
+                {records.length !== 1 ? "s" : ""}
+              </p>
             </div>
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
               <Scale className="h-6 w-6 text-[#295F58]" />
@@ -176,9 +222,26 @@ export default function BulkDensity() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">All Records</CardTitle>
-              <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export CSV
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  exportCSV();
+                }}
+              >
+                {isExportingCSV ? (
+                  <>
+                    <Loader2 className="-ml-1 animate-spin" size={16} />
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} />
+                    <span>Export CSV</span>
+                  </>
+                )}
               </Button>
             </div>
             <div className="flex flex-col gap-3">
@@ -225,7 +288,12 @@ export default function BulkDensity() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="startDate" className="text-xs text-muted-foreground mb-1 block">From</Label>
+                  <Label
+                    htmlFor="startDate"
+                    className="text-xs text-muted-foreground mb-1 block"
+                  >
+                    From
+                  </Label>
                   <Input
                     id="startDate"
                     type="date"
@@ -235,7 +303,12 @@ export default function BulkDensity() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="endDate" className="text-xs text-muted-foreground mb-1 block">To</Label>
+                  <Label
+                    htmlFor="endDate"
+                    className="text-xs text-muted-foreground mb-1 block"
+                  >
+                    To
+                  </Label>
                   <Input
                     id="endDate"
                     type="date"
@@ -249,168 +322,190 @@ export default function BulkDensity() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-  {/* DESKTOP & TABLET VIEW: Hidden on small screens (max-sm) */}
-  <div className="hidden sm:block overflow-x-auto">
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Record Info</TableHead>
-          <TableHead>Site & User</TableHead>
-          <TableHead>Measurements</TableHead>
-          <TableHead>Bulk Density</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {isLoading ? (
-          <TableRow>
-            <TableCell colSpan={5} className="text-center py-8">
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Loading records...</span>
-              </div>
-            </TableCell>
-          </TableRow>
-        ) : records.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-              No records found
-            </TableCell>
-          </TableRow>
-        ) : (
-          records.map((record) => (
-            <TableRow key={record.id}>
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE]">
-                      <Scale className="h-4 w-4 text-[#295F58]" />
-                    </div>
-                    <div>
-                      <div className="font-medium">{(record.recordDate)}</div>
-                      <div className="text-sm text-muted-foreground">{(record.recordTime)}</div>
-                    </div>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">
-                    {record.site?.siteCode ?? "—"}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {record.user?.userCode ?? "—"}
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Box className="h-3 w-3 text-muted-foreground" />
-                    <span>{record.measuringBoxVolume}L</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Weight className="h-3 w-3 text-muted-foreground" />
-                    <span>{record.recordedWeightKg}kg</span>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="font-medium text-[#295F58]">
-                  {record.bulkDensityCalculated} kg/m³
-                </div>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleViewRecord(record)}
-                  className="hover:bg-[#295F58]/10"
-                >
-                  <Eye className="h-4 w-4 text-[#295F58]" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
-  </div>
-
-  {/* MOBILE VIEW: Hidden on larger screens (min-sm) */}
-  <div className="sm:hidden">
-    {isLoading ? (
-      <div className="p-8 text-center flex flex-col items-center gap-2">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Loading records...</span>
-      </div>
-    ) : records.length === 0 ? (
-      <div className="p-8 text-center text-muted-foreground text-sm">No records found</div>
-    ) : (
-      <div className="divide-y divide-border">
-        {records.map((record) => (
-          <div key={record.id} className="p-4 space-y-4">
-            <div className="flex justify-between items-start">
-              <div className="flex gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
-                  <Scale className="h-5 w-5 text-[#295F58]" />
-                </div>
-                <div>
-                  <div className="font-bold text-base">{(record.recordDate)}</div>
-                  <div className="text-sm text-muted-foreground">{(record.recordTime)}</div>
-                </div>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleViewRecord(record)}
-                className="border-[#295F58]/20 text-[#295F58]"
-              >
-                <Eye className="h-4 w-4 mr-2" /> View
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Site/User</p>
-                <p className="text-sm font-medium">{record.site?.siteCode ?? "—"}</p>
-                <p className="text-xs text-muted-foreground">{record.user?.userCode ?? "—"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Measurements</p>
-                <div className="flex items-center gap-1.5 text-xs mt-1">
-                  <Box className="h-3 w-3 text-muted-foreground" />
-                  <span>{record.measuringBoxVolume}L</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs">
-                  <Weight className="h-3 w-3 text-muted-foreground" />
-                  <span>{record.recordedWeightKg}kg</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between bg-[#E1EFEE] p-3 rounded-md">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Bulk Density
-              </span>
-              <span className="text-base font-bold text-[#295F58]">
-                {record.bulkDensityCalculated} kg/m³
-              </span>
-            </div>
+          {/* DESKTOP & TABLET VIEW: Hidden on small screens (max-sm) */}
+          <div className="hidden sm:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Record Info</TableHead>
+                  <TableHead>Site & User</TableHead>
+                  <TableHead>Measurements</TableHead>
+                  <TableHead>Bulk Density</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Loading records...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : records.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="text-center text-muted-foreground py-8"
+                    >
+                      No records found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  records.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE]">
+                              <Scale className="h-4 w-4 text-[#295F58]" />
+                            </div>
+                            <div>
+                              <div className="font-medium">
+                                {record.recordDate}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {record.recordTime}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium">
+                            {record.site?.siteCode ?? "—"}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {record.user?.userCode ?? "—"}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Box className="h-3 w-3 text-muted-foreground" />
+                            <span>{record.measuringBoxVolume}L</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Weight className="h-3 w-3 text-muted-foreground" />
+                            <span>{record.recordedWeightKg}kg</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium text-[#295F58]">
+                          {record.bulkDensityCalculated} kg/m³
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleViewRecord(record)}
+                          className="hover:bg-[#295F58]/10"
+                        >
+                          <Eye className="h-4 w-4 text-[#295F58]" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
-        ))}
-      </div>
-    )}
-  </div>
-</CardContent>
+
+          {/* MOBILE VIEW: Hidden on larger screens (min-sm) */}
+          <div className="sm:hidden">
+            {isLoading ? (
+              <div className="p-8 text-center flex flex-col items-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  Loading records...
+                </span>
+              </div>
+            ) : records.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                No records found
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {records.map((record) => (
+                  <div key={record.id} className="p-4 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
+                          <Scale className="h-5 w-5 text-[#295F58]" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-base">
+                            {record.recordDate}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {record.recordTime}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewRecord(record)}
+                        className="border-[#295F58]/20 text-[#295F58]"
+                      >
+                        <Eye className="h-4 w-4 mr-2" /> View
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Site/User
+                        </p>
+                        <p className="text-sm font-medium">
+                          {record.site?.siteCode ?? "—"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {record.user?.userCode ?? "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Measurements
+                        </p>
+                        <div className="flex items-center gap-1.5 text-xs mt-1">
+                          <Box className="h-3 w-3 text-muted-foreground" />
+                          <span>{record.measuringBoxVolume}L</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Weight className="h-3 w-3 text-muted-foreground" />
+                          <span>{record.recordedWeightKg}kg</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-[#E1EFEE] p-3 rounded-md">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Bulk Density
+                      </span>
+                      <span className="text-base font-bold text-[#295F58]">
+                        {record.bulkDensityCalculated} kg/m³
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
       </Card>
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {endIndex} of{" "}
-            {totalRecords} records
+            Showing {startIndex + 1} to {endIndex} of {totalRecords} records
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -429,9 +524,7 @@ export default function BulkDensity() {
                 size="sm"
                 onClick={() => setCurrentPage(page)}
                 className={
-                  currentPage === page
-                    ? "bg-[#295F58] hover:bg-[#1e4540]"
-                    : ""
+                  currentPage === page ? "bg-[#295F58] hover:bg-[#1e4540]" : ""
                 }
               >
                 {page}
@@ -469,7 +562,7 @@ export default function BulkDensity() {
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div className="font-medium">
-                      {(selectedRecord.recordDate)} at {(selectedRecord.recordTime)}
+                      {selectedRecord.recordDate} at {selectedRecord.recordTime}
                     </div>
                   </div>
                 </div>
@@ -480,7 +573,8 @@ export default function BulkDensity() {
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Site</Label>
                   <div className="font-medium">
-                    {selectedRecord.site?.siteCode ?? "—"} - {selectedRecord.site?.siteName ?? "—"}
+                    {selectedRecord.site?.siteCode ?? "—"} -{" "}
+                    {selectedRecord.site?.siteName ?? "—"}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -488,7 +582,10 @@ export default function BulkDensity() {
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <div className="font-medium">
-                      {selectedRecord.user?.userCode ?? "—"} - {selectedRecord.user ? `${selectedRecord.user.firstName} ${selectedRecord.user.lastName}` : "—"}
+                      {selectedRecord.user?.userCode ?? "—"} -{" "}
+                      {selectedRecord.user
+                        ? `${selectedRecord.user.firstName} ${selectedRecord.user.lastName}`
+                        : "—"}
                     </div>
                   </div>
                 </div>
@@ -512,24 +609,36 @@ export default function BulkDensity() {
 
               {/* Measurements */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <Label className="text-muted-foreground mb-3 block">Measurements</Label>
+                <Label className="text-muted-foreground mb-3 block">
+                  Measurements
+                </Label>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Box Volume</Label>
+                    <Label className="text-xs text-muted-foreground">
+                      Box Volume
+                    </Label>
                     <div className="flex items-center gap-2">
                       <Box className="h-4 w-4 text-blue-600" />
-                      <span className="font-medium">{selectedRecord.measuringBoxVolume} liters</span>
+                      <span className="font-medium">
+                        {selectedRecord.measuringBoxVolume} liters
+                      </span>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Recorded Weight</Label>
+                    <Label className="text-xs text-muted-foreground">
+                      Recorded Weight
+                    </Label>
                     <div className="flex items-center gap-2">
                       <Weight className="h-4 w-4 text-blue-600" />
-                      <span className="font-medium">{selectedRecord.recordedWeightKg} kg</span>
+                      <span className="font-medium">
+                        {selectedRecord.recordedWeightKg} kg
+                      </span>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Bulk Density</Label>
+                    <Label className="text-xs text-muted-foreground">
+                      Bulk Density
+                    </Label>
                     <div className="flex items-center gap-2">
                       <Scale className="h-4 w-4 text-[#295F58]" />
                       <span className="font-medium text-[#295F58]">
@@ -540,7 +649,9 @@ export default function BulkDensity() {
                 </div>
                 <div className="mt-3 pt-3 border-t border-blue-200">
                   <div className="text-xs text-muted-foreground">
-                    Formula: ({selectedRecord.recordedWeightKg} / {selectedRecord.measuringBoxVolume}) × 1000 = {selectedRecord.bulkDensityCalculated} kg/m³
+                    Formula: ({selectedRecord.recordedWeightKg} /{" "}
+                    {selectedRecord.measuringBoxVolume}) × 1000 ={" "}
+                    {selectedRecord.bulkDensityCalculated} kg/m³
                   </div>
                 </div>
               </div>
@@ -565,7 +676,9 @@ export default function BulkDensity() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-sm text-muted-foreground">No empty box photo</div>
+                    <div className="text-sm text-muted-foreground">
+                      No empty box photo
+                    </div>
                   )}
                   {/* Filled Box Photo */}
                   {selectedRecord.filledBoxPhoto ? (
@@ -583,7 +696,9 @@ export default function BulkDensity() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-sm text-muted-foreground">No filled box photo</div>
+                    <div className="text-sm text-muted-foreground">
+                      No filled box photo
+                    </div>
                   )}
                   {/* Measurement Video */}
                   {selectedRecord.measurementVideo ? (
@@ -603,7 +718,9 @@ export default function BulkDensity() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-sm text-muted-foreground">No weighing video</div>
+                    <div className="text-sm text-muted-foreground">
+                      No weighing video
+                    </div>
                   )}
                 </div>
               </div>
@@ -611,16 +728,28 @@ export default function BulkDensity() {
               {/* Metadata */}
               <div className="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4">
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Captured At</Label>
-                  <div className="text-sm">{new Date(selectedRecord.capturedAt).toLocaleString()}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    Captured At
+                  </Label>
+                  <div className="text-sm">
+                    {new Date(selectedRecord.capturedAt).toLocaleString()}
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">Device</Label>
-                  <div className="text-sm">{selectedRecord.deviceInfo || "N/A"}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    Device
+                  </Label>
+                  <div className="text-sm">
+                    {selectedRecord.deviceInfo || "N/A"}
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-muted-foreground text-xs">App Version</Label>
-                  <div className="text-sm">{selectedRecord.appVersion || "N/A"}</div>
+                  <Label className="text-muted-foreground text-xs">
+                    App Version
+                  </Label>
+                  <div className="text-sm">
+                    {selectedRecord.appVersion || "N/A"}
+                  </div>
                 </div>
               </div>
             </div>

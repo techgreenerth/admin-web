@@ -6,6 +6,15 @@ import {
   RejectKontikiPayload,
 } from "@/types/biocharProduction.types";
 
+export type ExportBiocharProductionCSVParams = {
+  userId?: string;
+  siteId?: string;
+  status?: "DRAFT" | "SUBMITTED" | "VERIFIED" | "REJECTED";
+  productionStep?: number;
+  startDate?: string;
+  endDate?: string;
+};
+
 export const biocharProductionService = {
   // Get all biochar production records
   async getAllRecords(
@@ -55,4 +64,21 @@ export const biocharProductionService = {
       payload
     );
   },
-};
+
+  
+  // Export biochar production records to CSV
+  async exportToCSV(
+    params?: ExportBiocharProductionCSVParams
+  ): Promise<Blob> {
+    const response = await apiClient.get(
+      "/v1/biochar-production/export/csv",
+      {
+        params,
+      }
+    );
+
+    return new Blob([response.data], {
+      type: "text/csv;charset=utf-8;",
+    });
+  }
+}

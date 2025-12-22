@@ -4,6 +4,14 @@ import {
   BiocharSamplingResponse,
 } from "@/types/biocharSampling.types";
 
+export type ExportBiocharActivationCSVParams = {
+  userId?: string;
+  siteId?: string;
+  status?: "DRAFT" | "SUBMITTED" | "VERIFIED" | "REJECTED";
+  startDate?: string;
+  endDate?: string;
+};
+
 export const biocharSamplingService = {
   // Get all biochar sampling records
   async getAllRecords(
@@ -37,4 +45,21 @@ export const biocharSamplingService = {
     );
     return response.data;
   },
+
+  // Export biochar sampling records to CSV
+//   
+  async exportToCSV(
+    params?: ExportBiocharActivationCSVParams
+  ): Promise<Blob> {
+    const response = await apiClient.get(
+      "/v1/biochar-sampling/export/csv",
+      {
+        params,
+      }
+    );
+
+    return new Blob([response.data], {
+      type: "text/csv;charset=utf-8;",
+    });
+  }
 };

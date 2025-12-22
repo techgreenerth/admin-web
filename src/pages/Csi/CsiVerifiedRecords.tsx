@@ -46,6 +46,8 @@ import {
   PaginationMeta,
 } from "../../lib/api/csi/csi.service";
 import { formatDate, formatTime } from "../../lib/utils/date";
+import { toast } from "react-hot-toast";
+import { useMutation } from "@tanstack/react-query";
 
 export default function CsiVerifiedRecords() {
   const [records, setRecords] = useState<CsiVerifiedRecord[]>([]);
@@ -131,6 +133,39 @@ export default function CsiVerifiedRecords() {
     setSelectedRecord(record);
     setIsViewDialogOpen(true);
   };
+
+ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<
+   Blob,
+   Error
+ >({
+   mutationFn: () =>
+     CsiService.exportToCSV({
+       siteId: siteFilter !== "all" ? siteFilter : undefined,
+       // status: statusFilter !== "all" ? (statusFilter as any) : undefined,
+       startDate: startDate || undefined,
+       endDate: endDate || undefined,
+     }),
+
+   onSuccess: (blob) => {
+     const url = window.URL.createObjectURL(blob);
+     const a = document.createElement("a");
+     a.href = url;
+     a.download = `csi-${
+       new Date().toISOString().split("T")[0]
+     }.csv`;
+
+     document.body.appendChild(a);
+     a.click();
+     document.body.removeChild(a);
+     window.URL.revokeObjectURL(url);
+
+     toast.success("CSV exported successfully!");
+   },
+
+   onError: (error) => {
+     toast.error(error.message || "Failed to export CSV");
+   },
+ });
 
   // Calculate statistics
   const totalVerified = filteredRecords.length;
@@ -247,9 +282,26 @@ export default function CsiVerifiedRecords() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">All Verified Records</CardTitle>
-              <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export CSV
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  exportCSV();
+                }}
+              >
+                {isExportingCSV ? (
+                  <>
+                    <Loader2 className="-ml-1 animate-spin" size={16} />
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} />
+                    <span>Export CSV</span>
+                  </>
+                )}
               </Button>
             </div>
             <div className="flex flex-col gap-3">
