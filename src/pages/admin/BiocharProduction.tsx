@@ -69,7 +69,7 @@ import {
   BiocharProductionRecord,
   KontikiData,
 } from "@/types/biocharProduction.types";
-import { formatDate, formatTime } from "@/lib/utils/date";
+// import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BiocharProduction() {
   // Use context hooks
@@ -384,6 +384,19 @@ export default function BiocharProduction() {
     return total + recordTotal;
   }, 0);
 
+    if (isLoading || !records) {
+      return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+            <p className="text-muted-foreground text-sm">
+              Loading  details...
+            </p>
+          </div>
+        </div>
+      );
+    }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -593,7 +606,7 @@ export default function BiocharProduction() {
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={() => handleViewRecord(record)}>
+                <Button variant="ghost" size="icon" onClick={() => handleViewRecord(record)} className="hover:bg-[#295F58]/10">
                   <Eye className="h-4 w-4 text-[#295F58]" />
                 </Button>
               </TableCell>
@@ -748,7 +761,7 @@ export default function BiocharProduction() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Time</Label>
                   <div className="text-sm font-medium">
-                    {formatTime(selectedRecord.recordTime)}
+                    {(selectedRecord.recordTime)}
                   </div>
                 </div>
                 <div className="space-y-1">

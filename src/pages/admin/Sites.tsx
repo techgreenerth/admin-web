@@ -98,7 +98,7 @@ export default function Sites() {
     revokeUserFromSite,
     updateSite,
     fetchSites,
-    getSiteById
+    getSiteById,
   } = useSites();
 
   // Refresh data when navigating to this page
@@ -126,12 +126,11 @@ export default function Sites() {
     try {
       const site = await getSiteById(siteId);
 
-      const users =
-        site.userAssignments?.map((ua) => ua.user) ?? [];
+      const users = site.userAssignments?.map((ua) => ua.user) ?? [];
 
       setAssignedUsers(users);
       console.log("Mapped users:", users);
-      console.log(assignedUsers) // Fixed: was setAssignedUsers(user)
+      console.log(assignedUsers); // Fixed: was setAssignedUsers(user)
     } catch (error: any) {
       console.error(
         error.response?.data?.message || "Failed to fetch assigned users"
@@ -139,14 +138,11 @@ export default function Sites() {
     }
   };
 
- 
   useEffect(() => {
     if (isAssignUserDialogOpen) {
       fetchUsersForAssignment();
     }
   }, [isAssignUserDialogOpen]);
-
-
 
   const validateForm = () => {
     const newErrors: any = {};
@@ -237,7 +233,8 @@ export default function Sites() {
       normalizeLower(site.siteCode).includes(q) ||
       normalizeLower(site.address).includes(q);
 
-    const matchesStatus = statusFilter === "all" || site.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || site.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -361,12 +358,12 @@ export default function Sites() {
       setIsDeleteDialogOpen(false);
       setSelectedSite(null);
     } catch (error: any) {
-    console.error("Failed to delete site:", {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
-  }
+      console.error("Failed to delete site:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
   };
 
   const handleConfirmAssignUser = async () => {
@@ -380,10 +377,9 @@ export default function Sites() {
       setSelectedSite(null);
     } catch (error) {
       console.error("Failed to assign user", error);
+    } finally {
+      setIsSubmitting(false);
     }
-    finally {
-    setIsSubmitting(false);
-  }
   };
 
   const handleConfirmRevokeUser = async () => {
@@ -399,22 +395,32 @@ export default function Sites() {
       await fetchSites();
     } catch (error) {
       console.error("Failed to revoke user", error);
+    } finally {
+      setIsSubmitting(false);
     }
-    finally {
-    setIsSubmitting(false);
-  }
   };
 
+  if (isLoading || !sites) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">
+            Loading Sites ...
+          </p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
-      
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#295F58]">
-           Artisan Pro Sites
+            Artisan Pro Sites
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1">
-           Manage biochar production sites and user assignments
+            Manage biochar production sites and user assignments
           </p>
         </div>
 
@@ -565,13 +571,13 @@ export default function Sites() {
                             Assign User
                           </DropdownMenuItem>
                           {site._count?.userAssignments > 0 && (
-                              <DropdownMenuItem
-                                onClick={() => handleRevokeUser(site)}
-                              >
-                                <UserMinus className="h-4 w-4 mr-2" />
-                                Revoke User
-                              </DropdownMenuItem>
-                            )}
+                            <DropdownMenuItem
+                              onClick={() => handleRevokeUser(site)}
+                            >
+                              <UserMinus className="h-4 w-4 mr-2" />
+                              Revoke User
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             className="text-red-600"
                             onClick={() => handleDeleteSite(site)}
@@ -726,7 +732,7 @@ export default function Sites() {
         open={isRevokeUserDialogOpen}
         onOpenChange={setIsRevokeUserDialogOpen}
         selectedSite={selectedSite}
-        assignedUsers={assignedUsers} 
+        assignedUsers={assignedUsers}
         selectedUserId={selectedUserId}
         setSelectedUserId={setSelectedUserId}
         onConfirm={handleConfirmRevokeUser}

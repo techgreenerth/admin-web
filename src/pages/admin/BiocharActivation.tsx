@@ -41,7 +41,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { BiocharActivationRecord } from "@/types/biocharActivation.types";
-import { formatDate, formatTime } from "@/lib/utils/date";
+// import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BiocharActivation() {
   // Use context hooks
@@ -175,6 +175,19 @@ export default function BiocharActivation() {
     setSelectedRecord(record);
     setIsViewDialogOpen(true);
   };
+
+    if (isLoading || !records) {
+      return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+            <p className="text-muted-foreground text-sm">
+              Loading details...
+            </p>
+          </div>
+        </div>
+      );
+    }
 
   return (
     <div className="space-y-6">
@@ -314,8 +327,8 @@ export default function BiocharActivation() {
                     <FlaskConical className="h-4 w-4 text-[#295F58]" />
                   </div>
                   <div>
-                    <div className="font-medium">{formatDate(record.recordDate)}</div>
-                    <div className="text-sm text-muted-foreground">{ formatTime(record.recordTime)}</div>
+                    <div className="font-medium">{(record.recordDate)}</div>
+                    <div className="text-sm text-muted-foreground">{ (record.recordTime)}</div>
                   </div>
                 </div>
               </TableCell>
@@ -367,8 +380,8 @@ export default function BiocharActivation() {
                 <FlaskConical className="h-5 w-5 text-[#295F58]" />
               </div>
               <div>
-                <div className="font-bold text-base">{formatDate(record.recordDate)}</div>
-                <div className="text-sm text-muted-foreground">{formatTime(record.recordTime)}</div>
+                <div className="font-bold text-base">{(record.recordDate)}</div>
+                <div className="text-sm text-muted-foreground">{(record.recordTime)}</div>
               </div>
             </div>
             <Button 
@@ -488,13 +501,13 @@ export default function BiocharActivation() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Date</Label>
                   <div className="text-sm font-medium">
-                    {formatDate(selectedRecord.recordDate)}
+                    {(selectedRecord.recordDate)}
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Time</Label>
                   <div className="text-sm font-medium">
-                    {formatTime(selectedRecord.recordTime)}
+                    {(selectedRecord.recordTime)}
                   </div>
                 </div>
                 <div className="space-y-1">
