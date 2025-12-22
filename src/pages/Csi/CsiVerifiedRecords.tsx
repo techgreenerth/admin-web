@@ -46,6 +46,7 @@ import {
   PaginationMeta,
 } from "../../lib/api/csi/csi.service";
 import { formatDate, formatTime } from "../../lib/utils/date";
+import { toast } from "react-hot-toast";
 
 export default function CsiVerifiedRecords() {
   const [records, setRecords] = useState<CsiVerifiedRecord[]>([]);
@@ -130,6 +131,33 @@ export default function CsiVerifiedRecords() {
   const handleViewRecord = (record: CsiVerifiedRecord) => {
     setSelectedRecord(record);
     setIsViewDialogOpen(true);
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      toast.loading("Exporting to CSV...", { id: "export-csv" });
+
+      const blob = await CsiService.exportToCSV({
+        siteId: siteFilter !== "all" ? siteFilter : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `csi-verified-records-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("CSV exported successfully!", { id: "export-csv" });
+    } catch (error) {
+      console.error("Export CSV error:", error);
+      toast.error("Failed to export CSV", { id: "export-csv" });
+    }
   };
 
   // Calculate statistics
@@ -247,7 +275,11 @@ export default function CsiVerifiedRecords() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">All Verified Records</CardTitle>
-              <Button variant="outline" className="gap-2">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={handleExportCSV}
+              >
                 <Download className="h-4 w-4" />
                 Export CSV
               </Button>

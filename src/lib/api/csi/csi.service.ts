@@ -108,4 +108,16 @@ export const CsiService = {
     });
     return res.data;
   },
+
+  exportToCSV: async (params?: {
+    siteId?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Blob> => {
+    const res = await apiClient.get("/v1/csi/verified-records/export/csv", {
+      params,
+      responseType: "blob",
+    });
+    return res.data;
+  },
 };

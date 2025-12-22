@@ -14,6 +14,7 @@ import {
 import { useBiomassSourcing } from "@/contexts/biomassSourcingContext";
 import { useSites } from "@/contexts/siteContext";
 import { userService, User as UserType } from "@/lib/api/user.service";
+import { biomassSourcingService } from "@/lib/api/biomassSourcing.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { BiomassSourcingRecord } from "@/types/biomassSourcing.types";
 import { formatDate, formatTime ,formatDateTime} from "../../lib/utils/date";
+import { toast } from "react-hot-toast";
 
 export default function BiomassSourcing() {
   // Use context hooks
@@ -149,6 +151,34 @@ export default function BiomassSourcing() {
     setIsViewDialogOpen(true);
   };
 
+  const handleExportCSV = async () => {
+    try {
+      toast.loading("Exporting to CSV...", { id: "export-csv" });
+
+      const blob = await biomassSourcingService.exportToCSV({
+        userId: userFilter !== "all" ? userFilter : undefined,
+        siteId: siteFilter !== "all" ? siteFilter : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `biomass-sourcing-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link); 
+      window.URL.revokeObjectURL(url);
+
+      toast.success("CSV exported successfully!", { id: "export-csv" });
+    } catch (error) {
+      console.error("Export CSV error:", error);
+      toast.error("Failed to export CSV", { id: "export-csv" });
+    }
+  };
+
   // Calculate statistics
   const totalTrips = filteredRecords.length;
   const totalFarmAreaAcres = filteredRecords.reduce((sum, record) => {
@@ -242,7 +272,11 @@ export default function BiomassSourcing() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">All Records</CardTitle>
-              <Button variant="outline" className="gap-2">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={handleExportCSV}
+              >
                 <Download className="h-4 w-4" />
                 Export CSV
               </Button>
