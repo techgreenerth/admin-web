@@ -60,6 +60,7 @@ export function EditKontikiDialog({
             <Label>Site *</Label>
             <Select
               value={formData.siteId}
+              disabled
               onValueChange={(value) =>
                 setFormData({ ...formData, siteId: value })
               }

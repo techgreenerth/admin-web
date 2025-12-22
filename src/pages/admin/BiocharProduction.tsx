@@ -69,7 +69,7 @@ import {
   BiocharProductionRecord,
   KontikiData,
 } from "@/types/biocharProduction.types";
-import { formatDate, formatTime } from "@/lib/utils/date";
+// import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BiocharProduction() {
   // Use context hooks
@@ -748,7 +748,7 @@ export default function BiocharProduction() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Time</Label>
                   <div className="text-sm font-medium">
-                    {formatTime(selectedRecord.recordTime)}
+                    {(selectedRecord.recordTime)}
                   </div>
                 </div>
                 <div className="space-y-1">

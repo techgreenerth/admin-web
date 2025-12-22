@@ -21,7 +21,7 @@ export interface KontikiSamplingRecord {
   samplingId: string;
   kontikiId: string;
   productionBatches: string;
-  samplePhotos: string[];
+  samplePhoto: string;
   createdAt: string;
   updatedAt: string;
   kontiki: KontikiInfo;
