@@ -45,19 +45,43 @@ export const biomassSourcingService = {
 
 
   // ff
+  // async exportToCSV(params?: {
+  //   userId?: string;
+  //   siteId?: string;
+  //   status?: string;
+  //   startDate?: string;
+  //   endDate?: string;
+  // } ): Promise<Blob>{
+  //   const response = await apiClient.get("/v1/biomass-sourcing/export/csv", {
+  //     params,
+  //   });
+
+  //   const csvText = response.data.data; // 👈 extract CSV string
+
+  //   return new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+  // }
+
+
   async exportToCSV(params?: {
     userId?: string;
     siteId?: string;
     status?: string;
     startDate?: string;
     endDate?: string;
-  } ): Promise<Blob>{
-    const response = await apiClient.get("/v1/biomass-sourcing/export/csv", {
-      params,
-    });
+  }): Promise<Blob> {
+    const response = await apiClient.get(
+      "/v1/biomass-sourcing/export/csv",
+      {
+        params,
+        // responseType: "blob", // 👈 IMPORTANT
+      }
+    );
 
-    const csvText = response.data.data; // 👈 extract CSV string
 
-    return new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([response.data], {
+      type: 'text/csv;charset=utf-8;',
+    })
+    return blob
   }
+
 };

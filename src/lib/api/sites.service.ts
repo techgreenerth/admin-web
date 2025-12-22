@@ -1,5 +1,15 @@
 import apiClient from "./axios";
-import { Site,SitesResponse,CreateSitePayload ,UpdateSitePayload,AssignUserPayload, RevokeUserPayload} from "@/types/site.types";
+import {
+  Site,
+  SitesResponse,
+  CreateSitePayload,
+  UpdateSitePayload,
+  AssignUserPayload,
+  RevokeUserPayload,
+  SiteDocument,
+  DocumentType,
+  GetSiteDocumentsParams
+} from "@/types/site.types";
 
 export const sitesService = {
   async getAllSites(
@@ -51,6 +61,44 @@ async updateSite(id: string, payload: UpdateSitePayload) {
 async getSiteById(siteId: string): Promise<Site> {
   const response = await apiClient.get<Site>(`/v1/sites/${siteId}`);
   return response.data;
+},
+
+// Site Documents Management
+async uploadSiteDocument(
+  siteId: string,
+  documentType: DocumentType,
+  file: File
+): Promise<SiteDocument> {
+  const formData = new FormData();
+  formData.append("siteId", siteId);
+  formData.append("documentType", documentType);
+  formData.append("file", file);
+
+  const response = await apiClient.post<SiteDocument>(
+    "/v1/site-documents",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return response.data;
+},
+
+async getSiteDocuments(params: GetSiteDocumentsParams): Promise<SiteDocument[]> {
+  const { siteId, documentType } = params;
+  const response = await apiClient.get<SiteDocument[]>(
+    `/v1/site-documents/${siteId}`,
+    {
+      params: documentType ? { documentType } : undefined,
+    }
+  );
+  return response.data;
+},
+
+async deleteSiteDocument(id: string): Promise<void> {
+  await apiClient.delete(`/v1/site-documents/${id}`);
 },
 
 };

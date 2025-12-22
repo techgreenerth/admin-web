@@ -108,3 +108,53 @@ export interface PaginatedResponse<T> {
 }
 
 export type SitesResponse = PaginatedResponse<Site>;
+
+// Site Documents
+export type DocumentType =
+  | "TRAINING_VIDEO"
+  | "SITE_VIDEO"
+  | "MONITORING_VIDEO"
+  | "BULK_DENSITY_VIDEO"
+  | "LABOR_LIST"
+  | "INTERNAL_INSPECTION_REPORT"
+  | "FARMER_DECLARATION_FORM"
+  | "LABOR_PAYMENT_PROOFS"
+  | "BIOCHAR_DISTRIBUTION_LIST"
+  | "BIOCHAR_DISTRIBUTION_PHOTOS"
+  | "LABOR_CONSENT_FORMS"
+  | "BIOCHAR_PRODUCTION_TRAINING"
+  | "DMRV_TRAINING"
+  | "SAFETY_TRAINING"
+  | "TRAINING_COMPLETE_DECLARATION"
+  | "INTERNAL_UPLOADS";
+
+export interface SiteDocument {
+  id: string;
+  siteId: string;
+  documentType: DocumentType;
+  fileUrl: string;
+  fileName: string;
+  fileSize?: number;
+  mimeType?: string;
+  uploadedById?: string;
+  uploadedAt: Record<string, unknown> | string;
+  createdAt: Record<string, unknown> | string;
+  updatedAt: Record<string, unknown> | string;
+  uploadedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+}
+
+export interface UploadSiteDocumentPayload {
+  siteId: string;
+  documentType: DocumentType;
+  file: File;
+}
+
+export interface GetSiteDocumentsParams {
+  siteId: string;
+  documentType?: DocumentType;
+}

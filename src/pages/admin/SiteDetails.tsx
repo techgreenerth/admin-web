@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +37,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSites } from "@/contexts/siteContext";
-import { Site } from "@/types/site.types";
+import { Site, SiteDocument, DocumentType } from "@/types/site.types";
+import { sitesService } from "@/lib/api/sites.service";
+import { toast } from "react-hot-toast";
 
 interface UploadedFile {
   id: string;
@@ -51,6 +54,7 @@ interface UploadedFile {
 interface UploadFolder {
   id: string;
   name: string;
+  documentType: DocumentType;
   required: boolean;
   files: UploadedFile[];
 }
@@ -64,22 +68,83 @@ export default function SiteDetails() {
 
   // Upload folders with initial data
   const [uploadFolders, setUploadFolders] = useState<UploadFolder[]>([
-    { id: "1", name: "Training Video", required: true, files: [] },
-    { id: "2", name: "Site Video", required: true, files: [] },
-    { id: "3", name: "Monitoring Video", required: true, files: [] },
-    { id: "4", name: "Bulk Density Video", required: true, files: [] },
-    { id: "5", name: "Labor List", required: true, files: [] },
-    { id: "6", name: "Internal Inspection Report", required: true, files: [] },
-    { id: "7", name: "Farmer Declaration Form", required: true, files: [] },
-    { id: "8", name: "Labor Payment Proofs", required: true, files: [] },
-    { id: "9", name: "Biochar Distribution List", required: true, files: [] },
     {
-      id: "10",
-      name: "Biochar Distribution Photos",
+      id: "1",
+      name: "Training Video",
+      documentType: "TRAINING_VIDEO",
       required: true,
       files: [],
     },
-    { id: "11", name: "Labor Consent Forms", required: true, files: [] },
+    {
+      id: "2",
+      name: "Site Video",
+      documentType: "SITE_VIDEO",
+      required: true,
+      files: [],
+    },
+    {
+      id: "3",
+      name: "Monitoring Video",
+      documentType: "MONITORING_VIDEO",
+      required: true,
+      files: [],
+    },
+    {
+      id: "4",
+      name: "Bulk Density Video",
+      documentType: "BULK_DENSITY_VIDEO",
+      required: true,
+      files: [],
+    },
+    {
+      id: "5",
+      name: "Labor List",
+      documentType: "LABOR_LIST",
+      required: true,
+      files: [],
+    },
+    {
+      id: "6",
+      name: "Internal Inspection Report",
+      documentType: "INTERNAL_INSPECTION_REPORT",
+      required: true,
+      files: [],
+    },
+    {
+      id: "7",
+      name: "Farmer Declaration Form",
+      documentType: "FARMER_DECLARATION_FORM",
+      required: true,
+      files: [],
+    },
+    {
+      id: "8",
+      name: "Labor Payment Proofs",
+      documentType: "LABOR_PAYMENT_PROOFS",
+      required: true,
+      files: [],
+    },
+    {
+      id: "9",
+      name: "Biochar Distribution List",
+      documentType: "BIOCHAR_DISTRIBUTION_LIST",
+      required: true,
+      files: [],
+    },
+    {
+      id: "10",
+      name: "Biochar Distribution Photos",
+      documentType: "BIOCHAR_DISTRIBUTION_PHOTOS",
+      required: true,
+      files: [],
+    },
+    {
+      id: "11",
+      name: "Labor Consent Forms",
+      documentType: "LABOR_CONSENT_FORMS",
+      required: true,
+      files: [],
+    },
   ]);
 
   // Training folders
@@ -87,14 +152,28 @@ export default function SiteDetails() {
     {
       id: "t1",
       name: "Biochar Production Training",
+      documentType: "BIOCHAR_PRODUCTION_TRAINING",
       required: true,
       files: [],
     },
-    { id: "t2", name: "DMRV Training", required: true, files: [] },
-    { id: "t3", name: "Safety Training", required: true, files: [] },
+    {
+      id: "t2",
+      name: "DMRV Training",
+      documentType: "DMRV_TRAINING",
+      required: true,
+      files: [],
+    },
+    {
+      id: "t3",
+      name: "Safety Training",
+      documentType: "SAFETY_TRAINING",
+      required: true,
+      files: [],
+    },
     {
       id: "t4",
       name: "Training Complete Declaration",
+      documentType: "TRAINING_COMPLETE_DECLARATION",
       required: true,
       files: [],
     },
@@ -103,14 +182,47 @@ export default function SiteDetails() {
   // Internal uploads folder
   const [internalUploadsFolders, setInternalUploadsFolders] = useState<
     UploadFolder[]
-  >([{ id: "i1", name: "Internal Uploads", required: true, files: [] }]);
+  >([
+    {
+      id: "i1",
+      name: "Internal Uploads",
+      documentType: "INTERNAL_UPLOADS",
+      required: true,
+      files: [],
+    },
+  ]);
 
-  const [selectedFolder, setSelectedFolder] = useState<UploadFolder | null>(
-    null
-  );
-  const [selectedFolderType, setSelectedFolderType] = useState<
-    "upload" | "training" | "internal"
-  >("upload");
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+
+const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+const [selectedFolderType, setSelectedFolderType] = useState<
+  "upload" | "training" | "internal"
+>("upload");
+
+
+const selectedFolder = (() => {
+  if (!selectedFolderId) return null;
+
+  const source =
+    selectedFolderType === "upload"
+      ? uploadFolders
+      : selectedFolderType === "training"
+      ? trainingFolders
+      : internalUploadsFolders;
+
+  return source.find((f) => f.id === selectedFolderId) ?? null;
+})();
+
+const handleOpenFolder = (
+  folder: UploadFolder,
+  folderType: "upload" | "training" | "internal"
+) => {
+  setSelectedFolderId(folder.id);
+  setSelectedFolderType(folderType);
+  setIsFolderDialogOpen(true);
+};
+
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [isViewFileDialogOpen, setIsViewFileDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
@@ -118,7 +230,7 @@ export default function SiteDetails() {
 
   // Form state for editing
   const [formData, setFormData] = useState({
-    siteCode:"",
+    siteCode: "",
     siteName: "",
     latitude: "",
     longitude: "",
@@ -131,6 +243,81 @@ export default function SiteDetails() {
     infrastructure: "",
     status: "",
   });
+
+  // Helper function to convert SiteDocument to UploadedFile
+  const convertToUploadedFile = (doc: SiteDocument): UploadedFile => {
+    const getFileType = (fileName: string): "image" | "video" | "document" => {
+      const ext = fileName.toLowerCase().split(".").pop() || "";
+      if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
+      if (["mp4", "avi", "mov", "wmv"].includes(ext)) return "video";
+      return "document";
+    };
+
+    // Handle uploadedAt which might be an object or string
+    const uploadedAtStr =
+      typeof doc.uploadedAt === "string"
+        ? doc.uploadedAt
+        : new Date().toISOString();
+
+    // Handle uploadedBy which is an object
+    const uploadedByStr = doc.uploadedBy
+      ? `${doc.uploadedBy.firstName} ${doc.uploadedBy.lastName}`
+      : "System";
+
+    return {
+      id: doc.id,
+      name: doc.fileName,
+      size: doc.fileSize ? `${(doc.fileSize / 1024).toFixed(2)} KB` : "Unknown",
+      uploadedAt: uploadedAtStr,
+      uploadedBy: uploadedByStr,
+      url: doc.fileUrl,
+      type: getFileType(doc.fileName),
+    };
+  };
+
+  // Load site documents
+  const loadSiteDocuments = async (siteId: string) => {
+    try {
+      setIsLoadingDocuments(true);
+      const documents = await sitesService.getSiteDocuments({ siteId });
+
+      // Group documents by type
+      const documentsByType = documents.reduce((acc, doc) => {
+        if (!acc[doc.documentType]) acc[doc.documentType] = [];
+        acc[doc.documentType].push(convertToUploadedFile(doc));
+        return acc;
+      }, {} as Record<DocumentType, UploadedFile[]>);
+
+      // Update upload folders
+      setUploadFolders((prev) =>
+        prev.map((folder) => ({
+          ...folder,
+          files: documentsByType[folder.documentType] || [],
+        }))
+      );
+
+      // Update training folders
+      setTrainingFolders((prev) =>
+        prev.map((folder) => ({
+          ...folder,
+          files: documentsByType[folder.documentType] || [],
+        }))
+      );
+
+      // Update internal folders
+      setInternalUploadsFolders((prev) =>
+        prev.map((folder) => ({
+          ...folder,
+          files: documentsByType[folder.documentType] || [],
+        }))
+      );
+    } catch (error) {
+      console.error("Failed to load site documents:", error);
+      toast.error("Failed to load documents");
+    } finally {
+      setIsLoadingDocuments(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -151,6 +338,9 @@ export default function SiteDetails() {
         infrastructure: data.infrastructure ?? "",
         status: data.status,
       });
+
+      // Load documents
+      await loadSiteDocuments(id);
     })();
   }, [id]);
 
@@ -167,96 +357,80 @@ export default function SiteDetails() {
     }
   };
 
-  const handleOpenFolder = (
-    folder: UploadFolder,
-    folderType: "upload" | "training" | "internal"
-  ) => {
-    setSelectedFolder(folder);
-    setSelectedFolderType(folderType);
-    setIsFolderDialogOpen(true);
-  };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!selectedFolder || !event.target.files) return;
+
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!selectedFolder || !event.target.files || !site) return;
 
     const files = Array.from(event.target.files);
-    const newFiles: UploadedFile[] = files.map((file, index) => ({
-      id: `${selectedFolder.id}-${Date.now()}-${index}`,
-      name: file.name,
-      size: `${(file.size / 1024).toFixed(2)} KB`,
-      uploadedAt: new Date().toISOString(),
-      uploadedBy: "Current User",
-      url: URL.createObjectURL(file),
-      type: file.type.startsWith("image/")
-        ? "image"
-        : file.type.startsWith("video/")
-        ? "video"
-        : "document",
-    }));
 
-    // Update the correct folder type
-    if (selectedFolderType === "upload") {
-      setUploadFolders((prev) =>
-        prev.map((folder) =>
-          folder.id === selectedFolder.id
-            ? { ...folder, files: [...folder.files, ...newFiles] }
-            : folder
+    try {
+      setIsUploadingFiles(true);
+      toast.loading(`Uploading ${files.length} file(s)...`, {
+        id: "upload-docs",
+      });
+
+      // Upload files to API
+      const uploadPromises = files.map((file) =>
+        sitesService.uploadSiteDocument(
+          site.id,
+          selectedFolder.documentType,
+          file
         )
       );
-    } else if (selectedFolderType === "training") {
-      setTrainingFolders((prev) =>
-        prev.map((folder) =>
-          folder.id === selectedFolder.id
-            ? { ...folder, files: [...folder.files, ...newFiles] }
-            : folder
-        )
-      );
-    } else if (selectedFolderType === "internal") {
-      setInternalUploadsFolders((prev) =>
-        prev.map((folder) =>
-          folder.id === selectedFolder.id
-            ? { ...folder, files: [...folder.files, ...newFiles] }
-            : folder
-        )
-      );
+
+      await Promise.all(uploadPromises);
+
+      // Reload documents from API
+      await loadSiteDocuments(site.id);
+
+      // Update selected folder with new files
+      const updatedFolder = [
+        ...uploadFolders,
+        ...trainingFolders,
+        ...internalUploadsFolders,
+      ].find((f) => f.id === selectedFolder.id);
+     
+
+      toast.success("Files uploaded successfully!", { id: "upload-docs" });
+
+      // Reset file input
+      event.target.value = "";
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload files", { id: "upload-docs" });
+    } finally {
+      setIsUploadingFiles(false);
     }
   };
 
-  const handleDeleteFile = (fileId: string) => {
-    if (!selectedFolder) return;
+  const handleDeleteFile = async (fileId: string) => {
+    if (!selectedFolder || !site) return;
 
-    // Update the correct folder type
-    if (selectedFolderType === "upload") {
-      setUploadFolders((prev) =>
-        prev.map((folder) =>
-          folder.id === selectedFolder.id
-            ? { ...folder, files: folder.files.filter((f) => f.id !== fileId) }
-            : folder
-        )
-      );
-    } else if (selectedFolderType === "training") {
-      setTrainingFolders((prev) =>
-        prev.map((folder) =>
-          folder.id === selectedFolder.id
-            ? { ...folder, files: folder.files.filter((f) => f.id !== fileId) }
-            : folder
-        )
-      );
-    } else if (selectedFolderType === "internal") {
-      setInternalUploadsFolders((prev) =>
-        prev.map((folder) =>
-          folder.id === selectedFolder.id
-            ? { ...folder, files: folder.files.filter((f) => f.id !== fileId) }
-            : folder
-        )
-      );
+    try {
+      toast.loading("Deleting file...", { id: "delete-doc" });
+
+      // Delete from API
+      await sitesService.deleteSiteDocument(fileId);
+
+      // Reload documents
+      await loadSiteDocuments(site.id);
+
+      // Update selected folder with remaining files
+      const updatedFolder = [
+        ...uploadFolders,
+        ...trainingFolders,
+        ...internalUploadsFolders,
+      ].find((f) => f.id === selectedFolder.id);
+
+
+      toast.success("File deleted successfully!", { id: "delete-doc" });
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to delete file", { id: "delete-doc" });
     }
-
-    setSelectedFolder((prev) =>
-      prev
-        ? { ...prev, files: prev.files.filter((f) => f.id !== fileId) }
-        : null
-    );
   };
 
   const handleViewFile = (file: UploadedFile) => {
@@ -280,18 +454,18 @@ export default function SiteDetails() {
   };
 
   if (isLoading || !site) {
-        return (
+    return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
-          <p className="text-muted-foreground text-sm">Loading site details...</p>
+          <p className="text-muted-foreground text-sm">
+            Loading site details...
+          </p>
         </div>
       </div>
     );
   }
 
-   
-  
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -597,6 +771,7 @@ export default function SiteDetails() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             {/* Upload Button */}
+            {/* Upload Button */}
             <div className="flex items-center justify-between border-b pb-4">
               <div>
                 <p className="text-sm font-medium">
@@ -606,17 +781,35 @@ export default function SiteDetails() {
                   Upload images, videos, or documents
                 </p>
               </div>
-              <div className="relative">
-                <Input
+              <div>
+                <input
                   type="file"
                   multiple
                   onChange={handleFileUpload}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  className="hidden"
                   accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx"
+                  disabled={isUploadingFiles}
+                  id="file-upload-input"
                 />
-                <Button className="bg-[#295F58] hover:bg-[#295F58]/90">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Files
+                <Button
+                  className="bg-[#295F58] hover:bg-[#295F58]/90"
+                  disabled={isUploadingFiles}
+                  onClick={() =>
+                    document.getElementById("file-upload-input")?.click()
+                  }
+                  type="button"
+                >
+                  {isUploadingFiles ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Files
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
