@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, MoreVertical, Edit, Trash2, Shield, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  Search,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Shield,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { adminService, Admin as AdminType } from "@/lib/api/admin.service";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -138,7 +148,6 @@ export default function Admins() {
     }
   };
 
-
   // Handlers
   const handleCreateAdmin = () => {
     setFormData({
@@ -243,26 +252,38 @@ export default function Admins() {
     }
   };
 
+  if (isLoading || !admins) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">
+            Loading Admins ...
+          </p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
-<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-  <div>
-    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#295F58]">
-      Admin Management
-    </h1>
-    <p className="text-sm sm:text-base text-muted-foreground mt-1">
-      Manage platform administrators and permissions
-    </p>
-  </div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#295F58]">
+            Admin Management
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
+            Manage platform administrators and permissions
+          </p>
+        </div>
 
-  <Button
-    onClick={handleCreateAdmin}
-    className="w-full md:w-auto bg-[#295F58] hover:bg-[#295F58]/90"
-  >
-    <Plus className="h-4 w-4 mr-2" />
-    Add Admin
-  </Button>
-</div>
+        <Button
+          onClick={handleCreateAdmin}
+          className="w-full md:w-auto bg-[#295F58] hover:bg-[#295F58]/90"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Admin
+        </Button>
+      </div>
 
       <Card>
         <CardHeader className="border-b">
@@ -321,84 +342,101 @@ export default function Admins() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-muted-foreground"
+                  >
                     Loading admins...
                   </TableCell>
                 </TableRow>
               ) : admins.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-muted-foreground"
+                  >
                     No admins found
                   </TableCell>
                 </TableRow>
               ) : (
                 admins.map((admin) => (
-                <TableRow key={admin.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback className="bg-[#295F58] text-white">
-                          {admin.firstName[0]}{admin.lastName[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">
-                          {admin.firstName} {admin.lastName}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {admin.email}
+                  <TableRow key={admin.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarFallback className="bg-[#295F58] text-white">
+                            {admin.firstName[0]}
+                            {admin.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">
+                            {admin.firstName} {admin.lastName}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {admin.email}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">{admin.phone}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getRoleColor(admin.role)}>
-                      {admin.role.replace("_", " ")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(admin.status)}>
-                      {admin.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-muted-foreground">
-                      {admin.lastLoginAt ? new Date(admin.lastLoginAt).toLocaleDateString() : "Never"}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(admin.createdAt).toLocaleDateString()}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewAdmin(admin)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditAdmin(admin)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteAdmin(admin)}>
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              )))}
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">{admin.phone}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getRoleColor(admin.role)}>
+                        {admin.role.replace("_", " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(admin.status)}>
+                        {admin.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm text-muted-foreground">
+                        {admin.lastLoginAt
+                          ? new Date(admin.lastLoginAt).toLocaleDateString()
+                          : "Never"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(admin.createdAt).toLocaleDateString()}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleViewAdmin(admin)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleEditAdmin(admin)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => handleDeleteAdmin(admin)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -407,7 +445,9 @@ export default function Admins() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <div className="text-sm text-muted-foreground">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} results
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+              {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount}{" "}
+              results
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -420,22 +460,30 @@ export default function Admins() {
                 Previous
               </Button>
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className={currentPage === page ? "bg-[#295F58] hover:bg-[#295F58]/90" : ""}
-                  >
-                    {page}
-                  </Button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className={
+                        currentPage === page
+                          ? "bg-[#295F58] hover:bg-[#295F58]/90"
+                          : ""
+                      }
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
               >
                 Next
@@ -461,7 +509,9 @@ export default function Admins() {
               <Input
                 id="firstName"
                 value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, firstName: e.target.value })
+                }
                 placeholder="Enter first name"
               />
             </div>
@@ -470,7 +520,9 @@ export default function Admins() {
               <Input
                 id="lastName"
                 value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, lastName: e.target.value })
+                }
                 placeholder="Enter last name"
               />
             </div>
@@ -480,7 +532,9 @@ export default function Admins() {
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 placeholder="admin@techgreenerth.com"
               />
             </div>
@@ -489,13 +543,20 @@ export default function Admins() {
               <Input
                 id="phone"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
                 placeholder="+1234567890"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Role *</Label>
-              <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+              <Select
+                value={formData.role}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, role: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -513,16 +574,26 @@ export default function Admins() {
                 id="password"
                 type="password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 placeholder="Enter a strong password"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSubmitting}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateDialogOpen(false)}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitCreate} disabled={isSubmitting}>
+            <Button
+              className="bg-[#295F58] hover:bg-[#295F58]/90"
+              onClick={handleSubmitCreate}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Creating..." : "Create Admin"}
             </Button>
           </DialogFooter>
@@ -544,7 +615,9 @@ export default function Admins() {
               <Input
                 id="edit-firstName"
                 value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, firstName: e.target.value })
+                }
                 placeholder="Enter first name"
               />
             </div>
@@ -553,7 +626,9 @@ export default function Admins() {
               <Input
                 id="edit-lastName"
                 value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, lastName: e.target.value })
+                }
                 placeholder="Enter last name"
               />
             </div>
@@ -572,13 +647,20 @@ export default function Admins() {
               <Input
                 id="edit-phone"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
                 placeholder="+1234567890"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-role">Role *</Label>
-              <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+              <Select
+                value={formData.role}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, role: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -592,7 +674,12 @@ export default function Admins() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-status">Status *</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+              <Select
+                value={formData.status}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, status: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -604,21 +691,33 @@ export default function Admins() {
               </Select>
             </div>
             <div className="space-y-2 col-span-2">
-              <Label htmlFor="edit-password">New Password (leave blank to keep current)</Label>
+              <Label htmlFor="edit-password">
+                New Password (leave blank to keep current)
+              </Label>
               <Input
                 id="edit-password"
                 type="password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 placeholder="Enter new password or leave blank"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isSubmitting}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={handleSubmitEdit} disabled={isSubmitting}>
+            <Button
+              className="bg-[#295F58] hover:bg-[#295F58]/90"
+              onClick={handleSubmitEdit}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Updating..." : "Update Admin"}
             </Button>
           </DialogFooter>
@@ -639,14 +738,17 @@ export default function Admins() {
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarFallback className="bg-[#295F58] text-white text-lg">
-                    {selectedAdmin.firstName[0]}{selectedAdmin.lastName[0]}
+                    {selectedAdmin.firstName[0]}
+                    {selectedAdmin.lastName[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className="text-xl font-semibold">
                     {selectedAdmin.firstName} {selectedAdmin.lastName}
                   </h3>
-                  <p className="text-sm text-muted-foreground">{selectedAdmin.email}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedAdmin.email}
+                  </p>
                 </div>
               </div>
 
@@ -674,7 +776,9 @@ export default function Admins() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Last Login</Label>
                   <p className="font-medium">
-                    {selectedAdmin.lastLoginAt ? new Date(selectedAdmin.lastLoginAt).toLocaleString() : "Never"}
+                    {selectedAdmin.lastLoginAt
+                      ? new Date(selectedAdmin.lastLoginAt).toLocaleString()
+                      : "Never"}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -691,13 +795,19 @@ export default function Admins() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+            >
               Close
             </Button>
-            <Button className="bg-[#295F58] hover:bg-[#295F58]/90" onClick={() => {
-              setIsViewDialogOpen(false);
-              handleEditAdmin(selectedAdmin!);
-            }}>
+            <Button
+              className="bg-[#295F58] hover:bg-[#295F58]/90"
+              onClick={() => {
+                setIsViewDialogOpen(false);
+                handleEditAdmin(selectedAdmin!);
+              }}
+            >
               <Edit className="h-4 w-4 mr-2" />
               Edit Admin
             </Button>
@@ -706,7 +816,10 @@ export default function Admins() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -719,7 +832,9 @@ export default function Admins() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isSubmitting}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"

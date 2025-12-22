@@ -249,6 +249,18 @@ export default function Users() {
     }
   };
 
+    if (isLoading || !users) {
+      return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+            <p className="text-muted-foreground text-sm">
+              Loading Users ...
+            </p>
+          </div>
+        </div>
+      );
+    }
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
