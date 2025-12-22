@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
 import { useSites } from "@/contexts/siteContext";
 import { userService, User as UserType } from "@/lib/api/user.service";
+import { biocharSamplingService } from "@/lib/api/biocharSampling.service";
 import {
   Search,
   Eye,
@@ -41,6 +43,7 @@ import { useBiocharSampling } from "@/contexts/biocharSamplingContext";
 import { BiocharSamplingRecord as BiocharSamplingRecordType } from "@/types/biocharSampling.types";
 
 import { formatDate, formatTime } from "@/lib/utils/date";
+import { useMutation } from "@tanstack/react-query";
 
 export default function BiocharSampling() {
   const { records, meta, isLoading, fetchRecords } = useBiocharSampling();
@@ -136,6 +139,67 @@ export default function BiocharSampling() {
     setIsViewDialogOpen(true);
   };
 
+  // const handleExportCSV = async () => {
+  //   try {
+  //     toast.loading("Exporting to CSV...", { id: "export-csv" });
+
+  //     const blob = await biocharSamplingService.exportToCSV({
+  //       userId: userFilter !== "all" ? userFilter : undefined,
+  //       siteId: siteFilter !== "all" ? siteFilter : undefined,
+  //       startDate: startDate || undefined,
+  //       endDate: endDate || undefined,
+  //     });
+
+  //     const url = window.URL.createObjectURL(blob);
+  //     const link = document.createElement("a");
+  //     link.href = url;
+  //     link.download = `biochar-sampling-${new Date().toISOString().split("T")[0]}.csv`;
+  //     document.body.appendChild(link);
+  //     link.click();
+  //     document.body.removeChild(link);
+  //     window.URL.revokeObjectURL(url);
+
+  //     toast.success("CSV exported successfully!", { id: "export-csv" });
+  //   } catch (error) {
+  //     console.error("Export CSV error:", error);
+  //     toast.error("Failed to export CSV", { id: "export-csv" });
+  //   }
+  // };
+
+  const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<
+    Blob,
+    Error
+  >({
+    mutationFn: () =>
+      biocharSamplingService.exportToCSV({
+        userId: userFilter !== "all" ? userFilter : undefined,
+        siteId: siteFilter !== "all" ? siteFilter : undefined,
+        // status: statusFilter !== "all" ? (statusFilter as any) : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      }),
+
+    onSuccess: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `biochar-sampling-${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("CSV exported successfully!");
+    },
+
+    onError: (error) => {
+      toast.error(error.message || "Failed to export CSV");
+    },
+  });
+
     if (isLoading || !records) {
       return (
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -167,9 +231,26 @@ export default function BiocharSampling() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">All Records</CardTitle>
-              <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export CSV
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  exportCSV();
+                }}
+              >
+                {isExportingCSV ? (
+                  <>
+                    <Loader2 className="-ml-1 animate-spin" size={16} />
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} />
+                    <span>Export CSV</span>
+                  </>
+                )}
               </Button>
             </div>
             <div className="flex flex-col gap-3">

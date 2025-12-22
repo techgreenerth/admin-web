@@ -17,9 +17,16 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { useMutation } from "@tanstack/react-query";
 import { useBiocharProduction } from "@/contexts/biocharProductionContext";
 import { useSites } from "@/contexts/siteContext";
 import { userService, User as UserType } from "@/lib/api/user.service";
+import {
+  biocharProductionService,
+  ExportBiocharProductionCSVParams,
+} from "@/lib/api/biocharProduction.service";
+type DownloadBiocharProductionCSVProps = ExportBiocharProductionCSVParams;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -366,7 +373,44 @@ export default function BiocharProduction() {
     }
   };
 
-  // Calculate statistics
+  
+
+  const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<
+    Blob,
+    Error
+  >({
+    mutationFn: () =>
+      biocharProductionService.exportToCSV({
+        userId: userFilter !== "all" ? userFilter : undefined,
+        siteId: siteFilter !== "all" ? siteFilter : undefined,
+        status: statusFilter !== "all" ? (statusFilter as any) : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      }),
+
+    onSuccess: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `biochar-production-${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("CSV exported successfully!");
+    },
+
+    onError: (error) => {
+      toast.error(error.message || "Failed to export CSV");
+    },
+  });
+
+
+  // Calculate statistic
   const totalBatches = filteredRecords.length;
   const totalBiocharProduced = filteredRecords.reduce((total, record) => {
     const kontikiRecords = getKontikiRecords(record);
@@ -454,9 +498,26 @@ export default function BiocharProduction() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">All Records</CardTitle>
-              <Button variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export CSV
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  exportCSV();
+                }}
+              >
+                {isExportingCSV ? (
+                  <>
+                    <Loader2 className="-ml-1 animate-spin" size={16} />
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} />
+                    <span>Export CSV</span>
+                  </>
+                )}
               </Button>
             </div>
             <div className="flex flex-col gap-3">
@@ -548,139 +609,185 @@ export default function BiocharProduction() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-  {/* DESKTOP & TABLET VIEW: Hidden on small screens (max-sm) */}
-  <div className="hidden sm:block overflow-x-auto">
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Record Info</TableHead>
-          <TableHead>Site & User</TableHead>
-          <TableHead>Shift & Kontikis</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {isLoading ? (
-          <TableRow>
-            <TableCell colSpan={5} className="text-center py-12">
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Loading biochar production records...</span>
-              </div>
-            </TableCell>
-          </TableRow>
-        ) : paginatedRecords.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-              No records found
-            </TableCell>
-          </TableRow>
-        ) : (
-          paginatedRecords.map((record) => (
-            <TableRow key={record.id}>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE] shrink-0">
-                    <Factory className="h-4 w-4 text-[#295F58]" />
-                  </div>
-                  <div>
-                    <div className="font-medium">{(record.recordDate)}</div>
-                    <div className="text-sm text-muted-foreground">{(record.recordTime)}</div>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="text-sm font-medium">{record.site?.siteCode ?? "—"}</div>
-                <div className="text-sm text-muted-foreground">{record.user?.userCode ?? "—"}</div>
-              </TableCell>
-              <TableCell>
-                <Badge className={getStepColor(record.shiftNumber)}>Shift {record.shift.shiftNumber}</Badge>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {getKontikiRecords(record).map(k => getKontikiName(k)).join(", ")}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge className={getStatusColor(getActualStatus(record))}>
-                  {getActualStatus(record).replace("_", " ")}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={() => handleViewRecord(record)} className="hover:bg-[#295F58]/10">
-                  <Eye className="h-4 w-4 text-[#295F58]" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
-  </div>
-
-  {/* MOBILE VIEW: Hidden on larger screens (min-sm) */}
-  <div className="sm:hidden">
-    {isLoading ? (
-      <div className="p-8 text-center flex flex-col items-center gap-2">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Loading records...</span>
-      </div>
-    ) : paginatedRecords.length === 0 ? (
-      <div className="p-8 text-center text-muted-foreground text-sm">No records found</div>
-    ) : (
-      <div className="divide-y divide-border">
-        {paginatedRecords.map((record) => (
-          <div key={record.id} className="p-4 pb-8 space-y-4">
-            <div className="flex justify-between items-start">
-              <div className="flex gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
-                  <Factory className="h-5 w-5 text-[#295F58]" />
-                </div>
-                <div>
-                  <div className="font-bold text-base">{(record.recordDate)}</div>
-                  <div className="text-sm text-muted-foreground">{(record.recordTime)}</div>
-                </div>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleViewRecord(record)}
-                className="border-[#295F58]/20 text-[#295F58]"
-              >
-                <Eye className="h-4 w-4 mr-2" /> View
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Site/User</p>
-                <p className="text-sm font-medium">{record.site?.siteCode ?? "—"}</p>
-                <p className="text-xs text-muted-foreground">{record.user?.userCode ?? "—"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Shift & Kontikis</p>
-                <Badge className={`${getStepColor(record.shiftNumber)} text-[10px] px-1.5 py-0`}>
-                  Shift {record.shift.shiftNumber}
-                </Badge>
-                <p className="text-xs text-muted-foreground mt-1 truncate">
-                  {getKontikiRecords(record).map(k => getKontikiName(k)).join(", ")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
-              <Badge className={getStatusColor(getActualStatus(record))}>
-                {getActualStatus(record).replace("_", " ")}
-              </Badge>
-              <span className="text-[11px] text-muted-foreground italic">
-                {getStatusSubtext(record)}
-              </span>
-            </div>
+          {/* DESKTOP & TABLET VIEW: Hidden on small screens (max-sm) */}
+          <div className="hidden sm:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Record Info</TableHead>
+                  <TableHead>Site & User</TableHead>
+                  <TableHead>Shift & Kontikis</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-12">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Loading biochar production records...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedRecords.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="text-center text-muted-foreground py-8"
+                    >
+                      No records found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedRecords.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE] shrink-0">
+                            <Factory className="h-4 w-4 text-[#295F58]" />
+                          </div>
+                          <div>
+                            <div className="font-medium">
+                              {record.recordDate}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {record.recordTime}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm font-medium">
+                          {record.site?.siteCode ?? "—"}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {record.user?.userCode ?? "—"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStepColor(record.shiftNumber)}>
+                          Shift {record.shift.shiftNumber}
+                        </Badge>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {getKontikiRecords(record)
+                            .map((k) => getKontikiName(k))
+                            .join(", ")}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={getStatusColor(getActualStatus(record))}
+                        >
+                          {getActualStatus(record).replace("_", " ")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleViewRecord(record)}
+                          className="hover:bg-[#295F58]/10"
+                        >
+                          <Eye className="h-4 w-4 text-[#295F58]" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
-        ))}
-      </div>
-    )}
-  </div>
-</CardContent>
+
+          {/* MOBILE VIEW: Hidden on larger screens (min-sm) */}
+          <div className="sm:hidden">
+            {isLoading ? (
+              <div className="p-8 text-center flex flex-col items-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  Loading records...
+                </span>
+              </div>
+            ) : paginatedRecords.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                No records found
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {paginatedRecords.map((record) => (
+                  <div key={record.id} className="p-4 pb-8 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
+                          <Factory className="h-5 w-5 text-[#295F58]" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-base">
+                            {record.recordDate}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {record.recordTime}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewRecord(record)}
+                        className="border-[#295F58]/20 text-[#295F58]"
+                      >
+                        <Eye className="h-4 w-4 mr-2" /> View
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Site/User
+                        </p>
+                        <p className="text-sm font-medium">
+                          {record.site?.siteCode ?? "—"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {record.user?.userCode ?? "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Shift & Kontikis
+                        </p>
+                        <Badge
+                          className={`${getStepColor(
+                            record.shiftNumber
+                          )} text-[10px] px-1.5 py-0`}
+                        >
+                          Shift {record.shift.shiftNumber}
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-1 truncate">
+                          {getKontikiRecords(record)
+                            .map((k) => getKontikiName(k))
+                            .join(", ")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
+                      <Badge
+                        className={getStatusColor(getActualStatus(record))}
+                      >
+                        {getActualStatus(record).replace("_", " ")}
+                      </Badge>
+                      <span className="text-[11px] text-muted-foreground italic">
+                        {getStatusSubtext(record)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
       </Card>
 
       {/* Pagination */}
@@ -755,13 +862,13 @@ export default function BiocharProduction() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Date</Label>
                   <div className="text-sm font-medium">
-                    {(selectedRecord.recordDate)}
+                    {selectedRecord.recordDate}
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">Time</Label>
                   <div className="text-sm font-medium">
-                    {(selectedRecord.recordTime)}
+                    {selectedRecord.recordTime}
                   </div>
                 </div>
                 <div className="space-y-1">

@@ -152,33 +152,7 @@ export default function BiomassSourcing() {
     setIsViewDialogOpen(true);
   };
 
-  // const handleExportCSV = async () => {
-  //   try {
-  //     toast.loading("Exporting to CSV...", { id: "export-csv" });
-
-  //     const blob = await biomassSourcingService.exportToCSV({
-  //       userId: userFilter !== "all" ? userFilter : undefined,
-  //       siteId: siteFilter !== "all" ? siteFilter : undefined,
-  //       startDate: startDate || undefined,
-  //       endDate: endDate || undefined,
-  //     });
-
-  //     // Create download link
-  //     const url = window.URL.createObjectURL(blob);
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     link.download = `biomass-sourcing-${new Date().toISOString().split("T")[0]}.csv`;
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     document.body.removeChild(link); 
-  //     window.URL.revokeObjectURL(url);
-
-  //     toast.success("CSV exported successfully!", { id: "export-csv" });
-  //   } catch (error) {
-  //     console.error("Export CSV error:", error);
-  //     toast.error("Failed to export CSV", { id: "export-csv" });
-  //   }
-  // };
+ 
 
 
 const { mutate: downloadCSV, isPending } = useMutation<Blob, Error>({

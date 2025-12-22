@@ -60,4 +60,21 @@ export const bulkDensityService = {
       payload
     );
   },
+
+  async exportToCSV(params?: {
+    userId?: string;
+    siteId?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Blob> {
+    const response = await apiClient.get("/v1/bulk-density/export/csv",
+      { params, });
+
+
+    const blob = new Blob([response.data], {
+      type: 'text/csv;charset=utf-8;',
+    })
+    return blob
+  }
 };
