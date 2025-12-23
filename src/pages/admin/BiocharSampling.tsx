@@ -484,70 +484,70 @@ export default function BiocharSampling() {
               </div>
             ) : (
               paginatedRecords.map((record) => (
-                  <div key={record.id} className="p-4 mb-8 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex gap-3">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
-                          <Beaker className="h-5 w-5 text-[#295F58]" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-base">
-                            {record.recordDate}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {record.recordTime}
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewRecord(record)}
-                        className="border-[#295F58]/20 text-[#295F58]"
-                      >
-                        <Eye className="h-4 w-4 mr-2" /> View
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                          Site/User
-                        </p>
-                        <p className="text-sm font-medium">
-                          {record.site?.siteCode ?? "—"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {record.user?.userCode ?? "—"}
-                        </p>
+                <div key={record.id} className="p-4 mb-8 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
+                        <Beaker className="h-5 w-5 text-[#295F58]" />
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                          Kon-tikis
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {getKontikiRecords(record)
-                            .map((k) => getKontikiName(k))
-                            .join(", ") || "—"}
-                        </p>
+                        <div className="font-bold text-base">
+                          {record.recordDate}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {record.recordTime}
+                        </div>
                       </div>
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewRecord(record)}
+                      className="border-[#295F58]/20 text-[#295F58]"
+                    >
+                      <Eye className="h-4 w-4 mr-2" /> View
+                    </Button>
+                  </div>
 
-                    <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
-                      <div className="flex items-center gap-2">
-                        {hasAnySamplePhoto(record) && (
-                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span className="text-xs text-muted-foreground">
-                          {getTotalSamplePhotosCount(record)}{" "}
-                          {getTotalSamplePhotosCount(record) === 1
-                            ? "photo"
-                            : "photos"}
-                        </span>
-                      </div>
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Site/User
+                      </p>
+                      <p className="text-sm font-medium">
+                        {record.site?.siteCode ?? "—"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {record.user?.userCode ?? "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Kon-tikis
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {getKontikiRecords(record)
+                          .map((k) => getKontikiName(k))
+                          .join(", ") || "—"}
+                      </p>
                     </div>
                   </div>
-                ))
+
+                  <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
+                    <div className="flex items-center gap-2">
+                      {hasAnySamplePhoto(record) && (
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {getTotalSamplePhotosCount(record)}{" "}
+                        {getTotalSamplePhotosCount(record) === 1
+                          ? "photo"
+                          : "photos"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </CardContent>
@@ -678,52 +678,51 @@ export default function BiocharSampling() {
                   </div>
                 </div>
               </div>
+              <div className="flex">
+                {/* Kon-tiki Sections */}
+                {getKontikiRecords(selectedRecord).map((kontiki) => (
+                  <div
+                    key={kontiki.id ?? kontiki.kontikiId}
+                    className="border-4 border-gray-200 rounded-lg p-6 space-y-6"
+                  >
+                    {/* Kon-tiki Header */}
+                    <div className="pb-4 border-b">
+                      <h3 className="text-lg font-semibold text-[#295F58]">
+                        {kontiki.kontiki?.kontikiName ?? "—"}
+                      </h3>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {kontiki.productionBatches
+                          ? `Batches: ${kontiki.productionBatches}`
+                          : ""}
+                      </div>
+                    </div>
 
-              {/* Kon-tiki Sections */}
-              {getKontikiRecords(selectedRecord).map((kontiki) => (
-                <div
-                  key={kontiki.id ?? kontiki.kontikiId}
-                  className="border border-gray-200 rounded-lg p-6 space-y-6"
-                >
-                  {/* Kon-tiki Header */}
-                  <div className="pb-4 border-b">
-                    <h3 className="text-lg font-semibold text-[#295F58]">
-                      {kontiki.kontiki?.kontikiName ?? "—"}
-                    </h3>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {kontiki.productionBatches
-                        ? `Batches: ${kontiki.productionBatches}`
-                        : ""}
+                    {/* Sample Photos */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <ImageIcon className="h-5 w-5 text-[#295F58]" />
+                        Sample Photo
+                      </Label>
+
+                      {kontiki.samplePhoto ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div className="border rounded-lg overflow-hidden">
+                            <img
+                              src={kontiki.samplePhoto}
+                              alt="Sample photo"
+                              className="w-full h-auto"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground italic">
+                          No image found
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {/* Sample Photos */}
-
-                  {/* Sample Photos */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <ImageIcon className="h-5 w-5 text-[#295F58]" />
-                      Sample Photo
-                    </Label>
-
-                    {kontiki.samplePhoto ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div className="border rounded-lg overflow-hidden">
-                          <img
-                            src={kontiki.samplePhoto}
-                            alt="Sample photo"
-                            className="w-full h-auto"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-muted-foreground italic">
-                        No image found
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </DialogContent>
