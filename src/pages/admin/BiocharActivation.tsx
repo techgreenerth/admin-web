@@ -44,6 +44,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { BiocharActivationRecord } from "@/types/biocharActivation.types";
 import { useMutation } from "@tanstack/react-query";
+import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
 // import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BiocharActivation() {
@@ -126,46 +127,65 @@ export default function BiocharActivation() {
   const hasAnyMixingVideo = (record: BiocharActivationRecord) =>
     getKontikiRecords(record).some((k) => !!k.mixingVideo);
 
+
   // Filter records
   const filteredRecords = records.filter((record) => {
     const q = searchQuery.trim().toLowerCase();
     const kontikiRecords = getKontikiRecords(record);
 
-    const matchesSearch =
-      q.length === 0 ||
-      // User fields
-      normalizeLower(record.user?.userCode).includes(q) ||
-      normalizeLower(record.user?.firstName).includes(q) ||
-      normalizeLower(record.user?.lastName).includes(q) ||
-      // Site fields
-      normalizeLower(record.site?.siteCode).includes(q) ||
-      normalizeLower(record.site?.siteName).includes(q) ||
+    const searchableText = [
+      // User (match UI)
+      record.user?.userCode,
+      `user ${record.user?.userCode}`,
+      record.user?.firstName,
+      record.user?.lastName,
+
+      // Site (match UI)
+      record.site?.siteCode,
+      `site ${record.site?.siteCode}`,
+      record.site?.siteName,
+
       // Activation fields
-      normalizeLower(record.mixingAgent).includes(q) ||
-      normalizeLower(record.shift?.shiftName).includes(q) ||
-      // Kontiki fields
-      kontikiRecords.some((k) =>
-        normalizeLower(k.kontikiId).includes(q) ||
-        normalizeLower(k.kontiki?.kontikiCode).includes(q) ||
-        normalizeLower(k.kontiki?.kontikiName).includes(q)
-      );
+      record.mixingAgent,
+      record.shift?.shiftName,
+
+      // Kontiki (match formatted UI)
+      ...kontikiRecords.flatMap((k) => [
+        k.kontikiId,
+        `kontiki ${k.kontikiId}`,
+        k.kontiki?.kontikiCode,
+        k.kontiki?.kontikiName,
+      ]),
+
+      // Dates
+      normalizeDateForSearch(record.recordDate),
+      normalizeDateForSearch(record.createdAt),
+    ]
+      .map(toSearchString)
+      .join(" ");
+
+    const matchesSearch = q.length === 0 || searchableText.includes(q);
 
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
+
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
-    // Date range filter (treat endDate as inclusive, end-of-day)
+    // Date range filter (inclusive)
     let matchesDateRange = true;
     if (startDate && endDate) {
-      const recordDate = record.recordDate ? new Date(record.recordDate) : null;
+     const recordDate = parseDDMMYYYY(record.recordDate);
+
       const start = new Date(startDate);
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
 
-      matchesDateRange = !!recordDate && recordDate >= start && recordDate <= end;
+      matchesDateRange =
+        !!recordDate && recordDate >= start && recordDate <= end;
     }
 
     return matchesSearch && matchesSite && matchesUser && matchesDateRange;
   });
+
 
   // Pagination
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
@@ -349,7 +369,7 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                 <TableRow>
                   <TableHead>Record Info</TableHead>
                   <TableHead>Site & User</TableHead>
-                  <TableHead>Shift & Agent</TableHead>
+                  <TableHead>Shift </TableHead>
                   <TableHead>Media</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -406,9 +426,9 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                           >
                             {record.shift?.shiftName ?? "Shift"}
                           </Badge>
-                          <div className="text-sm text-muted-foreground">
-                            {record.mixingAgent}
-                          </div>
+                          {/* <div className="text-sm text-muted-foreground">
+                            {record.shift?.startTime}
+                          </div> */}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -695,47 +715,53 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
               {getKontikiRecords(selectedRecord).map((kontiki) => (
                 <div
                   key={kontiki.id ?? kontiki.kontikiId}
-                  className="border border-gray-200 rounded-lg p-6 space-y-6"
+                  className="border border-gray-200 rounded-xl p-4 sm:p-6 space-y-6"
                 >
                   {/* Kon-tiki Header */}
-                  <div className="pb-4 border-b">
-                    <h3 className="text-lg font-semibold text-[#295F58]">
+                  <div className="pb-3 border-b">
+                    <h3 className="text-base sm:text-lg font-semibold text-[#295F58]">
                       {kontiki.kontiki?.kontikiName ?? "—"}
                     </h3>
                   </div>
 
                   {/* Tractor Photo */}
                   {kontiki.tractorPhoto && (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <Label className="text-sm font-medium flex items-center gap-2">
-                        <ImageIcon className="h-5 w-5 text-[#295F58]" />
+                        <ImageIcon className="h-4 w-4 text-[#295F58]" />
                         Tractor Photo
                       </Label>
-                      <div className="border rounded-lg overflow-hidden max-w-md">
-                        <img
-                          src={kontiki.tractorPhoto}
-                          alt="Tractor"
-                          className="w-full h-auto"
-                        />
+
+                      <div className="mx-auto w-full max-w-md sm:max-w-lg lg:max-w-xl">
+                        <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
+                          <img
+                            src={kontiki.tractorPhoto}
+                            alt="Tractor"
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
 
                   {/* Mixing Video */}
                   {kontiki.mixingVideo && (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <Label className="text-sm font-medium flex items-center gap-2">
-                        <Video className="h-5 w-5 text-[#295F58]" />
+                        <Video className="h-4 w-4 text-[#295F58]" />
                         Mixing Video
                       </Label>
-                      <div className="border rounded-lg overflow-hidden max-w-2xl">
-                        <video
-                          controls
-                          className="w-full h-auto"
-                          src={kontiki.mixingVideo}
-                        >
-                          Your browser does not support the video tag.
-                        </video>
+
+                      <div className="mx-auto w-full max-w-md sm:max-w-lg lg:max-w-xl">
+                        <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
+                          <video
+                            controls
+                            className="h-full w-full object-contain"
+                            src={kontiki.mixingVideo}
+                          >
+                            Your browser does not support the video tag.
+                          </video>
+                        </div>
                       </div>
                     </div>
                   )}

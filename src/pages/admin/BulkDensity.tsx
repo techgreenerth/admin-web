@@ -49,6 +49,7 @@ import { Label } from "@/components/ui/label";
 import { useBulkDensity } from "@/contexts/bulkDensityContext";
 import { BulkDensityRecord as BulkDensityRecordType } from "@/types/bulkDensity.types";
 import { useMutation } from "@tanstack/react-query";
+import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
 // import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BulkDensity() {
