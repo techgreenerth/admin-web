@@ -48,6 +48,7 @@ import {
 import { formatDate, formatTime } from "../../lib/utils/date";
 import { toast } from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
+import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
 
 export default function CsiVerifiedRecords() {
   const [records, setRecords] = useState<CsiVerifiedRecord[]>([]);
@@ -73,10 +74,8 @@ export default function CsiVerifiedRecords() {
     try {
       setIsLoading(true);
       const res = await CsiService.getVerifiedRecords({
-        page: currentPage,
-        limit: itemsPerPage,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        page: 1,
+        limit: 1000, // Fetch all records for client-side filtering
       });
       setRecords(res.data);
       setMeta(res.meta);
@@ -89,37 +88,66 @@ export default function CsiVerifiedRecords() {
 
   useEffect(() => {
     fetchRecords();
-  }, [currentPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const normalizeLower = (value: unknown) => {
-    if (typeof value === "string") return value.toLowerCase();
-    if (value == null) return "";
-    return String(value).toLowerCase();
-  };
-
-  // Filter records
+  // Filter records (client-side filtering like activation page)
   const filteredRecords = records.filter((record) => {
     const q = searchQuery.trim().toLowerCase();
 
-    const matchesSearch =
-      q.length === 0 ||
-      normalizeLower(record.production?.site?.siteName).includes(q) ||
-      normalizeLower(record.production?.site?.siteCode).includes(q) ||
-      normalizeLower(record.production?.user?.firstName).includes(q) ||
-      normalizeLower(record.production?.user?.lastName).includes(q) ||
-      normalizeLower(record.production?.user?.userCode).includes(q) ||
-      normalizeLower(record.kontiki?.kontikiName).includes(q) ||
-      normalizeLower(record.kontiki?.kontikiCode).includes(q) ||
-      normalizeLower(record.verifiedBy?.firstName).includes(q) ||
-      normalizeLower(record.verifiedBy?.lastName).includes(q) ||
-      normalizeLower(record.productionStepName).includes(q);
+    const searchableText = [
+      // Site
+      record.production?.site?.siteName,
+      record.production?.site?.siteCode,
+      `site ${record.production?.site?.siteCode}`,
+
+      // User
+      record.production?.user?.firstName,
+      record.production?.user?.lastName,
+      record.production?.user?.userCode,
+      `user ${record.production?.user?.userCode}`,
+
+      // Kontiki
+      record.kontiki?.kontikiName,
+      record.kontiki?.kontikiCode,
+      `kontiki ${record.kontiki?.kontikiCode}`,
+
+      // Verified by
+      record.verifiedBy?.firstName,
+      record.verifiedBy?.lastName,
+
+      // Production step
+      record.productionStepName,
+
+      // Dates
+      normalizeDateForSearch(record.production?.recordDate),
+      normalizeDateForSearch(record.createdAt),
+    ]
+      .map(toSearchString)
+      .join(" ");
+
+    const matchesSearch = q.length === 0 || searchableText.includes(q);
 
     const matchesSite =
       siteFilter === "all" || record.production?.siteId === siteFilter;
+
     const matchesStep =
       stepFilter === "all" || record.productionStepName === stepFilter;
 
-    return matchesSearch && matchesSite && matchesStep;
+    // Date range filter (inclusive)
+    let matchesDateRange = true;
+    if (startDate && endDate) {
+      const recordDate = parseDDMMYYYY(record.production?.recordDate);
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      matchesDateRange =
+        !!recordDate && recordDate >= start && recordDate <= end;
+    }
+
+    return matchesSearch && matchesSite && matchesStep && matchesDateRange;
   });
 
   // Pagination
