@@ -5,6 +5,7 @@ import {
   CreateSitePayload,
   UpdateSitePayload,
   AssignUserPayload,
+  UnassignedUser,
   RevokeUserPayload,
   SiteDocument,
   DocumentType,
@@ -43,6 +44,14 @@ async assignUserToSite(siteId: string, payload: AssignUserPayload) {
   const response = await apiClient.post(`/v1/sites/${siteId}/assign-user`,payload);
   return response.data;
 },
+
+  // Get users NOT assigned to a site
+  async getUnassignedUsers(siteId: string): Promise<UnassignedUser[]> {
+    const response = await apiClient.get<UnassignedUser[]>(
+      `/v1/sites/${siteId}/unassigned-users`
+    );
+    return response.data;
+  },
 
 // Revoke user from site
 async revokeUserFromSite(siteId: string,payload: RevokeUserPayload) {

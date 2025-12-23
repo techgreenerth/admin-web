@@ -76,6 +76,13 @@ export interface AssignedUser {
   lastName: string;
   email: string;
 }
+export interface UnassignedUser {
+  id: string;
+  userCode: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
 
 export interface UserAssignment {
   id: string;

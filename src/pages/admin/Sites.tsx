@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSites } from "@/contexts/siteContext";
-import { userService } from "@/lib/api/user.service";
+// import { userService } from "@/lib/api/user.service";
 import { Site, AssignedUser } from "@/types/site.types";
 import {
   Plus,
@@ -61,6 +61,7 @@ import { EditSiteDialog } from "@/components/sites/EditSiteDialog";
 import { CreateSiteDialog } from "@/components/sites/CreateSiteDialog";
 import { RevokeUserDialog } from "@/components/sites/RevokeUserDialog";
 import { log } from "console";
+import { UnassignedUser } from "@/types/site.types";
 
 export default function Sites() {
   const navigate = useNavigate();
@@ -87,7 +88,7 @@ export default function Sites() {
   // Fixed: Changed type to match AssignedUser interface
   const [assignedUsers, setAssignedUsers] = useState<AssignedUser[]>([]);
 
-  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<UnassignedUser[]>([]);
 
   const {
     sites,
@@ -99,6 +100,7 @@ export default function Sites() {
     updateSite,
     fetchSites,
     getSiteById,
+    getUnassignedUsers,
   } = useSites();
 
   // Refresh data when navigating to this page
@@ -107,19 +109,15 @@ export default function Sites() {
   }, []);
 
   // Fetch Users in Drop Down for Assigning
-  const fetchUsersForAssignment = async () => {
-    try {
-      const response = await userService.getAll({
-        page: 1,
-        limit: 100, // enough for dropdown
-        status: "ACTIVE",
-      });
 
-      setAvailableUsers(response.data);
-    } catch (error: any) {
-      console.error(error.response?.data?.message || "Failed to fetch users");
-    }
-  };
+const fetchUsersForAssignment = async (siteId: string) => {
+  try {
+    const users = await getUnassignedUsers(siteId);
+    setAvailableUsers(users);
+  } catch (error) {
+    console.error("Failed to fetch unassigned users");
+  }
+};
 
   // Fixed: Changed setAssignedUsers(user) to setAssignedUsers(users)
   const fetchAssignedUsers = async (siteId: string) => {
@@ -139,11 +137,11 @@ export default function Sites() {
   };
 
   useEffect(() => {
-    if (isAssignUserDialogOpen) {
-      fetchUsersForAssignment();
+    if (isAssignUserDialogOpen && selectedSite?.id) {
+      fetchUsersForAssignment(selectedSite.id);
     }
-  }, [isAssignUserDialogOpen]);
-
+  }, [isAssignUserDialogOpen, selectedSite?.id]);
+  
   const validateForm = () => {
     const newErrors: any = {};
 
@@ -324,9 +322,10 @@ export default function Sites() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleAssignUser = (site: Site) => {
+  const handleAssignUser = async(site: Site) => {
     setSelectedSite(site);
     setSelectedUserId("");
+    await fetchUsersForAssignment(site.id);
     setIsAssignUserDialogOpen(true);
   };
 

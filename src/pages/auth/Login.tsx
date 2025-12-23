@@ -59,6 +59,8 @@ export default function Login() {
     try {
       await login(formData);
       toast.success("Login successful!");
+      // Navigate immediately after successful login
+      navigate("/", { replace: true });
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message || "Invalid credentials. Please try again.";

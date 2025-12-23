@@ -49,11 +49,12 @@ import { Label } from "@/components/ui/label";
 import { useBulkDensity } from "@/contexts/bulkDensityContext";
 import { BulkDensityRecord as BulkDensityRecordType } from "@/types/bulkDensity.types";
 import { useMutation } from "@tanstack/react-query";
+import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
 // import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BulkDensity() {
   const location = useLocation();
-  const { records, meta, isLoading, fetchRecords } = useBulkDensity();
+  const { records, isLoading } = useBulkDensity();
   const { sites: allSites, fetchSites } = useSites();
 
   const [users, setUsers] = useState<UserType[]>([]);
@@ -97,39 +98,71 @@ export default function BulkDensity() {
     loadUsers();
   }, []);
 
-  // Fetch records when filters change OR when user navigates back to this page.
-  useEffect(() => {
-    const params: any = {
-      page: currentPage,
-      limit: itemsPerPage,
-    };
+  // Filter records (client-side filtering like activation page)
+  const filteredRecords = records.filter((record) => {
+    const q = searchQuery.trim().toLowerCase();
 
-    if (searchQuery) params.search = searchQuery;
-    if (siteFilter !== "all") params.siteId = siteFilter;
-    if (userFilter !== "all") params.userId = userFilter;
-    if (startDate) params.startDate = startDate;
-    if (endDate) params.endDate = endDate;
+    const searchableText = [
+      // User (match UI)
+      record.user?.userCode,
+      `user ${record.user?.userCode}`,
+      record.user?.firstName,
+      record.user?.lastName,
 
-    fetchRecords(params);
-    // fetchRecords isn't memoized in the context; avoid it in deps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.key, currentPage, searchQuery, siteFilter, userFilter, startDate, endDate]);
+      // Site (match UI)
+      record.site?.siteCode,
+      `site ${record.site?.siteCode}`,
+      record.site?.siteName,
 
-  // Calculate average bulk density from records
-  const averageBulkDensity = records.length > 0
+      // Bulk density fields
+      record.bulkDensityCalculated,
+      record.measuringBoxVolume,
+      record.recordedWeightKg,
+
+      // Dates
+      normalizeDateForSearch(record.recordDate),
+      normalizeDateForSearch(record.createdAt),
+    ]
+      .map(toSearchString)
+      .join(" ");
+
+    const matchesSearch = q.length === 0 || searchableText.includes(q);
+
+    const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
+
+    const matchesUser = userFilter === "all" || record.userId === userFilter;
+
+    // Date range filter (inclusive)
+    let matchesDateRange = true;
+    if (startDate && endDate) {
+      const recordDate = parseDDMMYYYY(record.recordDate);
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      matchesDateRange =
+        !!recordDate && recordDate >= start && recordDate <= end;
+    }
+
+    return matchesSearch && matchesSite && matchesUser && matchesDateRange;
+  });
+
+  // Calculate average bulk density from filtered records
+  const averageBulkDensity = filteredRecords.length > 0
     ? (
-        records.reduce((sum, record) => {
+        filteredRecords.reduce((sum, record) => {
           const v = parseFloat(record.bulkDensityCalculated);
           return sum + (isNaN(v) ? 0 : v);
-        }, 0) / records.length
+        }, 0) / filteredRecords.length
       ).toFixed(2)
     : "0.00";
 
-  // Pagination from meta
-  const totalPages = meta?.totalPages || 1;
-  const totalRecords = meta?.total || 0;
-  const startIndex = ((meta?.page || 1) - 1) * (meta?.limit || itemsPerPage);
-  const endIndex = Math.min(startIndex + (meta?.limit || itemsPerPage), totalRecords);
+  // Pagination
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
 
   // Handlers
   const handleViewRecord = (record: BulkDensityRecordType) => {
@@ -206,8 +239,8 @@ export default function BulkDensity() {
                 {averageBulkDensity} kg/m³
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Based on {records.length} record
-                {records.length !== 1 ? "s" : ""}
+                Based on {filteredRecords.length} record
+                {filteredRecords.length !== 1 ? "s" : ""}
               </p>
             </div>
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
@@ -337,14 +370,14 @@ export default function BulkDensity() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={5} className="text-center py-12">
                       <div className="flex items-center justify-center gap-2 text-muted-foreground">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        <span>Loading records...</span>
+                        <span>Loading bulk density records...</span>
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : records.length === 0 ? (
+                ) : paginatedRecords.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={5}
@@ -354,7 +387,7 @@ export default function BulkDensity() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  records.map((record) => (
+                  paginatedRecords.map((record) => (
                     <TableRow key={record.id}>
                       <TableCell>
                         <div className="space-y-1">
@@ -417,22 +450,21 @@ export default function BulkDensity() {
             </Table>
           </div>
 
-          {/* MOBILE VIEW: Hidden on larger screens (min-sm) */}
-          <div className="sm:hidden">
+          {/* MOBILE VIEW: Card Stack */}
+          <div className="sm:hidden divide-y divide-border">
             {isLoading ? (
               <div className="p-8 text-center flex flex-col items-center gap-2">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#295F58]" />
                 <span className="text-sm text-muted-foreground">
                   Loading records...
                 </span>
               </div>
-            ) : records.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground text-sm">
+            ) : paginatedRecords.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
                 No records found
               </div>
             ) : (
-              <div className="divide-y divide-border">
-                {records.map((record) => (
+              paginatedRecords.map((record) => (
                   <div key={record.id} className="p-4 space-y-4">
                     <div className="flex justify-between items-start">
                       <div className="flex gap-3">
@@ -494,8 +526,7 @@ export default function BulkDensity() {
                       </span>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
             )}
           </div>
         </CardContent>
@@ -505,7 +536,9 @@ export default function BulkDensity() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {endIndex} of {totalRecords} records
+            Showing {startIndex + 1} to{" "}
+            {Math.min(endIndex, filteredRecords.length)} of{" "}
+            {filteredRecords.length} records
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -679,27 +712,7 @@ export default function BulkDensity() {
                     <div className="text-sm text-muted-foreground">
                       No empty box photo
                     </div>
-                  )}
-                  {/* Filled Box Photo */}
-                  {selectedRecord.filledBoxPhoto ? (
-                    <div className="space-y-2">
-                      <Label className="text-sm flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4" />
-                        Filled Box
-                      </Label>
-                      <div className="border rounded-lg overflow-hidden">
-                        <img
-                          src={selectedRecord.filledBoxPhoto}
-                          alt="Box filled with biochar"
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">
-                      No filled box photo
-                    </div>
-                  )}
+                  )}       
                   {/* Measurement Video */}
                   {selectedRecord.measurementVideo ? (
                     <div className="space-y-2">

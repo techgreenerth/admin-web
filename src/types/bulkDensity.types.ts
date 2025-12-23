@@ -30,7 +30,6 @@ export interface BulkDensityRecord {
 
   measuringBoxVolume: string;
   emptyBoxPhoto: string;
-  filledBoxPhoto: string;
   recordedWeightKg: string;
   measurementVideo: string;
   bulkDensityCalculated: string;

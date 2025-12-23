@@ -44,9 +44,10 @@ import { BiocharSamplingRecord as BiocharSamplingRecordType } from "@/types/bioc
 
 import { formatDate, formatTime } from "@/lib/utils/date";
 import { useMutation } from "@tanstack/react-query";
+import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
 
 export default function BiocharSampling() {
-  const { records, meta, isLoading, fetchRecords } = useBiocharSampling();
+  const { records, isLoading } = useBiocharSampling();
   const { sites: allSites, fetchSites } = useSites();
 
   const [users, setUsers] = useState<UserType[]>([]);
@@ -68,7 +69,10 @@ export default function BiocharSampling() {
     useState<BiocharSamplingRecordType | null>(null);
 
   useEffect(() => {
+    // NOTE: fetchSites isn't memoized in the context, so don't add it as a dependency
+    // or this effect can refire on every provider re-render.
     fetchSites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -91,30 +95,13 @@ export default function BiocharSampling() {
     loadUsers();
   }, []);
 
-  // Fetch records when filters change
-  useEffect(() => {
-    const params: any = {
-      page: currentPage,
-      limit: itemsPerPage,
-    };
-
-    if (searchQuery) params.search = searchQuery;
-    if (siteFilter !== "all") params.siteId = siteFilter;
-    if (userFilter !== "all") params.userId = userFilter;
-    if (startDate) params.startDate = startDate;
-    if (endDate) params.endDate = endDate;
-
-    fetchRecords(params);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, searchQuery, siteFilter, userFilter, startDate, endDate]);
-
   const getKontikiRecords = (record: BiocharSamplingRecordType) =>
     record.kontikiRecords ?? [];
 
   const getKontikiName = (
     kontikiRecord: BiocharSamplingRecordType["kontikiRecords"][number]
   ) => kontikiRecord.kontiki?.kontikiName ?? "—";
-  
+
   const getTotalSamplePhotosCount = (record: BiocharSamplingRecordType) =>
     getKontikiRecords(record).reduce(
       (sum, k) => sum + (k.samplePhoto ? 1 : 0),
@@ -124,14 +111,65 @@ export default function BiocharSampling() {
   const hasAnySamplePhoto = (record: BiocharSamplingRecordType) =>
     getKontikiRecords(record).some((k) => (k.samplePhoto?.length ?? 0) > 0);
 
-  // Pagination from meta
-  const totalPages = meta?.totalPages || 1;
-  const totalRecords = meta?.total || 0;
-  const startIndex = ((meta?.page || 1) - 1) * (meta?.limit || itemsPerPage);
-  const endIndex = Math.min(
-    startIndex + (meta?.limit || itemsPerPage),
-    totalRecords
-  );
+  // Filter records (client-side filtering like activation page)
+  const filteredRecords = records.filter((record) => {
+    const q = searchQuery.trim().toLowerCase();
+    const kontikiRecords = getKontikiRecords(record);
+
+    const searchableText = [
+      // User (match UI)
+      record.user?.userCode,
+      `user ${record.user?.userCode}`,
+      record.user?.firstName,
+      record.user?.lastName,
+
+      // Site (match UI)
+      record.site?.siteCode,
+      `site ${record.site?.siteCode}`,
+      record.site?.siteName,
+
+      // Kontiki (match formatted UI)
+      ...kontikiRecords.flatMap((k) => [
+        k.kontikiId,
+        `kontiki ${k.kontikiId}`,
+        k.kontiki?.kontikiCode,
+        k.kontiki?.kontikiName,
+      ]),
+
+      // Dates
+      normalizeDateForSearch(record.recordDate),
+      normalizeDateForSearch(record.createdAt),
+    ]
+      .map(toSearchString)
+      .join(" ");
+
+    const matchesSearch = q.length === 0 || searchableText.includes(q);
+
+    const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
+
+    const matchesUser = userFilter === "all" || record.userId === userFilter;
+
+    // Date range filter (inclusive)
+    let matchesDateRange = true;
+    if (startDate && endDate) {
+      const recordDate = parseDDMMYYYY(record.recordDate);
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      matchesDateRange =
+        !!recordDate && recordDate >= start && recordDate <= end;
+    }
+
+    return matchesSearch && matchesSite && matchesUser && matchesDateRange;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
 
   // Handlers
   const handleViewRecord = (record: BiocharSamplingRecordType) => {
@@ -346,14 +384,14 @@ export default function BiocharSampling() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={5} className="text-center py-12">
                       <div className="flex items-center justify-center gap-2 text-muted-foreground">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        <span>Loading records...</span>
+                        <span>Loading biochar sampling records...</span>
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : records.length === 0 ? (
+                ) : paginatedRecords.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={5}
@@ -363,7 +401,7 @@ export default function BiocharSampling() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  records.map((record) => (
+                  paginatedRecords.map((record) => (
                     <TableRow key={record.id}>
                       <TableCell>
                         <div className="space-y-1">
@@ -431,87 +469,85 @@ export default function BiocharSampling() {
             </Table>
           </div>
 
-          {/* MOBILE VIEW: Hidden on larger screens (min-sm) */}
-          <div className="sm:hidden">
+          {/* MOBILE VIEW: Card Stack */}
+          <div className="sm:hidden divide-y divide-border">
             {isLoading ? (
-              <div className="p-8  text-center flex flex-col items-center gap-2">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <div className="p-8 text-center flex flex-col items-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-[#295F58]" />
                 <span className="text-sm text-muted-foreground">
                   Loading records...
                 </span>
               </div>
-            ) : records.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground text-sm">
+            ) : paginatedRecords.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
                 No records found
               </div>
             ) : (
-              <div className="divide-y divide-border">
-                {records.map((record) => (
-                  <div key={record.id} className="p-4 mb-8 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex gap-3">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
-                          <Beaker className="h-5 w-5 text-[#295F58]" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-base">
-                            {record.recordDate}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {record.recordTime}
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewRecord(record)}
-                        className="border-[#295F58]/20 text-[#295F58]"
-                      >
-                        <Eye className="h-4 w-4 mr-2" /> View
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-2">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                          Site/User
-                        </p>
-                        <p className="text-sm font-medium">
-                          {record.site?.siteCode ?? "—"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {record.user?.userCode ?? "—"}
-                        </p>
+              paginatedRecords.map((record) => (
+                <div key={record.id} className="p-4 mb-8 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex gap-3">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E1EFEE] shrink-0">
+                        <Beaker className="h-5 w-5 text-[#295F58]" />
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                          Kon-tikis
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {getKontikiRecords(record)
-                            .map((k) => getKontikiName(k))
-                            .join(", ") || "—"}
-                        </p>
+                        <div className="font-bold text-base">
+                          {record.recordDate}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {record.recordTime}
+                        </div>
                       </div>
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewRecord(record)}
+                      className="border-[#295F58]/20 text-[#295F58]"
+                    >
+                      <Eye className="h-4 w-4 mr-2" /> View
+                    </Button>
+                  </div>
 
-                    <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
-                      <div className="flex items-center gap-2">
-                        {hasAnySamplePhoto(record) && (
-                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span className="text-xs text-muted-foreground">
-                          {getTotalSamplePhotosCount(record)}{" "}
-                          {getTotalSamplePhotosCount(record) === 1
-                            ? "photo"
-                            : "photos"}
-                        </span>
-                      </div>
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Site/User
+                      </p>
+                      <p className="text-sm font-medium">
+                        {record.site?.siteCode ?? "—"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {record.user?.userCode ?? "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Kon-tikis
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {getKontikiRecords(record)
+                          .map((k) => getKontikiName(k))
+                          .join(", ") || "—"}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
+                    <div className="flex items-center gap-2">
+                      {hasAnySamplePhoto(record) && (
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {getTotalSamplePhotosCount(record)}{" "}
+                        {getTotalSamplePhotosCount(record) === 1
+                          ? "photo"
+                          : "photos"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </CardContent>
@@ -521,7 +557,9 @@ export default function BiocharSampling() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {endIndex} of {totalRecords} records
+            Showing {startIndex + 1} to{" "}
+            {Math.min(endIndex, filteredRecords.length)} of{" "}
+            {filteredRecords.length} records
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -640,52 +678,51 @@ export default function BiocharSampling() {
                   </div>
                 </div>
               </div>
+              <div className="flex">
+                {/* Kon-tiki Sections */}
+                {getKontikiRecords(selectedRecord).map((kontiki) => (
+                  <div
+                    key={kontiki.id ?? kontiki.kontikiId}
+                    className="border-4 border-gray-200 rounded-lg p-6 space-y-6"
+                  >
+                    {/* Kon-tiki Header */}
+                    <div className="pb-4 border-b">
+                      <h3 className="text-lg font-semibold text-[#295F58]">
+                        {kontiki.kontiki?.kontikiName ?? "—"}
+                      </h3>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {kontiki.productionBatches
+                          ? `Batches: ${kontiki.productionBatches}`
+                          : ""}
+                      </div>
+                    </div>
 
-              {/* Kon-tiki Sections */}
-              {getKontikiRecords(selectedRecord).map((kontiki) => (
-                <div
-                  key={kontiki.id ?? kontiki.kontikiId}
-                  className="border border-gray-200 rounded-lg p-6 space-y-6"
-                >
-                  {/* Kon-tiki Header */}
-                  <div className="pb-4 border-b">
-                    <h3 className="text-lg font-semibold text-[#295F58]">
-                      {kontiki.kontiki?.kontikiName ?? "—"}
-                    </h3>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {kontiki.productionBatches
-                        ? `Batches: ${kontiki.productionBatches}`
-                        : ""}
+                    {/* Sample Photos */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <ImageIcon className="h-5 w-5 text-[#295F58]" />
+                        Sample Photo
+                      </Label>
+
+                      {kontiki.samplePhoto ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div className="border rounded-lg overflow-hidden">
+                            <img
+                              src={kontiki.samplePhoto}
+                              alt="Sample photo"
+                              className="w-full h-auto"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground italic">
+                          No image found
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {/* Sample Photos */}
-
-                  {/* Sample Photos */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <ImageIcon className="h-5 w-5 text-[#295F58]" />
-                      Sample Photo
-                    </Label>
-
-                    {kontiki.samplePhoto ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div className="border rounded-lg overflow-hidden">
-                          <img
-                            src={kontiki.samplePhoto}
-                            alt="Sample photo"
-                            className="w-full h-auto"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-muted-foreground italic">
-                        No image found
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </DialogContent>

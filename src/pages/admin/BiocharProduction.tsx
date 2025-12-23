@@ -76,6 +76,7 @@ import {
   BiocharProductionRecord,
   KontikiData,
 } from "@/types/biocharProduction.types";
+import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
 // import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BiocharProduction() {
@@ -249,36 +250,59 @@ export default function BiocharProduction() {
     const q = searchQuery.trim().toLowerCase();
     const kontikiRecords = getKontikiRecords(record);
 
-    const matchesSearch =
-      q.length === 0 ||
-      // User fields
-      normalizeLower(record.userName).includes(q) ||
-      normalizeLower(record.userCode).includes(q) ||
-      normalizeLower(record.user?.userCode).includes(q) ||
-      normalizeLower(record.user?.firstName).includes(q) ||
-      normalizeLower(record.user?.lastName).includes(q) ||
-      // Site fields
-      normalizeLower(record.siteCode).includes(q) ||
-      normalizeLower(record.siteName).includes(q) ||
-      normalizeLower(record.site?.siteCode).includes(q) ||
-      normalizeLower(record.site?.siteName).includes(q) ||
-      // Kontiki fields
-      kontikiRecords.some(
-        (k) =>
-          normalizeLower(k.kontikiId).includes(q) ||
-          normalizeLower(k.kontiki?.kontikiCode).includes(q) ||
-          normalizeLower(k.kontiki?.kontikiName).includes(q)
-      );
+    const searchableText = [
+      // User (match UI labels)
+      record.userName,
+      record.userCode,
+      `user ${record.userCode}`,
+
+      record.user?.userCode,
+      record.user?.firstName,
+      record.user?.lastName,
+
+      // Site (match UI labels)
+      record.siteCode,
+      record.siteName,
+      `site ${record.siteCode}`,
+
+      record.site?.siteCode,
+      record.site?.siteName,
+
+      // shift
+      `shift ${record.shift.shiftNumber}`,
+
+      // Kontiki (match formatted UI text)
+      ...kontikiRecords.flatMap((k) => [
+        k.kontikiId,
+        `kontiki ${k.kontikiId}`,
+        k.kontiki?.kontikiCode,
+        k.kontiki?.kontikiName,
+      ]),
+
+      // Dates
+      normalizeDateForSearch(record.recordDate),
+      normalizeDateForSearch(record.createdAt),
+
+      // Status (often visible as label)
+      getActualStatus(record),
+    ]
+      .map(toSearchString)
+      .join(" ");
+
+    const matchesSearch = q.length === 0 || searchableText.includes(q);
 
     const matchesStatus =
       statusFilter === "all" || getActualStatus(record) === statusFilter;
+
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
+
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
-    // Date range filter (treat endDate as inclusive, end-of-day)
+    // Date range filter (inclusive)
     let matchesDateRange = true;
     if (startDate && endDate) {
-      const recordDate = record.recordDate ? new Date(record.recordDate) : null;
+      const recordDate = parseDDMMYYYY(record.recordDate);
+
       const start = new Date(startDate);
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
@@ -295,6 +319,7 @@ export default function BiocharProduction() {
       matchesDateRange
     );
   });
+
 
   // Pagination
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);

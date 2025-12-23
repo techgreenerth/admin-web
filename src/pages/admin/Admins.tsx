@@ -90,6 +90,15 @@ export default function Admins() {
     password: "",
   });
 
+  // Validation errors
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
+
   // Fetch admins
   useEffect(() => {
     fetchAdmins();
@@ -148,6 +157,83 @@ export default function Admins() {
     }
   };
 
+  // Validation functions
+  const validateEmail = (email: string): string => {
+    if (!email.trim()) {
+      return "Email is required";
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return "Please enter a valid email address";
+    }
+    return "";
+  };
+
+  const validatePhone = (phone: string): string => {
+    if (!phone.trim()) {
+      return "Phone number is required";
+    }
+    // Remove any non-digit characters for validation
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length !== 10) {
+      return "Phone number must be exactly 10 digits";
+    }
+    return "";
+  };
+
+  const validateName = (name: string, fieldName: string): string => {
+    if (!name.trim()) {
+      return `${fieldName} is required`;
+    }
+    if (name.trim().length < 2) {
+      return `${fieldName} must be at least 2 characters`;
+    }
+    if (name.trim().length > 50) {
+      return `${fieldName} must not exceed 50 characters`;
+    }
+    // Only allow letters, spaces, hyphens, and apostrophes
+    const nameRegex = /^[a-zA-Z\s'-]+$/;
+    if (!nameRegex.test(name)) {
+      return `${fieldName} can only contain letters, spaces, hyphens, and apostrophes`;
+    }
+    return "";
+  };
+
+  const validatePassword = (password: string, isCreate: boolean): string => {
+    if (isCreate && !password.trim()) {
+      return "Password is required";
+    }
+    if (password && password.length < 8) {
+      return "Password must be at least 8 characters";
+    }
+    if (password && password.length > 100) {
+      return "Password must not exceed 100 characters";
+    }
+    if (password && !/(?=.*[a-z])/.test(password)) {
+      return "Password must contain at least one lowercase letter";
+    }
+    if (password && !/(?=.*[A-Z])/.test(password)) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (password && !/(?=.*\d)/.test(password)) {
+      return "Password must contain at least one number";
+    }
+    return "";
+  };
+
+  const validateForm = (isCreate: boolean): boolean => {
+    const newErrors = {
+      firstName: validateName(formData.firstName, "First name"),
+      lastName: validateName(formData.lastName, "Last name"),
+      email: isCreate ? validateEmail(formData.email) : "",
+      phone: validatePhone(formData.phone),
+      password: validatePassword(formData.password, isCreate),
+    };
+
+    setErrors(newErrors);
+    return !Object.values(newErrors).some((error) => error !== "");
+  };
+
   // Handlers
   const handleCreateAdmin = () => {
     setFormData({
@@ -157,6 +243,13 @@ export default function Admins() {
       phone: "",
       role: "ADMIN",
       status: "ACTIVE",
+      password: "",
+    });
+    setErrors({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
       password: "",
     });
     setIsCreateDialogOpen(true);
@@ -178,6 +271,13 @@ export default function Admins() {
       status: admin.status,
       password: "",
     });
+    setErrors({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+    });
     setIsEditDialogOpen(true);
   };
 
@@ -187,13 +287,18 @@ export default function Admins() {
   };
 
   const handleSubmitCreate = async () => {
+    if (!validateForm(true)) {
+      toast.error("Please fix all validation errors");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const createData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.replace(/\D/g, ""), // Send only digits
         role: formData.role,
         password: formData.password,
       };
@@ -211,12 +316,17 @@ export default function Admins() {
   const handleSubmitEdit = async () => {
     if (!selectedAdmin) return;
 
+    if (!validateForm(false)) {
+      toast.error("Please fix all validation errors");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const updateData: any = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        phone: formData.phone.replace(/\D/g, ""), // Send only digits
         role: formData.role,
         status: formData.status,
       };
@@ -509,22 +619,44 @@ export default function Admins() {
               <Input
                 id="firstName"
                 value={formData.firstName}
-                onChange={(e) =>
-                  setFormData({ ...formData, firstName: e.target.value })
+                onChange={(e) => {
+                  setFormData({ ...formData, firstName: e.target.value });
+                  setErrors({ ...errors, firstName: "" });
+                }}
+                onBlur={() =>
+                  setErrors({
+                    ...errors,
+                    firstName: validateName(formData.firstName, "First name"),
+                  })
                 }
                 placeholder="Enter first name"
+                className={errors.firstName ? "border-red-500" : ""}
               />
+              {errors.firstName && (
+                <p className="text-xs text-red-500">{errors.firstName}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="lastName">Last Name *</Label>
               <Input
                 id="lastName"
                 value={formData.lastName}
-                onChange={(e) =>
-                  setFormData({ ...formData, lastName: e.target.value })
+                onChange={(e) => {
+                  setFormData({ ...formData, lastName: e.target.value });
+                  setErrors({ ...errors, lastName: "" });
+                }}
+                onBlur={() =>
+                  setErrors({
+                    ...errors,
+                    lastName: validateName(formData.lastName, "Last name"),
+                  })
                 }
                 placeholder="Enter last name"
+                className={errors.lastName ? "border-red-500" : ""}
               />
+              {errors.lastName && (
+                <p className="text-xs text-red-500">{errors.lastName}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
@@ -532,22 +664,50 @@ export default function Admins() {
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
+                onChange={(e) => {
+                  setFormData({ ...formData, email: e.target.value });
+                  setErrors({ ...errors, email: "" });
+                }}
+                onBlur={() =>
+                  setErrors({
+                    ...errors,
+                    email: validateEmail(formData.email),
+                  })
                 }
                 placeholder="admin@techgreenerth.com"
+                className={errors.email ? "border-red-500" : ""}
               />
+              {errors.email && (
+                <p className="text-xs text-red-500">{errors.email}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number *</Label>
               <Input
                 id="phone"
                 value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
+                onChange={(e) => {
+                  // Only allow digits and limit to 10
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setFormData({ ...formData, phone: value });
+                  setErrors({ ...errors, phone: "" });
+                }}
+                onBlur={() =>
+                  setErrors({
+                    ...errors,
+                    phone: validatePhone(formData.phone),
+                  })
                 }
-                placeholder="+1234567890"
+                placeholder="1234567890"
+                maxLength={10}
+                className={errors.phone ? "border-red-500" : ""}
               />
+              {errors.phone && (
+                <p className="text-xs text-red-500">{errors.phone}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Enter 10-digit phone number
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Role *</Label>
@@ -574,11 +734,25 @@ export default function Admins() {
                 id="password"
                 type="password"
                 value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
+                onChange={(e) => {
+                  setFormData({ ...formData, password: e.target.value });
+                  setErrors({ ...errors, password: "" });
+                }}
+                onBlur={() =>
+                  setErrors({
+                    ...errors,
+                    password: validatePassword(formData.password, true),
+                  })
                 }
                 placeholder="Enter a strong password"
+                className={errors.password ? "border-red-500" : ""}
               />
+              {errors.password && (
+                <p className="text-xs text-red-500">{errors.password}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Must be at least 8 characters with uppercase, lowercase, and number
+              </p>
             </div>
           </div>
           <DialogFooter>
@@ -615,22 +789,44 @@ export default function Admins() {
               <Input
                 id="edit-firstName"
                 value={formData.firstName}
-                onChange={(e) =>
-                  setFormData({ ...formData, firstName: e.target.value })
+                onChange={(e) => {
+                  setFormData({ ...formData, firstName: e.target.value });
+                  setErrors({ ...errors, firstName: "" });
+                }}
+                onBlur={() =>
+                  setErrors({
+                    ...errors,
+                    firstName: validateName(formData.firstName, "First name"),
+                  })
                 }
                 placeholder="Enter first name"
+                className={errors.firstName ? "border-red-500" : ""}
               />
+              {errors.firstName && (
+                <p className="text-xs text-red-500">{errors.firstName}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-lastName">Last Name *</Label>
               <Input
                 id="edit-lastName"
                 value={formData.lastName}
-                onChange={(e) =>
-                  setFormData({ ...formData, lastName: e.target.value })
+                onChange={(e) => {
+                  setFormData({ ...formData, lastName: e.target.value });
+                  setErrors({ ...errors, lastName: "" });
+                }}
+                onBlur={() =>
+                  setErrors({
+                    ...errors,
+                    lastName: validateName(formData.lastName, "Last name"),
+                  })
                 }
                 placeholder="Enter last name"
+                className={errors.lastName ? "border-red-500" : ""}
               />
+              {errors.lastName && (
+                <p className="text-xs text-red-500">{errors.lastName}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-email">Email (Cannot be changed)</Label>
@@ -647,11 +843,28 @@ export default function Admins() {
               <Input
                 id="edit-phone"
                 value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
+                onChange={(e) => {
+                  // Only allow digits and limit to 10
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setFormData({ ...formData, phone: value });
+                  setErrors({ ...errors, phone: "" });
+                }}
+                onBlur={() =>
+                  setErrors({
+                    ...errors,
+                    phone: validatePhone(formData.phone),
+                  })
                 }
-                placeholder="+1234567890"
+                placeholder="1234567890"
+                maxLength={10}
+                className={errors.phone ? "border-red-500" : ""}
               />
+              {errors.phone && (
+                <p className="text-xs text-red-500">{errors.phone}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Enter 10-digit phone number
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-role">Role *</Label>
@@ -698,11 +911,27 @@ export default function Admins() {
                 id="edit-password"
                 type="password"
                 value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
+                onChange={(e) => {
+                  setFormData({ ...formData, password: e.target.value });
+                  setErrors({ ...errors, password: "" });
+                }}
+                onBlur={() =>
+                  setErrors({
+                    ...errors,
+                    password: validatePassword(formData.password, false),
+                  })
                 }
                 placeholder="Enter new password or leave blank"
+                className={errors.password ? "border-red-500" : ""}
               />
+              {errors.password && (
+                <p className="text-xs text-red-500">{errors.password}</p>
+              )}
+              {formData.password && (
+                <p className="text-xs text-muted-foreground">
+                  Must be at least 8 characters with uppercase, lowercase, and number
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>

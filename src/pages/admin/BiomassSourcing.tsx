@@ -46,6 +46,7 @@ import { Label } from "@/components/ui/label";
 import { BiomassSourcingRecord } from "@/types/biomassSourcing.types";
 import { formatDate, formatTime ,formatDateTime} from "../../lib/utils/date";
 import { toast } from "react-hot-toast";
+import { normalizeDateForSearch, toSearchString } from "@/lib/utils/utils";
 
 export default function BiomassSourcing() {
   // Use context hooks
@@ -105,30 +106,47 @@ export default function BiomassSourcing() {
   };
 
   // Filter records
+
+
+  
   const filteredRecords = records.filter((record) => {
     const q = searchQuery.trim().toLowerCase();
 
-    const matchesSearch =
-      q.length === 0 ||
+    const searchableText = [
       // Trip / farmer
-      normalizeLower(record.tripNumber).includes(q) ||
-      normalizeLower(record.farmerName).includes(q) ||
-      normalizeLower(record.farmerMobile).includes(q) ||
-      normalizeLower(record.farmAreaAcres).includes(q) ||
-      // Nested user/site (per types)
-      normalizeLower(record.user?.userCode).includes(q) ||
-      normalizeLower(record.user?.firstName).includes(q) ||
-      normalizeLower(record.user?.lastName).includes(q) ||
-      normalizeLower(record.site?.siteCode).includes(q) ||
-      normalizeLower(record.site?.siteName).includes(q);
+      `Trip ${record.tripNumber}`,
+
+      record.farmerName,
+      record.farmerMobile,
+      record.farmAreaAcres,
+
+      // Nested user
+      record.user?.userCode,
+      record.user?.firstName,
+      record.user?.lastName,
+
+      // Nested site
+      record.site?.siteCode,
+      record.site?.siteName,
+
+      // Dates (ISO + normal)
+      normalizeDateForSearch(record.recordDate),
+      normalizeDateForSearch(record.createdAt),
+    ]
+      .map(toSearchString)
+      .join(" ");
+
+    const matchesSearch = q.length === 0 || searchableText.includes(q);
 
     const matchesSite = siteFilter === "all" || record.siteId === siteFilter;
+
     const matchesUser = userFilter === "all" || record.userId === userFilter;
 
-    // Date range filter (treat endDate as inclusive, end-of-day)
+    // Date range filter (inclusive)
     let matchesDateRange = true;
     if (startDate && endDate) {
       const recordDate = record.recordDate ? new Date(record.recordDate) : null;
+
       const start = new Date(startDate);
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
@@ -139,6 +157,7 @@ export default function BiomassSourcing() {
 
     return matchesSearch && matchesSite && matchesUser && matchesDateRange;
   });
+
 
   // Pagination
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
@@ -523,7 +542,8 @@ const { mutate: downloadCSV, isPending } = useMutation<Blob, Error>({
                           Trip {record.tripNumber}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {record.recordDate} | {record.recordTime}
+                          {formatDate(record.recordDate)} |{" "}
+                          {formatTime(record.recordTime)}
                         </div>
                       </div>
                     </div>
@@ -659,11 +679,11 @@ const { mutate: downloadCSV, isPending } = useMutation<Blob, Error>({
               {selectedRecord.tractorPhoto ? (
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Tractor Photo</Label>
-                  <div className="border rounded-lg overflow-hidden">
+                  <div className=" rounded-lg overflow-hidden">
                     <img
                       src={selectedRecord.tractorPhoto}
                       alt="Tractor with biomass"
-                      className="w-full h-auto"
+                      className=" md:w-1/3 rounded-lg"
                     />
                   </div>
                 </div>
