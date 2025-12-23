@@ -62,16 +62,26 @@ export function AssignUserDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="assignUser">Select User *</Label>
-            <Select value={selectedUserId} onValueChange={onUserChange}>
+            <Select
+              value={selectedUserId}
+              onValueChange={onUserChange}
+              // disabled={availableUsers.length === 0}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Choose a user" />
               </SelectTrigger>
               <SelectContent>
-                {availableUsers.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.firstName} {user.lastName} ({user.userCode})
-                  </SelectItem>
-                ))}
+                {availableUsers.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                    All users are already assigned
+                  </div>
+                ) : (
+                  availableUsers.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.firstName} {user.lastName} ({user.userCode})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>

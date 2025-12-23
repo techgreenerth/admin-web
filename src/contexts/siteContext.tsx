@@ -6,7 +6,7 @@ import {
   ReactNode,
 } from "react";
 import { sitesService } from "@/lib/api/sites.service";
-import { Site, PaginationMeta, CreateSitePayload,AssignUserPayload,UpdateSitePayload } from "@/types/site.types";
+import { Site, PaginationMeta, CreateSitePayload,AssignUserPayload,UpdateSitePayload,UnassignedUser } from "@/types/site.types";
 
 interface SitesContextType {
   sites: Site[];
@@ -17,6 +17,7 @@ interface SitesContextType {
   createSite: (payload: CreateSitePayload) => Promise<void>;
   deleteSite: (id: string) => Promise<void>;
   updateSite: (id: string, payload: UpdateSitePayload) => Promise<void>;
+  getUnassignedUsers: (siteId: string) => Promise<UnassignedUser[]>;
 
   assignUserToSite: (
     siteId: string,
@@ -84,7 +85,16 @@ const deleteSite = async (siteId: string) => {
     setIsLoading(false);
   }
 };
-
+//  get un-assigned-user
+const getUnassignedUsers = async (siteId: string) => {
+  try {
+    const users = await sitesService.getUnassignedUsers(siteId);
+    return users;
+  } catch (error) {
+    console.error("Failed to fetch unassigned users", error);
+    throw error;
+  }
+};
 // Revoke a user
 const revokeUserFromSite = async (
   siteId: string,
@@ -133,9 +143,8 @@ const updateSite = async (
         assignUserToSite,
         revokeUserFromSite,
         updateSite,
-        getSiteById
-        
-        
+        getSiteById,
+        getUnassignedUsers,
       }}
     >
       {children}

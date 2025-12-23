@@ -679,27 +679,7 @@ export default function BulkDensity() {
                     <div className="text-sm text-muted-foreground">
                       No empty box photo
                     </div>
-                  )}
-                  {/* Filled Box Photo */}
-                  {selectedRecord.filledBoxPhoto ? (
-                    <div className="space-y-2">
-                      <Label className="text-sm flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4" />
-                        Filled Box
-                      </Label>
-                      <div className="border rounded-lg overflow-hidden">
-                        <img
-                          src={selectedRecord.filledBoxPhoto}
-                          alt="Box filled with biochar"
-                          className="w-full h-auto"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">
-                      No filled box photo
-                    </div>
-                  )}
+                  )}       
                   {/* Measurement Video */}
                   {selectedRecord.measurementVideo ? (
                     <div className="space-y-2">
