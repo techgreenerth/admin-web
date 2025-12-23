@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { userService, User as UserType } from "@/lib/api/user.service";
+import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
 
 
 export default function Users() {
@@ -67,7 +68,7 @@ export default function Users() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [totalPages, setTotalPages] = useState(1);
+  // const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
   // Dialog states
@@ -98,25 +99,22 @@ export default function Users() {
     password: "",
   });
 
-  // Fetch users on mount and when filters change
+  // Fetch users only once on mount
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, statusFilter, searchQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
       const params: any = {
-        page: currentPage,
-        limit: itemsPerPage,
+        page: 1,
+        limit: 1000, // Fetch all users for client-side filtering
       };
-      if (searchQuery) params.search = searchQuery;
-      if (statusFilter !== "all") params.status = statusFilter;
 
       const response = await userService.getAll(params);
       setUsers(response.data);
-      setTotalPages(response.meta.totalPages);
-      setTotalCount(response.meta.total);
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to fetch users");
     } finally {
@@ -137,9 +135,40 @@ export default function Users() {
     }
   };
 
-  // Pagination calculations
+  // Filter users (client-side filtering like activation page)
+  const filteredUsers = users.filter((user) => {
+    const q = searchQuery.trim().toLowerCase();
+
+    const searchableText = [
+      // User info
+      user.userCode,
+      `user ${user.userCode}`,
+      user.firstName,
+      user.lastName,
+      user.email,
+      user.phone,
+
+      // Organization
+      user.organizationName,
+
+      // Dates
+      normalizeDateForSearch(user.createdAt),
+    ]
+      .map(toSearchString)
+      .join(" ");
+
+    const matchesSearch = q.length === 0 || searchableText.includes(q);
+
+    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
   // Handlers
   const handleCreateUser = () => {
@@ -327,12 +356,15 @@ export default function Users() {
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="text-center py-8 text-muted-foreground"
+                    className="text-center py-12 text-muted-foreground"
                   >
-                    Loading users...
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-5 w-5 rounded-full border-2 border-[#295F58] border-t-transparent animate-spin" />
+                      <span>Loading users...</span>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ) : users.length === 0 ? (
+              ) : paginatedUsers.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={6}
@@ -342,7 +374,7 @@ export default function Users() {
                   </TableCell>
                 </TableRow>
               ) : (
-                users.map((user) => (
+                paginatedUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -419,7 +451,9 @@ export default function Users() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1} to {endIndex} of {totalCount} results
+              Showing {startIndex + 1} to{" "}
+              {Math.min(endIndex, filteredUsers.length)} of{" "}
+              {filteredUsers.length} results
             </div>
             <div className="flex items-center gap-2">
               <Button

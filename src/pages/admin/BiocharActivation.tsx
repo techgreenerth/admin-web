@@ -669,9 +669,10 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">
-                    Shift No.
+                    Shift Name
                   </Label>
                   <div className="text-sm font-medium">
+                    
                     {selectedRecord.shift?.shiftName ?? "—"}
                   </div>
                 </div>

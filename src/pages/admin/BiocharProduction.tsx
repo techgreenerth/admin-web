@@ -907,7 +907,7 @@ export default function BiocharProduction() {
                   <Label className="text-muted-foreground text-xs">User</Label>
                   <div className="text-sm font-medium">
                     {selectedRecord.user?.userCode ?? selectedRecord.userCode} -{" "}
-                    {selectedRecord.userName}
+                    {selectedRecord.user?.firstName}
                   </div>
                 </div>
                 <div className="space-y-1">
