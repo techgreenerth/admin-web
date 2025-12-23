@@ -32,6 +32,7 @@ import {
 
 import { useDashboard } from "../../contexts/DashboardContext";
 import { formatTime } from "@/lib/utils/date";
+import { parseDDMMYYYY, normalizeDateForSearch } from "@/lib/utils/utils";
 
 
 
@@ -67,11 +68,38 @@ export default function AdminDashboard() {
     ].filter((item) => item.value > 0)
   : [];
 
-  
-const chartData = (recordTrend ?? []).map(item => ({
-  month: item.month,
-  records: item.count,
-}));
+
+// Process chart data with proper date formatting
+
+// Backend returns format: "YYYY-MM" (e.g., "2025-12")
+const chartData = (recordTrend ?? []).map((item) => {
+  let displayMonth = item.month;
+
+  // Check if it's YYYY-MM format (e.g., "2025-12")
+  if (/^\d{4}-\d{2}$/.test(item.month)) {
+    const [year, month] = item.month.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+    displayMonth = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  }
+  // Check if it's DD/MM/YYYY format
+  else {
+    const parsedDate = parseDDMMYYYY(item.month);
+    if (parsedDate) {
+      displayMonth = parsedDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    } else {
+      // Try to parse as ISO date (YYYY-MM-DD or full ISO)
+      const isoDate = new Date(item.month);
+      if (!isNaN(isoDate.getTime())) {
+        displayMonth = isoDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      }
+    }
+  }
+
+  return {
+    date: displayMonth,
+    records: item.count,
+  };
+});
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -91,6 +119,8 @@ const chartData = (recordTrend ?? []).map(item => ({
     fetchRecordTrend(trendFilters.startDate, trendFilters.endDate);
   }
 }, [trendFilters.startDate, trendFilters.endDate]);
+
+
 
     if (isLoading || !overview ) {
         return (
@@ -213,9 +243,7 @@ const chartData = (recordTrend ?? []).map(item => ({
                 <h3 className="text-4xl font-bold text-[#295F58]">
                   {overview.totalBiocharProduced.value}
                 </h3>
-                <p className="text-xs text-muted-foreground">
-                  Kilograms
-                </p>
+                <p className="text-xs text-muted-foreground">Kilograms</p>
               </div>
               <div className="h-16 w-16 bg-gray-100 rounded-xl flex items-center justify-center">
                 <Factory className="h-8 w-8 text-[#295F58]" />
@@ -296,7 +324,10 @@ const chartData = (recordTrend ?? []).map(item => ({
                   type="date"
                   value={trendFilters.startDate}
                   onChange={(e) =>
-                    setTrendFilters({ ...trendFilters, startDate: e.target.value })
+                    setTrendFilters({
+                      ...trendFilters,
+                      startDate: e.target.value,
+                    })
                   }
                   className="h-9 mt-1 border-[#295F58]/20 hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
                 />
@@ -310,7 +341,10 @@ const chartData = (recordTrend ?? []).map(item => ({
                   type="date"
                   value={trendFilters.endDate}
                   onChange={(e) =>
-                    setTrendFilters({ ...trendFilters, endDate: e.target.value })
+                    setTrendFilters({
+                      ...trendFilters,
+                      endDate: e.target.value,
+                    })
                   }
                   className="h-9 mt-1 border-[#295F58]/20 hover:border-[#295F58]/50 hover:bg-gray-50 transition-colors cursor-pointer"
                 />
@@ -320,9 +354,13 @@ const chartData = (recordTrend ?? []).map(item => ({
           <CardContent className="pt-6">
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#E5E7EB"
+                  vertical={false}
+                />
                 <XAxis
-                  dataKey="month"
+                  dataKey="date"
                   tick={{ fontSize: 12, fill: "#6B7280" }}
                   tickLine={false}
                   axisLine={{ stroke: "#E5E7EB" }}
@@ -345,7 +383,12 @@ const chartData = (recordTrend ?? []).map(item => ({
                   dataKey="records"
                   stroke="#295F58"
                   strokeWidth={3}
-                  dot={{ fill: "#295F58", r: 6, strokeWidth: 2, stroke: "#fff" }}
+                  dot={{
+                    fill: "#295F58",
+                    r: 6,
+                    strokeWidth: 2,
+                    stroke: "#fff",
+                  }}
                   activeDot={{ r: 8 }}
                 />
               </LineChart>
@@ -382,34 +425,68 @@ const chartData = (recordTrend ?? []).map(item => ({
                       Status
                     </th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Time
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                 {(recentActivity ?? []).map((activity) => (
-                    <tr key={activity.site} className="border-b hover:bg-gray-50/50 transition-colors">
-                      <td className="py-3 px-4 text-sm font-medium">
-                        {activity.module}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">
-                        {activity.user}
-                      </td>
-                      <td className="py-3 px-4 text-sm">
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {activity.site}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4 text-sm">
-                        <Badge className={getStatusColor(activity.status)}>
-                          {activity.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">
-                        {formatTime(activity.time)}
-                      </td>
-                    </tr>
-                  ))}
+                  {(recentActivity ?? []).map((activity, index) => {
+                    // Parse the date/time from ISO string or DD/MM/YYYY format
+                    const dateObj = new Date(activity.time);
+                    const isValidDate = !isNaN(dateObj.getTime());
+
+                    const formattedDate = isValidDate
+                      ? dateObj.toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })
+                      : "—";
+
+                    const formattedTime = isValidDate
+                      ? dateObj.toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : formatTime(activity.time);
+
+                    return (
+                      <tr
+                        key={`${activity.site}-${index}`}
+                        className="border-b hover:bg-gray-50/50 transition-colors"
+                      >
+                        <td className="py-3 px-4 text-sm font-medium">
+                          {activity.module}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">
+                          {activity.user}
+                        </td>
+                        <td className="py-3 px-4 text-sm">
+                          <Badge
+                            variant="outline"
+                            className="font-mono text-xs"
+                          >
+                            {activity.site}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4 text-sm">
+                          <Badge className={getStatusColor(activity.status)}>
+                            {activity.status}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground font-medium">
+                          {formattedDate}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">
+                          {formattedTime}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
