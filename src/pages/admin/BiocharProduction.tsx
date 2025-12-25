@@ -115,6 +115,10 @@ export default function BiocharProduction() {
   );
   const [rejectionNote, setRejectionNote] = useState("");
 
+  // Loading states for verify/reject actions
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+
   // Load dropdown data
   useEffect(() => {
     // Sites are provided via SitesProvider.
@@ -374,6 +378,7 @@ export default function BiocharProduction() {
     if (!selectedKontiki) return;
 
     try {
+      setIsVerifying(true);
       await verifyKontiki(selectedKontiki.id);
 
       setIsVerifyDialogOpen(false);
@@ -381,6 +386,8 @@ export default function BiocharProduction() {
       setIsViewDialogOpen(false);
     } catch (error) {
       console.error("Error verifying kontiki:", error);
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -388,6 +395,7 @@ export default function BiocharProduction() {
     if (!selectedRecord || !selectedKontiki || !rejectionNote.trim()) return;
 
     try {
+      setIsRejecting(true);
       await rejectKontiki(selectedKontiki.id, {
         rejectionNote,
       });
@@ -397,6 +405,8 @@ export default function BiocharProduction() {
       setIsViewDialogOpen(false); // Close the view dialog to refresh
     } catch (error) {
       console.error("Error rejecting kontiki:", error);
+    } finally {
+      setIsRejecting(false);
     }
   };
 
@@ -1034,7 +1044,7 @@ export default function BiocharProduction() {
                               <img
                                 src={kontiki.moisturePhoto}
                                 alt="Moisture meter"
-                                className="w-full h-auto"
+                                className="w-72 h-auto"
                               />
                             </div>
                           )}
@@ -1069,7 +1079,7 @@ export default function BiocharProduction() {
                             <img
                               src={kontiki.startPhoto}
                               alt="Start phase"
-                              className="w-full h-auto"
+                              className="w-72 h-auto"
                             />
                           </div>
                         )}
@@ -1090,7 +1100,7 @@ export default function BiocharProduction() {
                             <img
                               src={kontiki.middlePhoto}
                               alt="Middle phase"
-                              className="w-full h-auto"
+                              className="w-72 h-auto"
                             />
                           </div>
                         )}
@@ -1111,7 +1121,7 @@ export default function BiocharProduction() {
                             <img
                               src={kontiki.endPhoto}
                               alt="End phase"
-                              className="w-full h-auto"
+                              className="w-72 h-auto"
                             />
                           </div>
                         )}
@@ -1132,7 +1142,7 @@ export default function BiocharProduction() {
                             <img
                               src={kontiki.finalPhoto}
                               alt="Final biochar"
-                              className="w-full h-auto"
+                              className="w-72 h-auto"
                             />
                           </div>
                         )}
@@ -1191,13 +1201,23 @@ export default function BiocharProduction() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isVerifying}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmVerify}
+              disabled={isVerifying}
               className="bg-green-600 hover:bg-green-700"
             >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Accept
+              {isVerifying ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Accepting...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Accept
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1224,6 +1244,7 @@ export default function BiocharProduction() {
                 onChange={(e) => setRejectionNote(e.target.value)}
                 placeholder="Explain why this Kon-tiki is being rejected..."
                 rows={4}
+                disabled={isRejecting}
               />
             </div>
           </div>
@@ -1231,16 +1252,26 @@ export default function BiocharProduction() {
             <Button
               variant="outline"
               onClick={() => setIsRejectDialogOpen(false)}
+              disabled={isRejecting}
             >
               Cancel
             </Button>
             <Button
               className="bg-orange-600 hover:bg-orange-700"
               onClick={handleConfirmReject}
-              disabled={!rejectionNote.trim()}
+              disabled={!rejectionNote.trim() || isRejecting}
             >
-              <XCircle className="h-4 w-4 mr-2" />
-              Reject
+              {isRejecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Rejecting...
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Reject
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
