@@ -86,7 +86,8 @@ export interface VerifyKontikiPayload {
 }
 
 export interface RejectKontikiPayload {
-  kontikiId: string;
+  
+ 
   rejectionNote: string;
 }
 

@@ -216,14 +216,12 @@ const { mutate: downloadCSV, isPending } = useMutation<Blob, Error>({
     filteredRecords.map((r) => r.farmerMobile || r.farmerName)
   ).size;
 
-    if (isLoading || !records) {
+    if (isUsersLoading || !records) {
       return (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="flex flex-col items-center gap-3">
             <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
-            <p className="text-muted-foreground text-sm">
-              Loading  details...
-            </p>
+            <p className="text-muted-foreground text-sm">Loading details...</p>
           </div>
         </div>
       );

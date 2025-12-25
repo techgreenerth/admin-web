@@ -56,11 +56,11 @@ export const biocharProductionService = {
 
   // Reject a kontiki in a production record
   async rejectKontiki(
-    recordId: string,
+    kontikiRecordId: string,
     payload: RejectKontikiPayload
   ): Promise<void> {
-    await apiClient.post(
-      `/v1/biochar-production/${recordId}/reject-kontiki`,
+    await apiClient.patch(
+      `/v1/biochar-production/kontiki/${kontikiRecordId}/reject`,
       payload
     );
   },
