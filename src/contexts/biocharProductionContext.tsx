@@ -70,18 +70,18 @@ const verifyKontiki = async (kontikiRecordId: string) => {
   await biocharProductionService.verifyKontiki(kontikiRecordId);
 };
   // Reject kontiki
-  const rejectKontiki = async (
-    recordId: string,
-    payload: RejectKontikiPayload
-  ) => {
-    try {
-      setIsLoading(true);
-      await biocharProductionService.rejectKontiki(recordId, payload);
-      await fetchRecords(); // Refresh the list after rejection
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const rejectKontiki = async (
+  kontikiRecordId: string,
+  payload: RejectKontikiPayload
+) => {
+  try {
+    setIsLoading(true);
+    await biocharProductionService.rejectKontiki(kontikiRecordId, payload);
+    await fetchRecords();
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <BiocharProductionContext.Provider

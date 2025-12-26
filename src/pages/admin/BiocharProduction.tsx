@@ -76,7 +76,11 @@ import {
   BiocharProductionRecord,
   KontikiData,
 } from "@/types/biocharProduction.types";
-import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
+import {
+  normalizeDateForSearch,
+  parseDDMMYYYY,
+  toSearchString,
+} from "@/lib/utils/utils";
 // import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BiocharProduction() {
@@ -88,6 +92,7 @@ export default function BiocharProduction() {
   const [users, setUsers] = useState<UserType[]>([]);
   const [isUsersLoading, setIsUsersLoading] = useState(false);
 
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [siteFilter, setSiteFilter] = useState("all");
@@ -109,6 +114,10 @@ export default function BiocharProduction() {
     null
   );
   const [rejectionNote, setRejectionNote] = useState("");
+
+  // Loading states for verify/reject actions
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   // Load dropdown data
   useEffect(() => {
@@ -320,7 +329,6 @@ export default function BiocharProduction() {
     );
   });
 
-
   // Pagination
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -367,26 +375,28 @@ export default function BiocharProduction() {
   //   }
   // };
   const handleConfirmVerify = async () => {
-  if (!selectedKontiki) return;
+    if (!selectedKontiki) return;
 
-  try {
-    await verifyKontiki(selectedKontiki.id);
+    try {
+      setIsVerifying(true);
+      await verifyKontiki(selectedKontiki.id);
 
-    setIsVerifyDialogOpen(false);
-    setSelectedKontiki(null);
-    setIsViewDialogOpen(false);
-  } catch (error) {
-    console.error("Error verifying kontiki:", error);
-  }
-};
-
+      setIsVerifyDialogOpen(false);
+      setSelectedKontiki(null);
+      setIsViewDialogOpen(false);
+    } catch (error) {
+      console.error("Error verifying kontiki:", error);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   const handleConfirmReject = async () => {
     if (!selectedRecord || !selectedKontiki || !rejectionNote.trim()) return;
 
     try {
-      await rejectKontiki(selectedRecord.id, {
-        kontikiId: selectedKontiki.kontikiId,
+      setIsRejecting(true);
+      await rejectKontiki(selectedKontiki.id, {
         rejectionNote,
       });
       setIsRejectDialogOpen(false);
@@ -395,10 +405,10 @@ export default function BiocharProduction() {
       setIsViewDialogOpen(false); // Close the view dialog to refresh
     } catch (error) {
       console.error("Error rejecting kontiki:", error);
+    } finally {
+      setIsRejecting(false);
     }
   };
-
-  
 
   const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<
     Blob,
@@ -434,7 +444,6 @@ export default function BiocharProduction() {
     },
   });
 
-
   // Calculate statistic
   const totalBatches = filteredRecords.length;
   const totalBiocharProduced = filteredRecords.reduce((total, record) => {
@@ -453,18 +462,16 @@ export default function BiocharProduction() {
     return total + recordTotal;
   }, 0);
 
-    if (isLoading || !records) {
-      return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
-            <p className="text-muted-foreground text-sm">
-              Loading  details...
-            </p>
-          </div>
+  if (isUsersLoading || !records) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading details...</p>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -957,219 +964,221 @@ export default function BiocharProduction() {
               </div>
 
               {/* Kontiki Sections */}
-              {getKontikiRecords(selectedRecord).map((kontiki) => (
-                <div
-                  key={kontiki.id ?? kontiki.kontikiId}
-                  className="border border-gray-200 rounded-lg p-6 space-y-6"
-                >
-                  {/* Kontiki Header with Accept/Reject Buttons */}
-                  <div className="flex items-center justify-between pb-4 border-b">
-                    <h3 className="text-lg font-semibold text-[#295F58]">
-                      {getKontikiName(kontiki)}
-                    </h3>
-                    {kontiki.status === "SUBMITTED" && (
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            handleVerifyKontiki(selectedRecord, kontiki)
-                          }
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Accept
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            handleRejectKontiki(selectedRecord, kontiki)
-                          }
-                          className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors"
-                        >
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Reject
-                        </Button>
+              <div className="flex">
+                {getKontikiRecords(selectedRecord).map((kontiki) => (
+                  <div
+                    key={kontiki.id ?? kontiki.kontikiId}
+                    className="border border-gray-200 rounded-lg p-6 space-y-6"
+                  >
+                    {/* Kontiki Header with Accept/Reject Buttons */}
+                    <div className="flex items-center justify-between pb-4 border-b">
+                      <h3 className="text-lg font-semibold text-[#295F58]">
+                        {getKontikiName(kontiki)}
+                      </h3>
+                      {kontiki.status === "SUBMITTED" && (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              handleVerifyKontiki(selectedRecord, kontiki)
+                            }
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              handleRejectKontiki(selectedRecord, kontiki)
+                            }
+                            className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors"
+                          >
+                            <XCircle className="h-4 w-4 mr-2" />
+                            Reject
+                          </Button>
+                        </div>
+                      )}
+                      {kontiki.status === "VERIFIED" && (
+                        <Badge className="bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Accepted
+                        </Badge>
+                      )}
+                      {kontiki.status === "REJECTED" && (
+                        <Badge className="bg-red-100 text-red-800">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Rejected
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Rejection Note */}
+                    {kontiki.status === "REJECTED" && kontiki.rejectionNote && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <Label className="text-xs text-red-800 font-medium">
+                          Rejection Note:
+                        </Label>
+                        <p className="text-sm text-red-700 mt-1">
+                          {kontiki.rejectionNote}
+                        </p>
                       </div>
                     )}
-                    {kontiki.status === "VERIFIED" && (
-                      <Badge className="bg-green-100 text-green-800">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Accepted
-                      </Badge>
-                    )}
-                    {kontiki.status === "REJECTED" && (
-                      <Badge className="bg-red-100 text-red-800">
-                        <XCircle className="h-3 w-3 mr-1" />
-                        Rejected
-                      </Badge>
-                    )}
-                  </div>
 
-                  {/* Rejection Note */}
-                  {kontiki.status === "REJECTED" && kontiki.rejectionNote && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <Label className="text-xs text-red-800 font-medium">
-                        Rejection Note:
-                      </Label>
-                      <p className="text-sm text-red-700 mt-1">
-                        {kontiki.rejectionNote}
-                      </p>
-                    </div>
-                  )}
+                    {/* Kontiki Production Process */}
+                    <div className="space-y-4">
+                      {/* 1. Moisture Photo & Percentage */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                              1
+                            </span>
+                            <Label className="text-sm font-medium">
+                              Moisture Photo
+                            </Label>
+                          </div>
+                          {kontiki.moisturePhoto && (
+                            <div className="border rounded-lg overflow-hidden">
+                              <img
+                                src={kontiki.moisturePhoto}
+                                alt="Moisture meter"
+                                className="w-72 h-auto"
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">
+                            Moisture Percentage
+                          </Label>
+                          {kontiki.moisturePercent && (
+                            <div className="flex items-center gap-2 mt-8">
+                              <Droplets className="h-5 w-5 text-blue-600" />
+                              <span className="text-lg font-semibold">
+                                {kontiki.moisturePercent}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
-                  {/* Kontiki Production Process */}
-                  <div className="space-y-4">
-                    {/* 1. Moisture Photo & Percentage */}
-                    <div className="grid grid-cols-2 gap-4">
+                      {/* 2. Start (25%) */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
-                            1
+                            2
                           </span>
                           <Label className="text-sm font-medium">
-                            Moisture Photo
+                            Start (25% fill)
                           </Label>
                         </div>
-                        {kontiki.moisturePhoto && (
-                          <div className="border rounded-lg overflow-hidden">
+                        {kontiki.startPhoto && (
+                          <div className="border rounded-lg overflow-hidden max-w-md">
                             <img
-                              src={kontiki.moisturePhoto}
-                              alt="Moisture meter"
-                              className="w-full h-auto"
+                              src={kontiki.startPhoto}
+                              alt="Start phase"
+                              className="w-72 h-auto"
                             />
                           </div>
                         )}
                       </div>
+
+                      {/* 3. Middle (50%) */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">
-                          Moisture Percentage
-                        </Label>
-                        {kontiki.moisturePercent && (
-                          <div className="flex items-center gap-2 mt-8">
-                            <Droplets className="h-5 w-5 text-blue-600" />
-                            <span className="text-lg font-semibold">
-                              {kontiki.moisturePercent}%
-                            </span>
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                            3
+                          </span>
+                          <Label className="text-sm font-medium">
+                            Middle (50% fill)
+                          </Label>
+                        </div>
+                        {kontiki.middlePhoto && (
+                          <div className="border rounded-lg overflow-hidden max-w-md">
+                            <img
+                              src={kontiki.middlePhoto}
+                              alt="Middle phase"
+                              className="w-72 h-auto"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 4. End (90%) */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                            4
+                          </span>
+                          <Label className="text-sm font-medium">
+                            End (90% fill)
+                          </Label>
+                        </div>
+                        {kontiki.endPhoto && (
+                          <div className="border rounded-lg overflow-hidden max-w-md">
+                            <img
+                              src={kontiki.endPhoto}
+                              alt="End phase"
+                              className="w-72 h-auto"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 5. Final Biochar with AI Estimate */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                            5
+                          </span>
+                          <Label className="text-sm font-medium">
+                            Final Biochar
+                          </Label>
+                        </div>
+                        {kontiki.finalPhoto && (
+                          <div className="border rounded-lg overflow-hidden max-w-md">
+                            <img
+                              src={kontiki.finalPhoto}
+                              alt="Final biochar"
+                              className="w-72 h-auto"
+                            />
+                          </div>
+                        )}
+                        {kontiki.aiVolumeEstimate && (
+                          <div className="grid grid-cols-3 gap-4 bg-purple-50 border border-purple-200 rounded-lg p-3 max-w-2xl">
+                            <div className="space-y-1">
+                              <Label className="text-muted-foreground text-xs">
+                                AI Volume Estimate
+                              </Label>
+                              <div className="font-medium text-sm">
+                                {kontiki.aiVolumeEstimate}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-muted-foreground text-xs">
+                                Confidence
+                              </Label>
+                              <div className="font-medium text-sm">
+                                {kontiki.aiConfidenceScore}
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-muted-foreground text-xs">
+                                Model Version
+                              </Label>
+                              <div className="font-medium text-sm">
+                                {kontiki.aiModelVersion}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
                     </div>
-
-                    {/* 2. Start (25%) */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
-                          2
-                        </span>
-                        <Label className="text-sm font-medium">
-                          Start (25% fill)
-                        </Label>
-                      </div>
-                      {kontiki.startPhoto && (
-                        <div className="border rounded-lg overflow-hidden max-w-md">
-                          <img
-                            src={kontiki.startPhoto}
-                            alt="Start phase"
-                            className="w-full h-auto"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 3. Middle (50%) */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
-                          3
-                        </span>
-                        <Label className="text-sm font-medium">
-                          Middle (50% fill)
-                        </Label>
-                      </div>
-                      {kontiki.middlePhoto && (
-                        <div className="border rounded-lg overflow-hidden max-w-md">
-                          <img
-                            src={kontiki.middlePhoto}
-                            alt="Middle phase"
-                            className="w-full h-auto"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 4. End (90%) */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
-                          4
-                        </span>
-                        <Label className="text-sm font-medium">
-                          End (90% fill)
-                        </Label>
-                      </div>
-                      {kontiki.endPhoto && (
-                        <div className="border rounded-lg overflow-hidden max-w-md">
-                          <img
-                            src={kontiki.endPhoto}
-                            alt="End phase"
-                            className="w-full h-auto"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 5. Final Biochar with AI Estimate */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
-                          5
-                        </span>
-                        <Label className="text-sm font-medium">
-                          Final Biochar
-                        </Label>
-                      </div>
-                      {kontiki.finalPhoto && (
-                        <div className="border rounded-lg overflow-hidden max-w-md">
-                          <img
-                            src={kontiki.finalPhoto}
-                            alt="Final biochar"
-                            className="w-full h-auto"
-                          />
-                        </div>
-                      )}
-                      {kontiki.aiVolumeEstimate && (
-                        <div className="grid grid-cols-3 gap-4 bg-purple-50 border border-purple-200 rounded-lg p-3 max-w-2xl">
-                          <div className="space-y-1">
-                            <Label className="text-muted-foreground text-xs">
-                              AI Volume Estimate
-                            </Label>
-                            <div className="font-medium text-sm">
-                              {kontiki.aiVolumeEstimate}
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-muted-foreground text-xs">
-                              Confidence
-                            </Label>
-                            <div className="font-medium text-sm">
-                              {kontiki.aiConfidenceScore}
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-muted-foreground text-xs">
-                              Model Version
-                            </Label>
-                            <div className="font-medium text-sm">
-                              {kontiki.aiModelVersion}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </DialogContent>
@@ -1192,13 +1201,23 @@ export default function BiocharProduction() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isVerifying}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmVerify}
+              disabled={isVerifying}
               className="bg-green-600 hover:bg-green-700"
             >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Accept
+              {isVerifying ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Accepting...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Accept
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1225,6 +1244,7 @@ export default function BiocharProduction() {
                 onChange={(e) => setRejectionNote(e.target.value)}
                 placeholder="Explain why this Kon-tiki is being rejected..."
                 rows={4}
+                disabled={isRejecting}
               />
             </div>
           </div>
@@ -1232,16 +1252,26 @@ export default function BiocharProduction() {
             <Button
               variant="outline"
               onClick={() => setIsRejectDialogOpen(false)}
+              disabled={isRejecting}
             >
               Cancel
             </Button>
             <Button
               className="bg-orange-600 hover:bg-orange-700"
               onClick={handleConfirmReject}
-              disabled={!rejectionNote.trim()}
+              disabled={!rejectionNote.trim() || isRejecting}
             >
-              <XCircle className="h-4 w-4 mr-2" />
-              Reject
+              {isRejecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Rejecting...
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Reject
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
