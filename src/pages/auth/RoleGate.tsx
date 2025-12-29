@@ -17,9 +17,12 @@ export function RoleGate({ allow, children }: RoleGateProps) {
   }
 
   if (!allow.includes(profile.role)) {
-    // fallback redirection
+    // fallback redirection based on role
     if (profile.role === "CSI_MANAGER") {
       return <Navigate to="/csi" replace />;
+    }
+    if (profile.role === "SUPERVISOR") {
+      return <Navigate to="/biomass-sourcing" replace />;
     }
     return <Navigate to="/" replace />;
   }

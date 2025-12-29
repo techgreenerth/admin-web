@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { adminService, Admin as AdminType } from "@/lib/api/admin.service";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function Admins() {
+  const { user } = useAuth();
   const [admins, setAdmins] = useState<AdminType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -141,6 +143,23 @@ export default function Admins() {
         return "bg-indigo-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case "SUPER_ADMIN":
+        return "Super Admin";
+      case "ADMIN":
+        return "Admin";
+      case "SUPERVISOR":
+        return "Implementation Partner";
+      case "VERIFIER":
+        return "Verifier";
+      case "CSI_MANAGER":
+        return "CSI Manager";
+      default:
+        return role;
     }
   };
 
@@ -241,7 +260,8 @@ export default function Admins() {
       lastName: "",
       email: "",
       phone: "",
-      role: "ADMIN",
+      // ADMIN users cannot create ADMIN or SUPER_ADMIN, default to SUPERVISOR
+      role: user?.role === "SUPER_ADMIN" ? "ADMIN" : "SUPERVISOR",
       status: "ACTIVE",
       password: "",
     });
@@ -417,9 +437,11 @@ export default function Admins() {
                   <SelectItem value="all">All Roles</SelectItem>
                   <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
                   <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="SUPERVISOR">Supervisor</SelectItem>
+                  <SelectItem value="SUPERVISOR">
+                    Implementation Partner
+                  </SelectItem>
                   <SelectItem value="VERIFIER">Verifier</SelectItem>
-                  <SelectItem value="CSI_MANAGER">CSI_Manager</SelectItem>
+                  <SelectItem value="CSI_MANAGER">CSI Manager</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -494,7 +516,7 @@ export default function Admins() {
                     </TableCell>
                     <TableCell>
                       <Badge className={getRoleColor(admin.role)}>
-                        {admin.role.replace("_", " ")}
+                        {getRoleDisplayName(admin.role)}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -721,10 +743,18 @@ export default function Admins() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="SUPERVISOR">Supervisor</SelectItem>
-                  <SelectItem value="CSI_MANAGER">CSI_Manager</SelectItem>
+                  {/* ADMIN users cannot create SUPER_ADMIN or ADMIN roles */}
+                  {user?.role === "SUPER_ADMIN" && (
+                    <>
+                      <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                    </>
+                  )}
+                  <SelectItem value="SUPERVISOR">
+                    Implementation Partner
+                  </SelectItem>
+                  <SelectItem value="VERIFIER">Verifier</SelectItem>
+                  <SelectItem value="CSI_MANAGER">CSI Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -751,7 +781,8 @@ export default function Admins() {
                 <p className="text-xs text-red-500">{errors.password}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Must be at least 8 characters with uppercase, lowercase, and number
+                Must be at least 8 characters with uppercase, lowercase, and
+                number
               </p>
             </div>
           </div>
@@ -878,10 +909,18 @@ export default function Admins() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="SUPERVISOR">Supervisor</SelectItem>
-                  <SelectItem value="CSI_MANAGER">CSI_Manager</SelectItem>
+                  {/* ADMIN users cannot edit to SUPER_ADMIN or ADMIN roles */}
+                  {user?.role === "SUPER_ADMIN" && (
+                    <>
+                      <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                    </>
+                  )}
+                  <SelectItem value="SUPERVISOR">
+                    Implementation Partner
+                  </SelectItem>
+                  <SelectItem value="VERIFIER">Verifier</SelectItem>
+                  <SelectItem value="CSI_MANAGER">CSI Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -929,7 +968,8 @@ export default function Admins() {
               )}
               {formData.password && (
                 <p className="text-xs text-muted-foreground">
-                  Must be at least 8 characters with uppercase, lowercase, and number
+                  Must be at least 8 characters with uppercase, lowercase, and
+                  number
                 </p>
               )}
             </div>
@@ -990,7 +1030,7 @@ export default function Admins() {
                   <Label className="text-muted-foreground">Role</Label>
                   <div>
                     <Badge className={getRoleColor(selectedAdmin.role)}>
-                      {selectedAdmin.role.replace("_", " ")}
+                      {getRoleDisplayName(selectedAdmin.role)}
                     </Badge>
                   </div>
                 </div>

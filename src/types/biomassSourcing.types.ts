@@ -11,6 +11,8 @@ export interface SourcingSite {
   id: string;
   siteCode: string;
   siteName: string;
+  latitude: string;
+  longitude: string;
 }
 
 export interface BiomassSourcingRecord {

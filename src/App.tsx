@@ -81,7 +81,7 @@ const App = () => (
                                 path="/*"
                                 element={
                                   <ProtectedRoute>
-                                    <RoleGate allow={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
+                                    <RoleGate allow={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPERVISOR]}>
                                     <AppLayout >
                                       <Routes>
                                         <Route

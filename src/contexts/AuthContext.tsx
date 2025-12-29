@@ -12,7 +12,7 @@ interface AuthContextType {
   user: Admin | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   logout: () => Promise<void>;
 }
 
@@ -36,10 +36,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const data: AuthResponse = await authService.login(credentials);
     authService.setAuthData(data);
     setUser(data.user);
+    return data;
   };
 
   const logout = async () => {

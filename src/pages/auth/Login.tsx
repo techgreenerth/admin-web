@@ -57,10 +57,18 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await login(formData);
+      const response = await login(formData);
       toast.success("Login successful!");
-      // Navigate immediately after successful login
-      navigate("/", { replace: true });
+
+      // Navigate based on user role
+      const userRole = response?.user?.role;
+      if (userRole === "CSI_MANAGER") {
+        navigate("/csi", { replace: true });
+      } else if (userRole === "SUPERVISOR") {
+        navigate("/biomass-sourcing", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message || "Invalid credentials. Please try again.";

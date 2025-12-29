@@ -84,8 +84,20 @@ export default function Profile() {
       ADMIN: "bg-blue-100 text-blue-800",
       SUPERVISOR: "bg-green-100 text-green-800",
       VERIFIER: "bg-orange-100 text-orange-800",
+      CSI_MANAGER: "bg-indigo-100 text-green-800",
     };
     return roleColors[role] || "bg-gray-100 text-gray-800";
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    const roleNames: Record<string, string> = {
+      SUPER_ADMIN: "Super Admin",
+      ADMIN: "Admin",
+      SUPERVISOR: "Implementation Partner",
+      VERIFIER: "Verifier",
+      CSI_MANAGER: "CSI Manager",
+    };
+    return roleNames[role] || role;
   };
 
   if (isLoading && !profile) {
@@ -124,7 +136,7 @@ export default function Profile() {
                 </h2>
                 <div className="flex gap-2">
                   <Badge className={getRoleBadge(profileData.role)}>
-                    {profileData.role.replace("_", " ")}
+                    {getRoleDisplayName(profileData.role)}
                   </Badge>
                   <Badge className="bg-green-100 text-green-800">
                     {profileData.status}
@@ -267,7 +279,7 @@ export default function Profile() {
                 <div className="space-y-1">
                   <Label className="text-muted-foreground">Role</Label>
                   <p className="font-medium">
-                    {profileData.role.replace("_", " ")}
+                    {getRoleDisplayName(profileData.role)}
                   </p>
                 </div>
               </div>
