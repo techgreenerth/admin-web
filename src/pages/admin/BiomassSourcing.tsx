@@ -19,6 +19,7 @@ import { biomassSourcingService } from "@/lib/api/biomassSourcing.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { calculateDistanceKm } from "@/lib/utils/geo";
 import {
   Table,
   TableBody,
@@ -44,7 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { BiomassSourcingRecord } from "@/types/biomassSourcing.types";
-import { formatDate, formatTime ,formatDateTime} from "../../lib/utils/date";
+import { formatDate, formatTime, formatDateTime } from "../../lib/utils/date";
 import { toast } from "react-hot-toast";
 import { normalizeDateForSearch, toSearchString } from "@/lib/utils/utils";
 
@@ -107,8 +108,6 @@ export default function BiomassSourcing() {
 
   // Filter records
 
-
-  
   const filteredRecords = records.filter((record) => {
     const q = searchQuery.trim().toLowerCase();
 
@@ -158,7 +157,6 @@ export default function BiomassSourcing() {
     return matchesSearch && matchesSite && matchesUser && matchesDateRange;
   });
 
-
   // Pagination
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -171,40 +169,35 @@ export default function BiomassSourcing() {
     setIsViewDialogOpen(true);
   };
 
- 
+  const { mutate: downloadCSV, isPending } = useMutation<Blob, Error>({
+    mutationFn: () =>
+      biomassSourcingService.exportToCSV({
+        userId: userFilter !== "all" ? userFilter : undefined,
+        siteId: siteFilter !== "all" ? siteFilter : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      }),
 
+    onSuccess: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `biomass-sourcing-${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
 
-const { mutate: downloadCSV, isPending } = useMutation<Blob, Error>({
-  mutationFn: () =>
-    biomassSourcingService.exportToCSV({
-      userId: userFilter !== "all" ? userFilter : undefined,
-      siteId: siteFilter !== "all" ? siteFilter : undefined,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-    }),
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
 
-  onSuccess: (blob) => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `biomass-sourcing-${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
+      toast.success("CSV exported successfully!");
+    },
 
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-
-    toast.success("CSV exported successfully!");
-  },
-
-  onError: (error) => {
-    toast.error(error.message || "Failed to export CSV");
-  },
-});
-
-
+    onError: (error) => {
+      toast.error(error.message || "Failed to export CSV");
+    },
+  });
 
   // Calculate statistics
   const totalTrips = filteredRecords.length;
@@ -216,16 +209,16 @@ const { mutate: downloadCSV, isPending } = useMutation<Blob, Error>({
     filteredRecords.map((r) => r.farmerMobile || r.farmerName)
   ).size;
 
-    if (isUsersLoading || !records) {
-      return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
-            <p className="text-muted-foreground text-sm">Loading details...</p>
-          </div>
+  if (isUsersLoading || !records) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading details...</p>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -413,6 +406,9 @@ const { mutate: downloadCSV, isPending } = useMutation<Blob, Error>({
                     <TableHead className="whitespace-nowrap">
                       Site & User
                     </TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      Distance Travelled
+                    </TableHead>
                     <TableHead className="whitespace-nowrap">Media</TableHead>
                     <TableHead className="text-right whitespace-nowrap">
                       Actions
@@ -439,74 +435,109 @@ const { mutate: downloadCSV, isPending } = useMutation<Blob, Error>({
                       </TableCell>
                     </TableRow>
                   ) : (
-                    paginatedRecords.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell className="whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE] shrink-0">
-                              <Leaf className="h-4 w-4 text-[#295F58]" />
+                    paginatedRecords.map((record) => {
+                      const siteLat = Number(record.site?.latitude);
+                      const siteLng = Number(record.site?.longitude);
+                      const captureLat = Number(record.latitude);
+                      const captureLng = Number(record.longitude);
+
+                      const distanceKm =
+                        siteLat && siteLng && captureLat && captureLng
+                          ? calculateDistanceKm(
+                              siteLat,
+                              siteLng,
+                              captureLat,
+                              captureLng
+                            )
+                          : null;
+
+                      return (
+                        <TableRow key={record.id}>
+                          <TableCell className="whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E1EFEE] shrink-0">
+                                <Leaf className="h-4 w-4 text-[#295F58]" />
+                              </div>
+                              <div>
+                                <div className="font-medium">
+                                  Trip {record.tripNumber}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {formatDate(record.recordDate)}{" "}
+                                  {formatTime(record.recordTime)}
+                                </div>
+                              </div>
                             </div>
-                            <div>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            <div className="text-sm">
                               <div className="font-medium">
-                                Trip {record.tripNumber}
+                                {record.farmerName}
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                {formatDate(record.recordDate)}{" "}
-                                {formatTime(record.recordTime)}
+                                {record.farmerMobile}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {record.farmAreaAcres} acres
                               </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <div className="text-sm">
-                            <div className="font-medium">
-                              {record.farmerName}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            <div className="text-sm">
+                              <div className="font-medium">
+                                {record.site?.siteName ?? "—"}
+                              </div>
+                              <div className="text-xs text-muted-foreground font-mono">
+                                {record.site?.siteCode ?? "—"}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {record.user
+                                  ? `${record.user.firstName} (${record.user.userCode})`
+                                  : "—"}
+                              </div>
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {record.farmerMobile}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {distanceKm !== null ? (
+                              <span
+                                className={`font-medium ${
+                                  distanceKm < 0
+                                    ? "text-red-600"
+                                    : "text-[#295F58]"
+                                }`}
+                              >
+                                {distanceKm.toFixed(2)} km
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">
+                                —
+                              </span>
+                            )}
+                          </TableCell>
+
+                          <TableCell className="whitespace-nowrap">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              {record.tractorPhoto ? (
+                                <Package className="h-4 w-4" />
+                              ) : null}
+                              <span>
+                                {record.tractorPhoto ? "Tractor photo" : "—"}
+                              </span>
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {record.farmAreaAcres} acres
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <div className="text-sm">
-                            <div className="font-medium">
-                              {record.site?.siteName ?? "—"}
-                            </div>
-                            <div className="text-xs text-muted-foreground font-mono">
-                              {record.site?.siteCode ?? "—"}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {record.user
-                                ? `${record.user.firstName} (${record.user.userCode})`
-                                : "—"}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            {record.tractorPhoto ? (
-                              <Package className="h-4 w-4" />
-                            ) : null}
-                            <span>
-                              {record.tractorPhoto ? "Tractor photo" : "—"}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleViewRecord(record)}
-                            className="hover:bg-[#295F58]/10"
-                          >
-                            <Eye className="h-4 w-4 text-[#295F58]" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                          </TableCell>
+                          <TableCell className="text-right whitespace-nowrap">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewRecord(record)}
+                              className="hover:bg-[#295F58]/10"
+                            >
+                              <Eye className="h-4 w-4 text-[#295F58]" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>

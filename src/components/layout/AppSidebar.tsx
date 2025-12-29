@@ -26,36 +26,36 @@ import {
 import { SidebarNavItem } from "./SidebarNavItem";
 
 interface AppSidebarProps {
-  userRole?: "admin" | "partner" | "verifier";
+  userRole?: "admin" | "partner" | "supervisor";
 }
 
 export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
-  return (
-    <Sidebar
-      collapsible="icon"
-      className="border-r bg-[#295F58] text-white"
-    >
-      <SidebarContent className="py-4 flex flex-col h-full overflow-y-auto">
+  const isSupervisor = userRole === "supervisor";
 
-        {/* Dashboard */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <SidebarNavItem
-                    to="/"
-                    className="hover:bg-white/10 transition-colors"
-                    activeClassName="bg-white/20 font-medium"
-                  >
-                    <Home className="h-5 w-5" />
-                    <span className="text-base">Dashboard</span>
-                  </SidebarNavItem>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+  return (
+    <Sidebar collapsible="icon" className="border-r bg-[#295F58] text-white">
+      <SidebarContent className="py-4 flex flex-col h-full overflow-y-auto">
+        {/* Dashboard - Hide for Implementation Partner */}
+        {!isSupervisor && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <SidebarNavItem
+                      to="/"
+                      className="hover:bg-white/10 transition-colors"
+                      activeClassName="bg-white/20 font-medium"
+                    >
+                      <Home className="h-5 w-5" />
+                      <span className="text-base">Dashboard</span>
+                    </SidebarNavItem>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* Production Modules */}
         <SidebarGroup>
@@ -64,7 +64,6 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <SidebarNavItem
@@ -129,80 +128,78 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
                   </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Management */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-xs uppercase text-white/70">
-            Management
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
+        {/* Management - Hide for Implementation Partner */}
+        {!isSupervisor && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4 text-xs uppercase text-white/70">
+              Management
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <SidebarNavItem
+                      to="/admins"
+                      className="hover:bg-white/10 transition-colors"
+                      activeClassName="bg-white/20 font-medium"
+                    >
+                      <Shield className="h-5 w-5" />
+                      <span className="text-base">Admins</span>
+                    </SidebarNavItem>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <SidebarNavItem
-                    to="/admins"
-                    className="hover:bg-white/10 transition-colors"
-                    activeClassName="bg-white/20 font-medium"
-                  >
-                    <Shield className="h-5 w-5" />
-                    <span className="text-base">Admins</span>
-                  </SidebarNavItem>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <SidebarNavItem
+                      to="/users"
+                      className="hover:bg-white/10 transition-colors"
+                      activeClassName="bg-white/20 font-medium"
+                    >
+                      <Users className="h-5 w-5" />
+                      <span className="text-base">Users</span>
+                    </SidebarNavItem>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <SidebarNavItem
-                    to="/users"
-                    className="hover:bg-white/10 transition-colors"
-                    activeClassName="bg-white/20 font-medium"
-                  >
-                    <Users className="h-5 w-5" />
-                    <span className="text-base">Users</span>
-                  </SidebarNavItem>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <SidebarNavItem
+                      to="/sites"
+                      className="hover:bg-white/10 transition-colors"
+                      activeClassName="bg-white/20 font-medium"
+                    >
+                      <MapPin className="h-5 w-5" />
+                      <span className="text-base">Artisan Pro Sites</span>
+                    </SidebarNavItem>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <SidebarNavItem
-                    to="/sites"
-                    className="hover:bg-white/10 transition-colors"
-                    activeClassName="bg-white/20 font-medium"
-                  >
-                    <MapPin className="h-5 w-5" />
-                    <span className="text-base">Artisan Pro Sites</span>
-                  </SidebarNavItem>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <SidebarNavItem
-                    to="/kontikis"
-                    className="hover:bg-white/10 transition-colors"
-                    activeClassName="bg-white/20 font-medium"
-                  >
-                    <Flame className="h-5 w-5" />
-                    <span className="text-base">Kontikis</span>
-                  </SidebarNavItem>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <SidebarNavItem
+                      to="/kontikis"
+                      className="hover:bg-white/10 transition-colors"
+                      activeClassName="bg-white/20 font-medium"
+                    >
+                      <Flame className="h-5 w-5" />
+                      <span className="text-base">Kontikis</span>
+                    </SidebarNavItem>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {/* Settings & Help */}
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
-
               {/* <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <SidebarNavItem
@@ -227,11 +224,9 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
                   </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
       </SidebarContent>
     </Sidebar>
   );
