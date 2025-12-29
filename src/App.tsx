@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
+import Unauthorized from "./pages/Unauthorized";
 
 // Auth pages
 import Login from "./pages/auth/Login";
@@ -63,16 +64,21 @@ const App = () => (
                             <Routes>
                               {/* Auth routes - No layout */}
                               <Route path="/login" element={<Login />} />
+                              <Route
+                                path="/unauthorized"
+                                element={<Unauthorized />}
+                              />
 
+                              {/* CSI Manager Route - No Sidebar */}
                               <Route
                                 path="/csi"
                                 element={
                                   <ProtectedRoute>
-                                   <AppLayout >
                                     <RoleGate allow={[ROLES.CSI_MANAGER]}>
-                                      <CsiVerifiedRecords/>
+                                      <AppLayout>
+                                        <CsiVerifiedRecords />
+                                      </AppLayout>
                                     </RoleGate>
-                                    </AppLayout>
                                   </ProtectedRoute>
                                 }
                               />
@@ -92,10 +98,16 @@ const App = () => (
                                           path="users"
                                           element={<Users />}
                                         />
+                                        {/* SUPER ADMIN ONLY */}
                                         <Route
                                           path="admins"
-                                          element={<Admins />}
+                                          element={
+                                            <RoleGate allow={[ROLES.SUPER_ADMIN]}>
+                                              <Admins />
+                                            </RoleGate>
+                                          }
                                         />
+
                                         <Route
                                           path="sites"
                                           element={<Sites />}

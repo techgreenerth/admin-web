@@ -440,7 +440,7 @@ export default function Admins() {
                   <SelectItem value="SUPERVISOR">
                     Implementation Partner
                   </SelectItem>
-                  <SelectItem value="VERIFIER">Verifier</SelectItem>
+                  {/* <SelectItem value="VERIFIER">Verifier</SelectItem> */}
                   <SelectItem value="CSI_MANAGER">CSI Manager</SelectItem>
                 </SelectContent>
               </Select>
@@ -919,7 +919,7 @@ export default function Admins() {
                   <SelectItem value="SUPERVISOR">
                     Implementation Partner
                   </SelectItem>
-                  <SelectItem value="VERIFIER">Verifier</SelectItem>
+                  {/* <SelectItem value="VERIFIER">Verifier</SelectItem> */}
                   <SelectItem value="CSI_MANAGER">CSI Manager</SelectItem>
                 </SelectContent>
               </Select>

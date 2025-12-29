@@ -1,12 +1,14 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { ROLES } from "@/constrants/roles";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -21,6 +23,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Redirect CSI_MANAGER to /csi if trying to access any other route
+  if (user?.role === ROLES.CSI_MANAGER && location.pathname !== "/csi") {
+    return <Navigate to="/csi" replace />;
+  }
+
+  // Redirect SUPERVISOR from dashboard to biomass-sourcing
+  if (user?.role === ROLES.SUPERVISOR && location.pathname === "/") {
+    return <Navigate to="/biomass-sourcing" replace />;
   }
 
   return <>{children}</>;

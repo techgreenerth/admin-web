@@ -25,12 +25,16 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarNavItem } from "./SidebarNavItem";
 
-interface AppSidebarProps {
-  userRole?: "admin" | "partner" | "supervisor";
-}
+import { useProfile } from "@/contexts/ProfileContext";
+import { ROLES } from "@/constrants/roles";
 
-export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
-  const isSupervisor = userRole === "supervisor";
+export function AppSidebar() {
+  const { profile } = useProfile();
+
+  const role = profile?.role;
+
+  const isSupervisor = role === ROLES.SUPERVISOR;
+  const isSuperAdmin = role === ROLES.SUPER_ADMIN;
 
   return (
     <Sidebar collapsible="icon" className="border-r bg-[#295F58] text-white">
@@ -140,19 +144,23 @@ export function AppSidebar({ userRole = "admin" }: AppSidebarProps) {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <SidebarNavItem
-                      to="/admins"
-                      className="hover:bg-white/10 transition-colors"
-                      activeClassName="bg-white/20 font-medium"
-                    >
-                      <Shield className="h-5 w-5" />
-                      <span className="text-base">Admins</span>
-                    </SidebarNavItem>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {/* Admins — ONLY SUPER ADMIN */}
+                {isSuperAdmin && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <SidebarNavItem
+                        to="/admins"
+                        className="hover:bg-white/10 transition-colors"
+                        activeClassName="bg-white/20 font-medium"
+                      >
+                        <Shield className="h-5 w-5" />
+                        <span className="text-base">Admins</span>
+                      </SidebarNavItem>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
 
+                {/* Users — Admin + Super Admin */}
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <SidebarNavItem

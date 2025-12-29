@@ -21,6 +21,8 @@ import { toast } from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
 import { useBiocharProduction } from "@/contexts/biocharProductionContext";
 import { useSites } from "@/contexts/siteContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { ROLES } from "@/constrants/roles";
 import { userService, User as UserType } from "@/lib/api/user.service";
 import {
   biocharProductionService,
@@ -88,6 +90,10 @@ export default function BiocharProduction() {
   const { records, isLoading, verifyKontiki, rejectKontiki } =
     useBiocharProduction();
   const { sites: allSites, fetchSites } = useSites();
+  const { user } = useAuth();
+
+  // Check if current user is Supervisor
+  const isSupervisor = user?.role === ROLES.SUPERVISOR;
 
   const [users, setUsers] = useState<UserType[]>([]);
   const [isUsersLoading, setIsUsersLoading] = useState(false);
@@ -983,6 +989,7 @@ export default function BiocharProduction() {
                               handleVerifyKontiki(selectedRecord, kontiki)
                             }
                             className="bg-green-600 hover:bg-green-700 text-white"
+                            disabled={isSupervisor}
                           >
                             <CheckCircle className="h-4 w-4 mr-2" />
                             Accept
@@ -994,6 +1001,7 @@ export default function BiocharProduction() {
                               handleRejectKontiki(selectedRecord, kontiki)
                             }
                             className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors"
+                            disabled={isSupervisor}
                           >
                             <XCircle className="h-4 w-4 mr-2" />
                             Reject
