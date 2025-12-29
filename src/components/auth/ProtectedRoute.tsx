@@ -30,5 +30,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/csi" replace />;
   }
 
+  // Redirect SUPERVISOR from dashboard to biomass-sourcing
+  if (user?.role === ROLES.SUPERVISOR && location.pathname === "/") {
+    return <Navigate to="/biomass-sourcing" replace />;
+  }
+
   return <>{children}</>;
 }
