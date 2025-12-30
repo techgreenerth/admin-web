@@ -386,24 +386,47 @@ export default function BiocharProduction() {
   //     console.error("Error verifying kontiki:", error);
   //   }
   // };
+  // const handleConfirmVerify = async () => {
+  //   if (!selectedKontiki) return;
+
+  //   try {
+  //     setIsVerifying(true);
+  //     await verifyKontikiMutation.mutateAsync(selectedKontiki.id);
+
+  //     setIsVerifyDialogOpen(false);
+  //     setSelectedKontiki(null);
+  //     setIsViewDialogOpen(false);
+  //     refetch();
+  //     toast.success("Kontiki verified successfully!");
+  //   } catch (error) {
+  //     console.error("Error verifying kontiki:", error);
+  //     toast.error("Failed to verify kontiki");
+  //   } finally {
+  //     setIsVerifying(false);
+     
+  //   }
+  // };
+
   const handleConfirmVerify = async () => {
     if (!selectedKontiki) return;
 
     try {
       setIsVerifying(true);
+
       await verifyKontikiMutation.mutateAsync(selectedKontiki.id);
+
+      toast.success("Kontiki verified successfully!");
 
       setIsVerifyDialogOpen(false);
       setSelectedKontiki(null);
       setIsViewDialogOpen(false);
-      toast.success("Kontiki verified successfully!");
     } catch (error) {
-      console.error("Error verifying kontiki:", error);
       toast.error("Failed to verify kontiki");
     } finally {
       setIsVerifying(false);
     }
   };
+
 
   const handleConfirmReject = async () => {
     if (!selectedRecord || !selectedKontiki || !rejectionNote.trim()) return;
@@ -1204,6 +1227,7 @@ export default function BiocharProduction() {
       </Dialog>
 
       {/* Verify Dialog */}
+      {/* Verify Dialog */}
       <AlertDialog
         open={isVerifyDialogOpen}
         onOpenChange={setIsVerifyDialogOpen}
@@ -1219,9 +1243,13 @@ export default function BiocharProduction() {
               ? This action will mark this Kon-tiki as verified.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter>
+            {/* Cancel Button */}
             <AlertDialogCancel disabled={isVerifying}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+
+            {/* Confirm Button (DO NOT use AlertDialogAction for async) */}
+            <Button
               onClick={handleConfirmVerify}
               disabled={isVerifying}
               className="bg-green-600 hover:bg-green-700"
@@ -1237,7 +1265,7 @@ export default function BiocharProduction() {
                   Accept
                 </>
               )}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

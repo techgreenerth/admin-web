@@ -21,9 +21,8 @@ export function BiocharProductionProvider({ children }: { children: ReactNode })
   const { data, isLoading, refetch } = useQuery<BiocharProductionResponse>({
     queryKey: ["biocharProduction", "records"],
     queryFn: () => biocharProductionService.getAllRecords(1, 1000),
-    staleTime: 30000,
-    refetchOnWindowFocus: true,
-    refetchInterval: 60000,
+    refetchInterval: 30000, // Auto-refetch every 30 seconds for fresh data
+    refetchOnMount: "always", // Always refetch when component mounts
   });
 
   const records = data?.data ?? [];
@@ -58,8 +57,10 @@ export function useVerifyKontiki() {
   return useMutation({
     mutationFn: (kontikiRecordId: string) =>
       biocharProductionService.verifyKontiki(kontikiRecordId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["biocharProduction", "records"] });
+    onSuccess: async () => {
+      // Invalidate and immediately refetch to ensure fresh data
+      await queryClient.invalidateQueries({ queryKey: ["biocharProduction", "records"] });
+      await queryClient.refetchQueries({ queryKey: ["biocharProduction", "records"] });
     },
   });
 }
@@ -70,8 +71,10 @@ export function useRejectKontiki() {
   return useMutation({
     mutationFn: ({ kontikiRecordId, payload }: { kontikiRecordId: string; payload: RejectKontikiPayload }) =>
       biocharProductionService.rejectKontiki(kontikiRecordId, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["biocharProduction", "records"] });
+    onSuccess: async () => {
+      // Invalidate and immediately refetch to ensure fresh data
+      await queryClient.invalidateQueries({ queryKey: ["biocharProduction", "records"] });
+      await queryClient.refetchQueries({ queryKey: ["biocharProduction", "records"] });
     },
   });
 }
