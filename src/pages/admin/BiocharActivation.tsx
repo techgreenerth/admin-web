@@ -49,7 +49,7 @@ import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/uti
 
 export default function BiocharActivation() {
   // Use context hooks
-  const { records, isLoading } = useBiocharActivation();
+  const { records, isLoading, refetch } = useBiocharActivation();
   const { sites: allSites, fetchSites } = useSites();
 
   const [users, setUsers] = useState<UserType[]>([]);
@@ -92,6 +92,9 @@ export default function BiocharActivation() {
 
     loadUsers();
   }, []);
+    useEffect(() => {
+      refetch(); // force fresh data whenever page is opened
+    }, [refetch]);
 
   const getShiftNumber = (shiftName?: string) => {
     if (!shiftName) return 1;

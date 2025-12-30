@@ -1,22 +1,15 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import { createContext, useContext, ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { biocharActivationService } from "@/lib/api/biocharActivation.service";
 import {
   BiocharActivationRecord,
-  PaginationMeta,
+  BiocharActivationResponse,
 } from "@/types/biocharActivation.types";
 
 interface BiocharActivationContextType {
   records: BiocharActivationRecord[];
-  meta: PaginationMeta | null;
   isLoading: boolean;
-  fetchRecords: () => Promise<void>;
-  getRecordById: (id: string) => Promise<BiocharActivationRecord>;
+  refetch: () => void;
 }
 
 const BiocharActivationContext = createContext<
@@ -24,51 +17,22 @@ const BiocharActivationContext = createContext<
 >(undefined);
 
 export function BiocharActivationProvider({ children }: { children: ReactNode }) {
-  const [records, setRecords] = useState<BiocharActivationRecord[]>([]);
-  const [meta, setMeta] = useState<PaginationMeta | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading, refetch } = useQuery<BiocharActivationResponse>({
+    queryKey: ["biocharActivation", "records"],
+    queryFn: () => biocharActivationService.getAllRecords(1, 1000),
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 60000,
+  });
 
-  useEffect(() => {
-    const initRecords = async () => {
-      await fetchRecords();
-    };
-
-    initRecords();
-  }, []);
-
-  // Fetch all biochar activation records
-  const fetchRecords = async () => {
-    setIsLoading(true);
-    try {
-      const response = await biocharActivationService.getAllRecords();
-      setRecords(response.data);
-      setMeta(response.meta);
-    } catch (error) {
-      console.error("Error fetching biochar activation records:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch record by ID
-  const getRecordById = async (id: string): Promise<BiocharActivationRecord> => {
-    setIsLoading(true);
-    try {
-      const record = await biocharActivationService.getRecordById(id);
-      return record;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const records = data?.data ?? [];
 
   return (
     <BiocharActivationContext.Provider
       value={{
         records,
-        meta,
         isLoading,
-        fetchRecords,
-        getRecordById,
+        refetch,
       }}
     >
       {children}
@@ -84,4 +48,12 @@ export function useBiocharActivation() {
     );
   }
   return context;
+}
+
+export function useBiocharActivationById(id: string) {
+  return useQuery<BiocharActivationRecord>({
+    queryKey: ["biocharActivation", "record", id],
+    queryFn: () => biocharActivationService.getRecordById(id),
+    enabled: !!id,
+  });
 }

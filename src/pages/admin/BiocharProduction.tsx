@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
-import { useBiocharProduction } from "@/contexts/biocharProductionContext";
+import { useBiocharProduction, useVerifyKontiki, useRejectKontiki } from "@/contexts/biocharProductionContext";
 import { useSites } from "@/contexts/siteContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES } from "@/constrants/roles";
@@ -87,10 +87,13 @@ import {
 
 export default function BiocharProduction() {
   // Use context hooks
-  const { records, isLoading, verifyKontiki, rejectKontiki } =
-    useBiocharProduction();
+  const { records, isLoading, refetch } = useBiocharProduction();
   const { sites: allSites, fetchSites } = useSites();
   const { user } = useAuth();
+
+  // Use mutation hooks
+  const verifyKontikiMutation = useVerifyKontiki();
+  const rejectKontikiMutation = useRejectKontiki();
 
   // Check if current user is Supervisor
   const isSupervisor = user?.role === ROLES.SUPERVISOR;
@@ -134,6 +137,8 @@ export default function BiocharProduction() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Note: No need to manually refetch here - the context has refetchOnMount: "always"
+
   useEffect(() => {
     const loadUsers = async () => {
       try {
@@ -153,7 +158,10 @@ export default function BiocharProduction() {
 
     loadUsers();
   }, []);
-
+    useEffect(() => {
+      refetch(); // force fresh data whenever page is opened
+    }, [refetch]);
+    
   const getStatusColor = (status: string) => {
     switch (status) {
       case "DRAFT":
@@ -380,37 +388,65 @@ export default function BiocharProduction() {
   //     console.error("Error verifying kontiki:", error);
   //   }
   // };
+  // const handleConfirmVerify = async () => {
+  //   if (!selectedKontiki) return;
+
+  //   try {
+  //     setIsVerifying(true);
+  //     await verifyKontikiMutation.mutateAsync(selectedKontiki.id);
+
+  //     setIsVerifyDialogOpen(false);
+  //     setSelectedKontiki(null);
+  //     setIsViewDialogOpen(false);
+  //     refetch();
+  //     toast.success("Kontiki verified successfully!");
+  //   } catch (error) {
+  //     console.error("Error verifying kontiki:", error);
+  //     toast.error("Failed to verify kontiki");
+  //   } finally {
+  //     setIsVerifying(false);
+     
+  //   }
+  // };
+
   const handleConfirmVerify = async () => {
     if (!selectedKontiki) return;
 
     try {
       setIsVerifying(true);
-      await verifyKontiki(selectedKontiki.id);
+
+      await verifyKontikiMutation.mutateAsync(selectedKontiki.id);
+
+      toast.success("Kontiki verified successfully!");
 
       setIsVerifyDialogOpen(false);
       setSelectedKontiki(null);
       setIsViewDialogOpen(false);
     } catch (error) {
-      console.error("Error verifying kontiki:", error);
+      toast.error("Failed to verify kontiki");
     } finally {
       setIsVerifying(false);
     }
   };
+
 
   const handleConfirmReject = async () => {
     if (!selectedRecord || !selectedKontiki || !rejectionNote.trim()) return;
 
     try {
       setIsRejecting(true);
-      await rejectKontiki(selectedKontiki.id, {
-        rejectionNote,
+      await rejectKontikiMutation.mutateAsync({
+        kontikiRecordId: selectedKontiki.id,
+        payload: { rejectionNote },
       });
       setIsRejectDialogOpen(false);
       setSelectedKontiki(null);
       setRejectionNote("");
-      setIsViewDialogOpen(false); // Close the view dialog to refresh
+      setIsViewDialogOpen(false);
+      toast.success("Kontiki rejected successfully!");
     } catch (error) {
       console.error("Error rejecting kontiki:", error);
+      toast.error("Failed to reject kontiki");
     } finally {
       setIsRejecting(false);
     }
@@ -428,7 +464,7 @@ export default function BiocharProduction() {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
       }),
-
+      
     onSuccess: (blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -467,6 +503,15 @@ export default function BiocharProduction() {
 
     return total + recordTotal;
   }, 0);
+
+  // Debug: Log to console to trace data updates
+  console.log('[BiocharProduction] Data Update:', {
+    totalRecords: records.length,
+    filteredRecords: filteredRecords.length,
+    totalBatches,
+    totalBiocharProduced,
+    timestamp: new Date().toISOString()
+  });
 
   if (isUsersLoading || !records) {
     return (
@@ -1193,6 +1238,7 @@ export default function BiocharProduction() {
       </Dialog>
 
       {/* Verify Dialog */}
+      {/* Verify Dialog */}
       <AlertDialog
         open={isVerifyDialogOpen}
         onOpenChange={setIsVerifyDialogOpen}
@@ -1208,9 +1254,13 @@ export default function BiocharProduction() {
               ? This action will mark this Kon-tiki as verified.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter>
+            {/* Cancel Button */}
             <AlertDialogCancel disabled={isVerifying}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+
+            {/* Confirm Button (DO NOT use AlertDialogAction for async) */}
+            <Button
               onClick={handleConfirmVerify}
               disabled={isVerifying}
               className="bg-green-600 hover:bg-green-700"
@@ -1226,7 +1276,7 @@ export default function BiocharProduction() {
                   Accept
                 </>
               )}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

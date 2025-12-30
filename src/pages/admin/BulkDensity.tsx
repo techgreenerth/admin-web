@@ -54,7 +54,7 @@ import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/uti
 
 export default function BulkDensity() {
   const location = useLocation();
-  const { records, isLoading } = useBulkDensity();
+  const { records, isLoading, refetch } = useBulkDensity();
   const { sites: allSites, fetchSites } = useSites();
 
   const [users, setUsers] = useState<UserType[]>([]);
@@ -97,6 +97,10 @@ export default function BulkDensity() {
 
     loadUsers();
   }, []);
+
+    useEffect(() => {
+      refetch(); // force fresh data whenever page is opened
+    }, [refetch]);
 
   // Filter records (client-side filtering like activation page)
   const filteredRecords = records.filter((record) => {

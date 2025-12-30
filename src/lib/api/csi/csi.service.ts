@@ -115,7 +115,10 @@ export const CsiService = {
     endDate?: string;
   }): Promise<Blob> {
     const response = await apiClient.get("/v1/csi/export/csv",
-      { params, });
+      {
+        params,
+        responseType: 'blob'
+      });
 
 
     const blob = new Blob([response.data], {

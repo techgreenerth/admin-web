@@ -55,6 +55,7 @@ export const biocharSamplingService = {
       "/v1/biochar-sampling/export/csv",
       {
         params,
+        responseType: 'blob'
       }
     );
 

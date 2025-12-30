@@ -43,7 +43,16 @@ import { RoleGate } from "./pages/auth/RoleGate";
 import CsiVerifiedRecords from "./pages/Csi/CsiVerifiedRecords";
 
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      staleTime: 0, // Always consider data stale by default
+      gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
