@@ -136,9 +136,8 @@ export default function BiocharProduction() {
     fetchSites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-    useEffect(() => {
-      refetch(); // force fresh data whenever page is opened
-    }, [refetch]);
+
+  // Note: No need to manually refetch here - the context has refetchOnMount: "always"
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -159,7 +158,10 @@ export default function BiocharProduction() {
 
     loadUsers();
   }, []);
-
+    useEffect(() => {
+      refetch(); // force fresh data whenever page is opened
+    }, [refetch]);
+    
   const getStatusColor = (status: string) => {
     switch (status) {
       case "DRAFT":
@@ -501,6 +503,15 @@ export default function BiocharProduction() {
 
     return total + recordTotal;
   }, 0);
+
+  // Debug: Log to console to trace data updates
+  console.log('[BiocharProduction] Data Update:', {
+    totalRecords: records.length,
+    filteredRecords: filteredRecords.length,
+    totalBatches,
+    totalBiocharProduced,
+    timestamp: new Date().toISOString()
+  });
 
   if (isUsersLoading || !records) {
     return (
