@@ -1,22 +1,15 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import { createContext, useContext, ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { biomassSourcingService } from "@/lib/api/biomassSourcing.service";
 import {
   BiomassSourcingRecord,
-  PaginationMeta,
+  BiomassSourcingResponse,
 } from "@/types/biomassSourcing.types";
 
 interface BiomassSourcingContextType {
   records: BiomassSourcingRecord[];
-  meta: PaginationMeta | null;
   isLoading: boolean;
-  fetchRecords: () => Promise<void>;
-  getRecordById: (id: string) => Promise<BiomassSourcingRecord>;
+  refetch: () => void;
 }
 
 const BiomassSourcingContext = createContext<
@@ -24,51 +17,22 @@ const BiomassSourcingContext = createContext<
 >(undefined);
 
 export function BiomassSourcingProvider({ children }: { children: ReactNode }) {
-  const [records, setRecords] = useState<BiomassSourcingRecord[]>([]);
-  const [meta, setMeta] = useState<PaginationMeta | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading, refetch } = useQuery<BiomassSourcingResponse>({
+    queryKey: ["biomassSourcing", "records"],
+    queryFn: () => biomassSourcingService.getAllRecords(1, 1000),
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 60000,
+  });
 
-  useEffect(() => {
-    const initRecords = async () => {
-      await fetchRecords();
-    };
-
-    initRecords();
-  }, []);
-
-  // Fetch all biomass sourcing records
-  const fetchRecords = async () => {
-    setIsLoading(true);
-    try {
-      const response = await biomassSourcingService.getAllRecords();
-      setRecords(response.data);
-      setMeta(response.meta);
-    } catch (error) {
-      console.error("Error fetching biomass sourcing records:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch record by ID
-  const getRecordById = async (id: string): Promise<BiomassSourcingRecord> => {
-    setIsLoading(true);
-    try {
-      const record = await biomassSourcingService.getRecordById(id);
-      return record;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const records = data?.data ?? [];
 
   return (
     <BiomassSourcingContext.Provider
       value={{
         records,
-        meta,
         isLoading,
-        fetchRecords,
-        getRecordById,
+        refetch,
       }}
     >
       {children}
@@ -84,4 +48,12 @@ export function useBiomassSourcing() {
     );
   }
   return context;
+}
+
+export function useBiomassSourcingById(id: string) {
+  return useQuery<BiomassSourcingRecord>({
+    queryKey: ["biomassSourcing", "record", id],
+    queryFn: () => biomassSourcingService.getRecordById(id),
+    enabled: !!id,
+  });
 }

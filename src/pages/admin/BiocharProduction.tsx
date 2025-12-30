@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
-import { useBiocharProduction } from "@/contexts/biocharProductionContext";
+import { useBiocharProduction, useVerifyKontiki, useRejectKontiki } from "@/contexts/biocharProductionContext";
 import { useSites } from "@/contexts/siteContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES } from "@/constrants/roles";
@@ -87,10 +87,13 @@ import {
 
 export default function BiocharProduction() {
   // Use context hooks
-  const { records, isLoading, verifyKontiki, rejectKontiki } =
-    useBiocharProduction();
+  const { records, isLoading, refetch } = useBiocharProduction();
   const { sites: allSites, fetchSites } = useSites();
   const { user } = useAuth();
+
+  // Use mutation hooks
+  const verifyKontikiMutation = useVerifyKontiki();
+  const rejectKontikiMutation = useRejectKontiki();
 
   // Check if current user is Supervisor
   const isSupervisor = user?.role === ROLES.SUPERVISOR;
@@ -133,6 +136,9 @@ export default function BiocharProduction() {
     fetchSites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+    useEffect(() => {
+      refetch(); // force fresh data whenever page is opened
+    }, [refetch]);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -385,13 +391,15 @@ export default function BiocharProduction() {
 
     try {
       setIsVerifying(true);
-      await verifyKontiki(selectedKontiki.id);
+      await verifyKontikiMutation.mutateAsync(selectedKontiki.id);
 
       setIsVerifyDialogOpen(false);
       setSelectedKontiki(null);
       setIsViewDialogOpen(false);
+      toast.success("Kontiki verified successfully!");
     } catch (error) {
       console.error("Error verifying kontiki:", error);
+      toast.error("Failed to verify kontiki");
     } finally {
       setIsVerifying(false);
     }
@@ -402,15 +410,18 @@ export default function BiocharProduction() {
 
     try {
       setIsRejecting(true);
-      await rejectKontiki(selectedKontiki.id, {
-        rejectionNote,
+      await rejectKontikiMutation.mutateAsync({
+        kontikiRecordId: selectedKontiki.id,
+        payload: { rejectionNote },
       });
       setIsRejectDialogOpen(false);
       setSelectedKontiki(null);
       setRejectionNote("");
-      setIsViewDialogOpen(false); // Close the view dialog to refresh
+      setIsViewDialogOpen(false);
+      toast.success("Kontiki rejected successfully!");
     } catch (error) {
       console.error("Error rejecting kontiki:", error);
+      toast.error("Failed to reject kontiki");
     } finally {
       setIsRejecting(false);
     }
@@ -428,7 +439,7 @@ export default function BiocharProduction() {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
       }),
-
+      
     onSuccess: (blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");

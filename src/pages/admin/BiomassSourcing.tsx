@@ -51,7 +51,7 @@ import { normalizeDateForSearch, toSearchString } from "@/lib/utils/utils";
 
 export default function BiomassSourcing() {
   // Use context hooks
-  const { records, isLoading } = useBiomassSourcing();
+  const { records, isLoading, refetch } = useBiomassSourcing();
   const { sites: allSites, fetchSites } = useSites();
 
   const [users, setUsers] = useState<UserType[]>([]);
@@ -79,7 +79,9 @@ export default function BiomassSourcing() {
     fetchSites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
+ useEffect(() => {
+   refetch(); // force fresh data whenever page is opened
+ }, [refetch]);
   useEffect(() => {
     const loadUsers = async () => {
       try {

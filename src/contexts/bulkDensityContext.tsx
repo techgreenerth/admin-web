@@ -1,149 +1,42 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import { createContext, useContext, ReactNode } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { bulkDensityService } from "@/lib/api/bulkDensity.service";
 import {
   BulkDensityRecord,
-  PaginationMeta,
+  BulkDensityResponse,
   VerifyBulkDensityPayload,
   RejectBulkDensityPayload,
 } from "@/types/bulkDensity.types";
 
 interface BulkDensityContextType {
   records: BulkDensityRecord[];
-  meta: PaginationMeta | null;
   isLoading: boolean;
-  fetchRecords: (params?: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    siteId?: string;
-    userId?: string;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-  }) => Promise<void>;
-  getRecordById: (id: string) => Promise<BulkDensityRecord>;
-  verifyRecord: (payload: VerifyBulkDensityPayload) => Promise<void>;
-  rejectRecord: (payload: RejectBulkDensityPayload) => Promise<void>;
-  refreshRecords: () => Promise<void>;
+  refetch: () => void;
 }
 
-const BulkDensityContext = createContext<
-  BulkDensityContextType | undefined
->(undefined);
+const BulkDensityContext = createContext<BulkDensityContextType | undefined>(
+  undefined
+);
 
 export function BulkDensityProvider({ children }: { children: ReactNode }) {
-  const [records, setRecords] = useState<BulkDensityRecord[]>([]);
-  const [meta, setMeta] = useState<PaginationMeta | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [lastFetchParams, setLastFetchParams] = useState<{
-    page?: number;
-    limit?: number;
-    search?: string;
-    siteId?: string;
-    userId?: string;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-  }>({});
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const initRecords = async () => {
-      await fetchRecords();
-    };
+  // Fetch all bulk density records with TanStack Query
+  const { data, isLoading, refetch } = useQuery<BulkDensityResponse>({
+    queryKey: ["bulkDensity", "records"],
+    queryFn: () => bulkDensityService.getAllRecords(1, 1000),
+    refetchInterval: 30000, // Auto-refetch every 30 seconds for fresh data
+    refetchOnMount: "always", // Always refetch when component mounts
+  });
 
-    initRecords();
-  }, []);
-
-  // Fetch all bulk density records with optional filters
-  const fetchRecords = async (params?: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    siteId?: string;
-    userId?: string;
-    status?: string;
-    startDate?: string;
-    endDate?: string;
-  }) => {
-    setIsLoading(true);
-    try {
-      // Store params for refresh functionality
-      if (params) {
-        setLastFetchParams(params);
-      }
-      
-      const response = await bulkDensityService.getAllRecords(
-        params?.page,
-        params?.limit,
-        params
-      );
-      setRecords(response.data);
-      setMeta(response.meta);
-    } catch (error) {
-      console.error("Error fetching bulk density records:", error);
-      // Set empty state on error
-      setRecords([]);
-      setMeta(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch record by ID
-  const getRecordById = async (id: string): Promise<BulkDensityRecord> => {
-    setIsLoading(true);
-    try {
-      const record = await bulkDensityService.getRecordById(id);
-      return record;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Verify record
-  const verifyRecord = async (payload: VerifyBulkDensityPayload) => {
-    try {
-      setIsLoading(true);
-      await bulkDensityService.verifyRecord(payload);
-      await refreshRecords(); // Refresh the list after verification
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Reject record
-  const rejectRecord = async (payload: RejectBulkDensityPayload) => {
-    try {
-      setIsLoading(true);
-      await bulkDensityService.rejectRecord(payload);
-      await refreshRecords(); // Refresh the list after rejection
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Refresh records using the last fetch parameters
-  const refreshRecords = async () => {
-    await fetchRecords(lastFetchParams);
-  };
+  const records = data?.data ?? [];
 
   return (
     <BulkDensityContext.Provider
       value={{
         records,
-        meta,
         isLoading,
-        fetchRecords,
-        getRecordById,
-        verifyRecord,
-        rejectRecord,
-        refreshRecords,
+        refetch,
       }}
     >
       {children}
@@ -159,4 +52,39 @@ export function useBulkDensity() {
     );
   }
   return context;
+}
+
+// Custom hooks for mutations
+export function useVerifyBulkDensity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: VerifyBulkDensityPayload) =>
+      bulkDensityService.verifyRecord(payload),
+    onSuccess: () => {
+      // Invalidate and refetch records after verification
+      queryClient.invalidateQueries({ queryKey: ["bulkDensity", "records"] });
+    },
+  });
+}
+
+export function useRejectBulkDensity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: RejectBulkDensityPayload) =>
+      bulkDensityService.rejectRecord(payload),
+    onSuccess: () => {
+      // Invalidate and refetch records after rejection
+      queryClient.invalidateQueries({ queryKey: ["bulkDensity", "records"] });
+    },
+  });
+}
+
+export function useBulkDensityById(id: string) {
+  return useQuery<BulkDensityRecord>({
+    queryKey: ["bulkDensity", "record", id],
+    queryFn: () => bulkDensityService.getRecordById(id),
+    enabled: !!id, // Only run query if id is provided
+  });
 }

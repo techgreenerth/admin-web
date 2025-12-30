@@ -47,7 +47,7 @@ import { useMutation } from "@tanstack/react-query";
 import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
 
 export default function BiocharSampling() {
-  const { records, isLoading } = useBiocharSampling();
+  const { records, isLoading, refetch } = useBiocharSampling();
   const { sites: allSites, fetchSites } = useSites();
 
   const [users, setUsers] = useState<UserType[]>([]);
@@ -94,6 +94,10 @@ export default function BiocharSampling() {
 
     loadUsers();
   }, []);
+
+  useEffect(() => {
+    refetch(); // force fresh data whenever page is opened
+  }, [refetch]);
 
   const getKontikiRecords = (record: BiocharSamplingRecordType) =>
     record.kontikiRecords ?? [];
@@ -238,16 +242,16 @@ export default function BiocharSampling() {
     },
   });
 
-    if (isUsersLoading || !records) {
-      return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
-            <p className="text-muted-foreground text-sm">Loading details...</p>
-          </div>
+  if (isUsersLoading || !records) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading sampling records...</p>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

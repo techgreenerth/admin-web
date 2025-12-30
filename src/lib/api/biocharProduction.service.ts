@@ -74,6 +74,7 @@ export const biocharProductionService = {
       "/v1/biochar-production/export/csv",
       {
         params,
+        responseType: 'blob'
       }
     );
 

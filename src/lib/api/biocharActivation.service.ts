@@ -43,6 +43,7 @@ export const biocharActivationService = {
       "/v1/biochar-activation/export/csv",
       {
         params,
+        responseType: 'blob'
       }
     );
 
