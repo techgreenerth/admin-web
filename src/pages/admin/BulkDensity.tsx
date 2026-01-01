@@ -50,7 +50,6 @@ import { useBulkDensity } from "@/contexts/bulkDensityContext";
 import { BulkDensityRecord as BulkDensityRecordType } from "@/types/bulkDensity.types";
 import { useMutation } from "@tanstack/react-query";
 import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
-// import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BulkDensity() {
   const location = useLocation();
@@ -178,14 +177,31 @@ export default function BulkDensity() {
     Blob,
     Error
   >({
-    mutationFn: () =>
-      bulkDensityService.exportToCSV({
+    mutationFn: () => {
+      // Format dates properly for API - endDate should include the entire day
+      let formattedStartDate = startDate || undefined;
+      let formattedEndDate = endDate || undefined;
+
+      // If endDate exists, add end of day time to include all records from that day
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        formattedEndDate = end.toISOString();
+      }
+
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        formattedStartDate = start.toISOString();
+      }
+
+      return bulkDensityService.exportToCSV({
         userId: userFilter !== "all" ? userFilter : undefined,
         siteId: siteFilter !== "all" ? siteFilter : undefined,
-        // status: statusFilter !== "all" ? (statusFilter as any) : undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
-      }),
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      });
+    },
 
     onSuccess: (blob) => {
       const url = window.URL.createObjectURL(blob);

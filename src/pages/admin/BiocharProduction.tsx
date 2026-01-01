@@ -83,7 +83,9 @@ import {
   parseDDMMYYYY,
   toSearchString,
 } from "@/lib/utils/utils";
-// import { formatDate, formatTime } from "@/lib/utils/date";
+
+import { formatDate } from "@/lib/utils/date";
+
 
 export default function BiocharProduction() {
   // Use context hooks
@@ -139,6 +141,10 @@ export default function BiocharProduction() {
 
   // Note: No need to manually refetch here - the context has refetchOnMount: "always"
 
+    useEffect(() => {
+      refetch(); // force fresh data whenever page is opened
+    }, [refetch]);
+    
   useEffect(() => {
     const loadUsers = async () => {
       try {
@@ -461,10 +467,10 @@ export default function BiocharProduction() {
         userId: userFilter !== "all" ? userFilter : undefined,
         siteId: siteFilter !== "all" ? siteFilter : undefined,
         status: statusFilter !== "all" ? (statusFilter as any) : undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        startDate: startDate ? formatDate(startDate) : undefined,
+        endDate: endDate ? formatDate(endDate) : undefined,
       }),
-      
+
     onSuccess: (blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
