@@ -203,9 +203,18 @@ export default function BiomassSourcing() {
 
   // Calculate statistics
   const totalTrips = filteredRecords.length;
-  const totalFarmAreaAcres = filteredRecords.reduce((sum, record) => {
-    const acres = parseFloat(record.farmAreaAcres || "0");
-    return sum + (isNaN(acres) ? 0 : acres);
+  const totalDistanceTravelled = filteredRecords.reduce((sum, record) => {
+    const siteLat = Number(record.site?.latitude);
+    const siteLng = Number(record.site?.longitude);
+    const captureLat = Number(record.latitude);
+    const captureLng = Number(record.longitude);
+
+    const distanceKm =
+      siteLat && siteLng && captureLat && captureLng
+        ? calculateDistanceKm(siteLat, siteLng, captureLat, captureLng)
+        : 0;
+
+    return sum + (distanceKm < 0 ? 0 : distanceKm);
   }, 0);
   const uniqueFarmers = new Set(
     filteredRecords.map((r) => r.farmerMobile || r.farmerName)
@@ -255,14 +264,14 @@ export default function BiomassSourcing() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Total Farm Area
+                  Total Distance Travelled
                 </p>
                 <h3 className="text-3xl font-bold text-[#295F58] mt-2">
-                  {totalFarmAreaAcres.toFixed(1)} acres
+                  {totalDistanceTravelled.toFixed(2)} km
                 </h3>
               </div>
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#E1EFEE]">
-                <Package className="h-6 w-6 text-[#295F58]" />
+                <MapPin className="h-6 w-6 text-[#295F58]" />
               </div>
             </div>
           </CardContent>
@@ -411,7 +420,6 @@ export default function BiomassSourcing() {
                     <TableHead className="whitespace-nowrap">
                       Distance Travelled
                     </TableHead>
-                    <TableHead className="whitespace-nowrap">Media</TableHead>
                     <TableHead className="text-right whitespace-nowrap">
                       Actions
                     </TableHead>
@@ -465,8 +473,8 @@ export default function BiomassSourcing() {
                                   Trip {record.tripNumber}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  {formatDate(record.recordDate)}{" "}
-                                  {formatTime(record.recordTime)}
+                                  {(record.recordDate)}{" "}
+                                  {(record.recordTime)}
                                 </div>
                               </div>
                             </div>
@@ -515,17 +523,6 @@ export default function BiomassSourcing() {
                                 —
                               </span>
                             )}
-                          </TableCell>
-
-                          <TableCell className="whitespace-nowrap">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              {record.tractorPhoto ? (
-                                <Package className="h-4 w-4" />
-                              ) : null}
-                              <span>
-                                {record.tractorPhoto ? "Tractor photo" : "—"}
-                              </span>
-                            </div>
                           </TableCell>
                           <TableCell className="text-right whitespace-nowrap">
                             <Button
@@ -737,8 +734,8 @@ export default function BiomassSourcing() {
                     Record Date & Time
                   </Label>
                   <p className="font-medium">
-                    {formatDate(selectedRecord.recordDate)}{" "}
-                    {formatTime(selectedRecord.recordTime)}
+                    {(selectedRecord.recordDate)}{" "}
+                    {(selectedRecord.recordTime)}
                   </p>
                 </div>
                 <div className="space-y-1">

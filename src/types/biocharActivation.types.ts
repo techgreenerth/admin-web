@@ -61,6 +61,7 @@ export interface BiocharActivationRecord {
     shiftName: string;
     startTime?: string;
     endTime?: string;
+    shiftNumber?: string;
   };
 
   kontikiRecords: KontikiActivationData[];

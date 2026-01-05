@@ -52,6 +52,13 @@ export interface BiocharSamplingRecord {
 
   user: SamplingUser;
   site: SamplingSite;
+  shift?: {
+    id: string;
+    shiftName: string;
+    startTime?: string;
+    endTime?: string;
+    shiftNumber?: string;
+  };
 
   kontikiRecords: KontikiSamplingRecord[];
 }
