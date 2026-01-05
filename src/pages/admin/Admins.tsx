@@ -137,8 +137,8 @@ export default function Admins() {
         return "bg-blue-100 text-blue-800";
       case "SUPERVISOR":
         return "bg-cyan-100 text-cyan-800";
-      case "VERIFIER":
-        return "bg-indigo-100 text-indigo-800";
+      // case "VERIFIER":
+      //   return "bg-indigo-100 text-indigo-800";
       case "CSI_MANAGER":
         return "bg-indigo-100 text-green-800";
       default:
@@ -154,8 +154,8 @@ export default function Admins() {
         return "Admin";
       case "SUPERVISOR":
         return "Implementation Partner";
-      case "VERIFIER":
-        return "Verifier";
+      // case "VERIFIER":
+      //   return "Verifier";
       case "CSI_MANAGER":
         return "CSI Manager";
       default:
@@ -753,7 +753,7 @@ export default function Admins() {
                   <SelectItem value="SUPERVISOR">
                     Implementation Partner
                   </SelectItem>
-                  <SelectItem value="VERIFIER">Verifier</SelectItem>
+                  {/* <SelectItem value="VERIFIER">Verifier</SelectItem> */}
                   <SelectItem value="CSI_MANAGER">CSI Manager</SelectItem>
                 </SelectContent>
               </Select>

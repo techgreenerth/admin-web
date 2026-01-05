@@ -633,9 +633,13 @@ export default function BiocharSampling() {
                   <Label className="text-muted-foreground text-xs">Site</Label>
                   <div className="text-sm font-medium">
                     {selectedRecord.site?.siteCode ?? "—"} -{" "}
-                    {selectedRecord.site?.siteName ?? "—"}
+                    {selectedRecord.site?.siteName ?? "—"} 
+                    <div className="text-sm font-medium">
+                      Shift_No. {selectedRecord.shift?.shiftNumber ?? "—"}
+                    </div>
                   </div>
                 </div>
+
                 <div className="space-y-1">
                   <Label className="text-muted-foreground text-xs">User</Label>
                   <div className="text-sm font-medium">

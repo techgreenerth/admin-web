@@ -766,11 +766,18 @@ export default function BiocharProduction() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          className={getStatusColor(getActualStatus(record))}
-                        >
-                          {getActualStatus(record).replace("_", " ")}
-                        </Badge>
+                        <div className="space-y-1">
+                          <Badge
+                            className={getStatusColor(getActualStatus(record))}
+                          >
+                            {getActualStatus(record).replace("_", " ")}
+                          </Badge>
+                          {getStatusSubtext(record) && (
+                            <div className="text-xs text-muted-foreground">
+                              {getStatusSubtext(record)}
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button

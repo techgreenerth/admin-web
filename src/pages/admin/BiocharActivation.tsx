@@ -371,7 +371,7 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                   <TableHead>Record Info</TableHead>
                   <TableHead>Site & User</TableHead>
                   <TableHead>Shift </TableHead>
-                  <TableHead>Media</TableHead>
+
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -427,21 +427,12 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                           >
                             {record.shift?.shiftName ?? "Shift"}
                           </Badge>
-                          {/* <div className="text-sm text-muted-foreground">
-                            {record.shift?.startTime}
-                          </div> */}
+                          <div className="text-sm text-muted-foreground">
+                            Shift_No. {record.shift?.shiftNumber}
+                          </div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {hasAnyTractorPhoto(record) && (
-                            <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                          )}
-                          {hasAnyMixingVideo(record) && (
-                            <Video className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </div>
-                      </TableCell>
+
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"
@@ -673,8 +664,10 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                     Shift Name
                   </Label>
                   <div className="text-sm font-medium">
-                    
                     {selectedRecord.shift?.shiftName ?? "—"}
+                  </div>
+                  <div className="text-sm font-medium">
+                    Shift_No. {selectedRecord.shift?.shiftNumber ?? "—"}
                   </div>
                 </div>
                 <div className="space-y-1">

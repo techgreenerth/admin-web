@@ -51,8 +51,8 @@ export function AppSidebar() {
                       className="hover:bg-white/10 transition-colors"
                       activeClassName="bg-white/20 font-medium"
                     >
-                      <Home className="h-5 w-5" />
-                      <span className="text-base">Dashboard</span>
+                      <Home className="h-6 w-6" />
+                      <span className="text-lg">Dashboard</span>
                     </SidebarNavItem>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -63,7 +63,7 @@ export function AppSidebar() {
 
         {/* Production Modules */}
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 text-xs uppercase text-white/70">
+          <SidebarGroupLabel className="px-4 text-sm uppercase text-white/70">
             Production Modules
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -75,8 +75,8 @@ export function AppSidebar() {
                     className="hover:bg-white/10 transition-colors"
                     activeClassName="bg-white/20 font-medium"
                   >
-                    <Leaf className="h-5 w-5" />
-                    <span className="text-base">Biomass Sourcing</span>
+                    <Leaf className="h-8 w-8" />
+                    <span className="text-lg">Biomass Sourcing</span>
                   </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -88,8 +88,8 @@ export function AppSidebar() {
                     className="hover:bg-white/10 transition-colors"
                     activeClassName="bg-white/20 font-medium"
                   >
-                    <Factory className="h-5 w-5" />
-                    <span className="text-base">Biochar Production</span>
+                    <Factory className="h-8 w-8" />
+                    <span className="text-lg">Biochar Production</span>
                   </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -101,8 +101,8 @@ export function AppSidebar() {
                     className="hover:bg-white/10 transition-colors"
                     activeClassName="bg-white/20 font-medium"
                   >
-                    <FlaskConical className="h-5 w-5" />
-                    <span className="text-base">Biochar Activation</span>
+                    <FlaskConical className="h-8 w-8" />
+                    <span className="text-lg">Biochar Activation</span>
                   </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -114,8 +114,8 @@ export function AppSidebar() {
                     className="hover:bg-white/10 transition-colors"
                     activeClassName="bg-white/20 font-medium"
                   >
-                    <TestTube className="h-5 w-5" />
-                    <span className="text-base">Biochar Sampling</span>
+                    <TestTube className="h-8 w-8" />
+                    <span className="text-lg">Biochar Sampling</span>
                   </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -127,8 +127,8 @@ export function AppSidebar() {
                     className="hover:bg-white/10 transition-colors"
                     activeClassName="bg-white/20 font-medium"
                   >
-                    <Weight className="h-5 w-5" />
-                    <span className="text-base">Bulk Density</span>
+                    <Weight className="h-8 w-8" />
+                    <span className="text-lg">Bulk Density</span>
                   </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -139,7 +139,7 @@ export function AppSidebar() {
         {/* Management - Hide for Implementation Partner */}
         {!isSupervisor && (
           <SidebarGroup>
-            <SidebarGroupLabel className="px-4 text-xs uppercase text-white/70">
+            <SidebarGroupLabel className="px-4 text-sm uppercase text-white/70">
               Management
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -153,8 +153,8 @@ export function AppSidebar() {
                         className="hover:bg-white/10 transition-colors"
                         activeClassName="bg-white/20 font-medium"
                       >
-                        <Shield className="h-5 w-5" />
-                        <span className="text-base">Admins</span>
+                        <Shield className="h-8 w-8" />
+                        <span className="text-lg">Admins</span>
                       </SidebarNavItem>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -168,8 +168,8 @@ export function AppSidebar() {
                       className="hover:bg-white/10 transition-colors"
                       activeClassName="bg-white/20 font-medium"
                     >
-                      <Users className="h-5 w-5" />
-                      <span className="text-base">Users</span>
+                      <Users className="h-8 w-8" />
+                      <span className="text-lg">Users</span>
                     </SidebarNavItem>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -181,8 +181,8 @@ export function AppSidebar() {
                       className="hover:bg-white/10 transition-colors"
                       activeClassName="bg-white/20 font-medium"
                     >
-                      <MapPin className="h-5 w-5" />
-                      <span className="text-base">Artisan Pro Sites</span>
+                      <MapPin className="h-8 w-8" />
+                      <span className="text-lg">Artisan Pro Sites</span>
                     </SidebarNavItem>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -194,8 +194,8 @@ export function AppSidebar() {
                       className="hover:bg-white/10 transition-colors"
                       activeClassName="bg-white/20 font-medium"
                     >
-                      <Flame className="h-5 w-5" />
-                      <span className="text-base">Kontikis</span>
+                      <Flame className="h-8 w-8" />
+                      <span className="text-lg">Kontikis</span>
                     </SidebarNavItem>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -215,7 +215,7 @@ export function AppSidebar() {
                     className="hover:bg-white/10 transition-colors"
                     activeClassName="bg-white/20 font-medium"
                   >
-                    <Settings className="h-5 w-5" />
+                    <Settings className="h-8 w-8" />
                     <span className="text-base">Settings</span>
                   </SidebarNavItem>
                 </SidebarMenuButton>
@@ -227,8 +227,8 @@ export function AppSidebar() {
                     to="/help"
                     className="hover:bg-white/10 transition-colors"
                   >
-                    <HelpCircle className="h-5 w-5" />
-                    <span className="text-base">Help & Support</span>
+                    <HelpCircle className="h-8 w-8" />
+                    <span className="text-lg">Help & Support</span>
                   </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>

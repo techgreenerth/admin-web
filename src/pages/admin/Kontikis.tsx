@@ -268,11 +268,11 @@ export default function Kontikis() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#295F58]">
-          Kontikis Management
+            Kontikis Management
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1">
-           Manage biochar production kilns and equipment
-           </p>
+            Manage biochar production kilns and equipment
+          </p>
         </div>
 
         <Button
@@ -280,7 +280,7 @@ export default function Kontikis() {
           className="w-full md:w-auto bg-[#295F58] hover:bg-[#295F58]/90"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add User
+          Add kon-tikis
         </Button>
       </div>
 
@@ -510,7 +510,7 @@ export default function Kontikis() {
         sites={sites}
         onSubmit={handleSubmitEdit}
         isSubmitting={isSubmitting}
-        />
+      />
 
       {/* View Kontiki Details Dialog */}
 
