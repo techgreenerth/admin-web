@@ -22,7 +22,7 @@ export default function HelpSupport() {
   const handleSubmitTicket = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Add API call to submit support ticket
-    console.log("Support ticket submitted");
+    // console.log("Support ticket submitted");
   };
 
   return (

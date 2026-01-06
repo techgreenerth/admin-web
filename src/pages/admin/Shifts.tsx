@@ -240,19 +240,19 @@ export default function Shifts() {
 
   const handleSubmitCreate = () => {
     // TODO: Add API call to create shift
-    console.log("Creating shift:", formData);
+    // console.log("Creating shift:", formData);
     setIsCreateDialogOpen(false);
   };
 
   const handleSubmitEdit = () => {
     // TODO: Add API call to update shift
-    console.log("Updating shift:", selectedShift?.id, formData);
+    // console.log("Updating shift:", selectedShift?.id, formData);
     setIsEditDialogOpen(false);
   };
 
   const handleConfirmDelete = () => {
     // TODO: Add API call to delete shift
-    console.log("Deleting shift:", selectedShift?.id);
+    // console.log("Deleting shift:", selectedShift?.id);
     setIsDeleteDialogOpen(false);
   };
 

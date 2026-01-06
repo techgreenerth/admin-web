@@ -4,7 +4,6 @@ import { biocharProductionService } from "@/lib/api/biocharProduction.service";
 import {
   BiocharProductionRecord,
   BiocharProductionResponse,
-  RejectKontikiPayload,
 } from "@/types/biocharProduction.types";
 
 interface BiocharProductionContextType {
@@ -50,13 +49,13 @@ export function useBiocharProduction() {
   return context;
 }
 
-// Custom hooks for mutations
-export function useVerifyKontiki() {
+// Custom hooks for mutations - Step-based verification
+export function useVerifyKontikiStep() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (kontikiRecordId: string) =>
-      biocharProductionService.verifyKontiki(kontikiRecordId),
+    mutationFn: ({ kontikiRecordId, stepNumber }: { kontikiRecordId: string; stepNumber: number }) =>
+      biocharProductionService.verifyKontikiStep(kontikiRecordId, stepNumber),
     onSuccess: async () => {
       // Invalidate and immediately refetch to ensure fresh data
       await queryClient.invalidateQueries({ queryKey: ["biocharProduction", "records"] });
@@ -65,12 +64,20 @@ export function useVerifyKontiki() {
   });
 }
 
-export function useRejectKontiki() {
+export function useRejectKontikiStep() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ kontikiRecordId, payload }: { kontikiRecordId: string; payload: RejectKontikiPayload }) =>
-      biocharProductionService.rejectKontiki(kontikiRecordId, payload),
+    mutationFn: ({
+      kontikiRecordId,
+      stepNumber,
+      rejectionNote
+    }: {
+      kontikiRecordId: string;
+      stepNumber: number;
+      rejectionNote: string
+    }) =>
+      biocharProductionService.rejectKontikiStep(kontikiRecordId, stepNumber, rejectionNote),
     onSuccess: async () => {
       // Invalidate and immediately refetch to ensure fresh data
       await queryClient.invalidateQueries({ queryKey: ["biocharProduction", "records"] });

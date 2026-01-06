@@ -127,8 +127,8 @@ const fetchUsersForAssignment = async (siteId: string) => {
       const users = site.userAssignments?.map((ua) => ua.user) ?? [];
 
       setAssignedUsers(users);
-      console.log("Mapped users:", users);
-      console.log(assignedUsers); // Fixed: was setAssignedUsers(user)
+      // console.log("Mapped users:", users);
+      // console.log(assignedUsers); // Fixed: was setAssignedUsers(user)
     } catch (error: any) {
       console.error(
         error.response?.data?.message || "Failed to fetch assigned users"

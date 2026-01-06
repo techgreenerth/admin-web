@@ -26,6 +26,9 @@ export interface KontikiData {
   verifiedById?: string | null;
   rejectionNote?: string | null;
 
+  // Step verifications for the new step-based workflow
+  stepVerifications?: StepVerification[];
+
   kontiki?: {
     id: string;
     kontikiCode: string;
@@ -81,14 +84,25 @@ export interface BiocharProductionRecord {
   };
 }
 
-export interface VerifyKontikiPayload {
-  kontikiRecordId: string;
+export interface VerifyKontikiStepPayload {
+  stepNumber: number;
 }
 
-export interface RejectKontikiPayload {
-  
- 
+export interface RejectKontikiStepPayload {
+  stepNumber: number;
   rejectionNote: string;
+}
+
+export interface StepVerification {
+  id: string;
+  kontikiRecordId: string;
+  stepNumber: number;
+  status: "VERIFIED" | "REJECTED";
+  rejectionNote?: string;
+  verifiedById?: string;
+  verifiedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PaginationMeta {
