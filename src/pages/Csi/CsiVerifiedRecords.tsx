@@ -60,6 +60,7 @@ export default function CsiVerifiedRecords() {
   const [stepFilter, setStepFilter] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [allSites, setAllSites] = useState<Site[]>([]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -70,12 +71,15 @@ export default function CsiVerifiedRecords() {
   const [selectedRecord, setSelectedRecord] =
     useState<CsiVerifiedRecord | null>(null);
 
-  const fetchRecords = async () => {
+  const fetchRecords = async (page = 1) => {
     try {
       setIsLoading(true);
       const res = await CsiService.getVerifiedRecords({
-        page: 1,
-        limit: 1000, // Fetch all records for client-side filtering
+        page: page,
+        limit: itemsPerPage,
+        siteId: siteFilter !== "all" ? siteFilter : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
       });
       setRecords(res.data);
       setMeta(res.meta);
@@ -87,11 +91,41 @@ export default function CsiVerifiedRecords() {
   };
 
   useEffect(() => {
-    fetchRecords();
+    fetchRecords(currentPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, siteFilter, startDate, endDate]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteFilter, stepFilter, startDate, endDate]);
+
+  // Fetch all sites for filter dropdown on mount
+  useEffect(() => {
+    const fetchAllSites = async () => {
+      try {
+        const res = await CsiService.getVerifiedRecords({
+          page: 1,
+          limit: 1000, // Get all to extract unique sites
+        });
+        const uniqueSitesMap = new Map<string, Site>();
+        res.data.forEach((record) => {
+          if (record.production?.site?.id) {
+            uniqueSitesMap.set(record.production.site.id, record.production.site);
+          }
+        });
+        setAllSites(Array.from(uniqueSitesMap.values()));
+      } catch (err) {
+        console.error("Failed to fetch sites:", err);
+      }
+    };
+    fetchAllSites();
   }, []);
 
-  // Filter records (client-side filtering like activation page)
+  // Client-side filtering for search and step filter only
   const filteredRecords = records.filter((record) => {
     const q = searchQuery.trim().toLowerCase();
 
@@ -128,33 +162,18 @@ export default function CsiVerifiedRecords() {
 
     const matchesSearch = q.length === 0 || searchableText.includes(q);
 
-    const matchesSite =
-      siteFilter === "all" || record.production?.siteId === siteFilter;
-
     const matchesStep =
       stepFilter === "all" || record.productionStepName === stepFilter;
 
-    // Date range filter (inclusive)
-    let matchesDateRange = true;
-    if (startDate && endDate) {
-      const recordDate = parseDDMMYYYY(record.production?.recordDate);
-
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-
-      matchesDateRange =
-        !!recordDate && recordDate >= start && recordDate <= end;
-    }
-
-    return matchesSearch && matchesSite && matchesStep && matchesDateRange;
+    return matchesSearch && matchesStep;
   });
 
-  // Pagination
-  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
+  // Server-side pagination
+  const totalPages = meta?.totalPages || 1;
+  const totalRecords = meta?.total || 0;
+  const startIndex = ((meta?.page || 1) - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + filteredRecords.length, totalRecords);
+  const paginatedRecords = filteredRecords;
 
   // Handlers
   const handleViewRecord = (record: CsiVerifiedRecord) => {
@@ -195,29 +214,20 @@ export default function CsiVerifiedRecords() {
    },
  });
 
-  // Calculate statistics
-  const totalVerified = filteredRecords.length;
-  const totalAIEstimate = filteredRecords.reduce((sum, record) => {
+  // Calculate statistics from current page
+  const totalVerified = meta?.total || 0;
+  const totalAIEstimate = paginatedRecords.reduce((sum, record) => {
     const estimate = parseFloat(record.aiVolumeEstimate || "0");
     return sum + (isNaN(estimate) ? 0 : estimate);
   }, 0);
-  const avgConfidence = filteredRecords.length
-    ? filteredRecords.reduce((sum, record) => {
+  const avgConfidence = paginatedRecords.length
+    ? paginatedRecords.reduce((sum, record) => {
         const score = parseFloat(record.aiConfidenceScore || "0");
         return sum + (isNaN(score) ? 0 : score);
-      }, 0) / filteredRecords.length
+      }, 0) / paginatedRecords.length
     : 0;
 
-  // Get unique sites for filter
-  const uniqueSites = Array.from(
-    new Set(records.map((r) => r.production?.site?.id).filter(Boolean))
-  )
-    .map((id) => {
-      const site = records.find((r) => r.production?.site?.id === id)
-        ?.production?.site;
-      return site;
-    })
-    .filter(Boolean);
+  // Sites are loaded from initial fetch in allSites state
 
   // Production steps
   const productionSteps = ["STEP1", "STEP2", "STEP3", "STEP4", "STEP5"];
@@ -349,9 +359,9 @@ export default function CsiVerifiedRecords() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sites</SelectItem>
-                    {uniqueSites.map((site) => (
-                      <SelectItem key={site!.id} value={site!.id}>
-                        {site!.siteCode}
+                    {allSites.map((site) => (
+                      <SelectItem key={site.id} value={site.id}>
+                        {site.siteCode}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -649,9 +659,7 @@ export default function CsiVerifiedRecords() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1} to{" "}
-              {Math.min(endIndex, filteredRecords.length)} of{" "}
-              {filteredRecords.length} results
+              Showing {startIndex + 1} to {endIndex} of {totalRecords} results
             </div>
             <div className="flex items-center gap-2">
               <Button

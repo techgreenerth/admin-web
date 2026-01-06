@@ -142,9 +142,9 @@ export default function BiocharProduction() {
 
   // Note: No need to manually refetch here - the context has refetchOnMount: "always"
 
-    useEffect(() => {
-      refetch(); // force fresh data whenever page is opened
-    }, [refetch]);
+    // useEffect(() => {
+    //   refetch(); // force fresh data whenever page is opened
+    // }, [refetch]);
     
   useEffect(() => {
     const loadUsers = async () => {
@@ -226,11 +226,17 @@ export default function BiocharProduction() {
     // Count kontikis by their review status
     let fullyReviewedCount = 0;
     let hasAnyReview = false;
+    let hasAnyRejection = false;
 
     kontikiRecords.forEach((kontiki) => {
       const stepVerifications = kontiki.stepVerifications || [];
       if (stepVerifications.length > 0) {
         hasAnyReview = true;
+      }
+      // Check if any step is rejected
+      const hasRejectedStep = stepVerifications.some((sv) => sv.status === "REJECTED");
+      if (hasRejectedStep) {
+        hasAnyRejection = true;
       }
       if (isKontikiFullyReviewed(kontiki)) {
         fullyReviewedCount++;
@@ -242,7 +248,12 @@ export default function BiocharProduction() {
       return "SUBMITTED";
     }
 
-    // All kontikis fully reviewed (all 5 steps reviewed for each)
+    // If any step is rejected, show as REJECTED
+    if (hasAnyRejection) {
+      return "REJECTED";
+    }
+
+    // All kontikis fully reviewed (all 5 steps reviewed for each) and no rejections
     if (fullyReviewedCount === kontikiRecords.length) {
       return "VERIFIED";
     }
@@ -273,8 +284,12 @@ export default function BiocharProduction() {
       return "Start Review";
     }
 
-    if (actualStatus === "VERIFIED") {
+    if (actualStatus === "REJECTED") {
       return `${verifiedSteps} verified, ${rejectedSteps} rejected`;
+    }
+
+    if (actualStatus === "VERIFIED") {
+      return `All ${verifiedSteps} steps verified`;
     }
 
     if (actualStatus === "IN_PROGRESS") {
@@ -390,7 +405,7 @@ export default function BiocharProduction() {
     setSelectedRecord(record);
     setSelectedKontiki(kontiki);
     setSelectedStepNumber(stepNumber);
-    refetch();
+  
     setIsVerifyDialogOpen(true);
   };
 
@@ -448,26 +463,28 @@ export default function BiocharProduction() {
     try {
       setIsVerifying(true);
 
+      // Call the API to verify the step
       await verifyKontikiStepMutation.mutateAsync({
         kontikiRecordId: selectedKontiki.id,
         stepNumber: selectedStepNumber
       });
 
-      console.log(`✅ Step ${selectedStepNumber} verified successfully for kontiki ${selectedKontiki.id}`);
+      // console.log(`✅ Step ${selectedStepNumber} verified successfully for kontiki ${selectedKontiki.id}`);
       toast.success(`Step ${selectedStepNumber} verified successfully!`);
 
       // Close confirm dialog and reset
       setIsVerifyDialogOpen(false);
       setSelectedStepNumber(1);
 
-      // Wait for mutation to complete and data to refresh
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for refetch to complete and get fresh data
+      const { data: refetchedData } = await refetch();
 
-      // Find and update the selected record with fresh data
-      const updatedRecords = records;
-      const updatedRecord = updatedRecords.find(r => r.id === selectedRecord.id);
-      if (updatedRecord) {
-        setSelectedRecord(updatedRecord);
+      // Update the selected record with fresh data
+      if (refetchedData?.data) {
+        const updatedRecord = refetchedData.data.find((r: BiocharProductionRecord) => r.id === selectedRecord.id);
+        if (updatedRecord) {
+          setSelectedRecord(updatedRecord);
+        }
       }
     } catch (error) {
       console.error("❌ Failed to verify step:", error);
@@ -483,13 +500,15 @@ export default function BiocharProduction() {
 
     try {
       setIsRejecting(true);
+
+      // Call the API to reject the step
       await rejectKontikiStepMutation.mutateAsync({
         kontikiRecordId: selectedKontiki.id,
         stepNumber: selectedStepNumber,
         rejectionNote
       });
 
-      console.log(`✅ Step ${selectedStepNumber} rejected successfully for kontiki ${selectedKontiki.id}`);
+      // console.log(`✅ Step ${selectedStepNumber} rejected successfully for kontiki ${selectedKontiki.id}`);
       toast.success(`Step ${selectedStepNumber} rejected successfully!`);
 
       // Close confirm dialog and reset
@@ -497,14 +516,15 @@ export default function BiocharProduction() {
       setSelectedStepNumber(1);
       setRejectionNote("");
 
-      // Wait for mutation to complete and data to refresh
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for refetch to complete and get fresh data
+      const { data: refetchedData } = await refetch();
 
-      // Find and update the selected record with fresh data
-      const updatedRecords = records;
-      const updatedRecord = updatedRecords.find(r => r.id === selectedRecord.id);
-      if (updatedRecord) {
-        setSelectedRecord(updatedRecord);
+      // Update the selected record with fresh data
+      if (refetchedData?.data) {
+        const updatedRecord = refetchedData.data.find((r: BiocharProductionRecord) => r.id === selectedRecord.id);
+        if (updatedRecord) {
+          setSelectedRecord(updatedRecord);
+        }
       }
     } catch (error) {
       console.error("❌ Failed to reject step:", error);
