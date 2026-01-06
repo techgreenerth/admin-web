@@ -96,24 +96,24 @@ export default function BiocharActivation() {
       refetch(); // force fresh data whenever page is opened
     }, [refetch]);
 
-  const getShiftNumber = (shiftName?: string) => {
-    if (!shiftName) return 1;
-    const match = shiftName.match(/\d+/);
-    const n = match ? parseInt(match[0], 10) : NaN;
-    return Number.isFinite(n) && n > 0 ? n : 1;
-  };
+  // const getShiftNumber = (shiftName?: string) => {
+  //   if (!shiftName) return 1;
+  //   const match = shiftName.match(/\d+/);
+  //   const n = match ? parseInt(match[0], 10) : NaN;
+  //   return Number.isFinite(n) && n > 0 ? n : 1;
+  // };
 
-  const getShiftColor = (shiftName?: string) => {
-    const shiftNumber = getShiftNumber(shiftName);
-    const colors = [
-      "bg-blue-100 text-blue-800", // Shift 1
-      "bg-purple-100 text-purple-800", // Shift 2
-      "bg-orange-100 text-orange-800", // Shift 3
-      "bg-pink-100 text-pink-800", // Shift 4
-      "bg-cyan-100 text-cyan-800", // Shift 5
-    ];
-    return colors[shiftNumber - 1] || "bg-gray-100 text-gray-800";
-  };
+  // const getShiftColor = (shiftName?: string) => {
+  //   const shiftNumber = getShiftNumber(shiftName);
+  //   const colors = [
+  //     "bg-blue-100 text-blue-800", // Shift 1
+  //     "bg-purple-100 text-purple-800", // Shift 2
+  //     "bg-orange-100 text-orange-800", // Shift 3
+  //     "bg-pink-100 text-pink-800", // Shift 4
+  //     "bg-cyan-100 text-cyan-800", // Shift 5
+  //   ];
+  //   return colors[shiftNumber - 1] || "bg-gray-100 text-gray-800";
+  // };
 
   const normalizeLower = (value: unknown) => {
     if (typeof value === "string") return value.toLowerCase();
@@ -150,7 +150,7 @@ export default function BiocharActivation() {
 
       // Activation fields
       record.mixingAgent,
-      record.shift?.shiftName,
+      // record.shift?.shiftName,
 
       // Kontiki (match formatted UI)
       ...kontikiRecords.flatMap((k) => [
@@ -422,11 +422,7 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          <Badge
-                            className={getShiftColor(record.shift?.shiftName)}
-                          >
-                            {record.shift?.shiftName ?? "Shift"}
-                          </Badge>
+                        
                           <div className="text-sm text-muted-foreground">
                             Shift_No. {record.shift?.shiftNumber}
                           </div>
@@ -499,13 +495,13 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                       <p className="text-sm font-semibold text-[#295F58]">
                         {record.mixingAgent || "Not Specified"}
                       </p>
-                      <Badge
+                      {/* <Badge
                         className={`${getShiftColor(
                           record.shift?.shiftName
                         )} text-[10px] px-1.5 py-0 w-fit`}
                       >
                         {record.shift?.shiftName ?? "Shift"}
-                      </Badge>
+                      </Badge> */}
                     </div>
                     {/* Site and User */}
                     <div className="bg-slate-50 p-2 rounded-md border border-slate-100">
@@ -663,9 +659,9 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                   <Label className="text-muted-foreground text-xs">
                     Shift Name
                   </Label>
-                  <div className="text-sm font-medium">
+                  {/* <div className="text-sm font-medium">
                     {selectedRecord.shift?.shiftName ?? "—"}
-                  </div>
+                  </div> */}
                   <div className="text-sm font-medium">
                     Shift_No. {selectedRecord.shift?.shiftNumber ?? "—"}
                   </div>

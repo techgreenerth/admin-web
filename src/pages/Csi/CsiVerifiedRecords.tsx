@@ -904,9 +904,9 @@ export default function CsiVerifiedRecords() {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-muted-foreground">Shift</Label>
-                    <p className="font-medium">
+                    {/* <p className="font-medium">
                       {selectedRecord.production?.shift?.shiftName ?? "—"}
-                    </p>
+                    </p> */}
                     <p className="text-xs text-muted-foreground">
                       Shift #{selectedRecord.production?.shift?.shiftNumber}
                     </p>
