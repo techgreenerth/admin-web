@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
-import { useBiocharProduction, useVerifyKontiki, useRejectKontiki } from "@/contexts/biocharProductionContext";
+import { useBiocharProduction, useVerifyKontikiStep, useRejectKontikiStep } from "@/contexts/biocharProductionContext";
 import { useSites } from "@/contexts/siteContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLES } from "@/constrants/roles";
@@ -93,9 +93,9 @@ export default function BiocharProduction() {
   const { sites: allSites, fetchSites } = useSites();
   const { user } = useAuth();
 
-  // Use mutation hooks
-  const verifyKontikiMutation = useVerifyKontiki();
-  const rejectKontikiMutation = useRejectKontiki();
+  // Use mutation hooks for step-based verification
+  const verifyKontikiStepMutation = useVerifyKontikiStep();
+  const rejectKontikiStepMutation = useRejectKontikiStep();
 
   // Check if current user is Supervisor
   const isSupervisor = user?.role === ROLES.SUPERVISOR;
@@ -124,6 +124,7 @@ export default function BiocharProduction() {
   const [selectedKontiki, setSelectedKontiki] = useState<KontikiData | null>(
     null
   );
+  const [selectedStepNumber, setSelectedStepNumber] = useState<number>(1);
   const [rejectionNote, setRejectionNote] = useState("");
 
   // Loading states for verify/reject actions
@@ -199,65 +200,85 @@ export default function BiocharProduction() {
   const getKontikiName = (kontikiRecord: KontikiData) =>
     kontikiRecord.kontiki?.kontikiName ?? "—";
 
-  // Helper function to determine the actual status based on kontiki records
+  // Helper function to get step verification status
+  const getStepStatus = (kontiki: KontikiData, stepNumber: number): "VERIFIED" | "REJECTED" | "PENDING" => {
+    const stepVerification = kontiki.stepVerifications?.find(
+      (sv) => sv.stepNumber === stepNumber
+    );
+    if (!stepVerification) return "PENDING";
+    return stepVerification.status;
+  };
+
+  // Helper function to check if all steps are verified or rejected for a kontiki
+  const isKontikiFullyReviewed = (kontiki: KontikiData): boolean => {
+    const stepVerifications = kontiki.stepVerifications || [];
+    // There are 5 steps total
+    const totalSteps = 5;
+    const reviewedSteps = stepVerifications.length;
+    return reviewedSteps === totalSteps;
+  };
+
+  // Helper function to determine the actual status based on step verifications
   const getActualStatus = (record: BiocharProductionRecord) => {
     const kontikiRecords = getKontikiRecords(record);
     if (kontikiRecords.length === 0) return "IN_PROGRESS";
 
-    const verifiedCount = kontikiRecords.filter(
-      (k) => k.status === "VERIFIED"
-    ).length;
-    const rejectedCount = kontikiRecords.filter(
-      (k) => k.status === "REJECTED"
-    ).length;
-    const submittedCount = kontikiRecords.filter(
-      (k) => k.status === "SUBMITTED"
-    ).length;
+    // Count kontikis by their review status
+    let fullyReviewedCount = 0;
+    let hasAnyReview = false;
 
-    // All submitted, none reviewed
-    if (submittedCount === kontikiRecords.length) {
+    kontikiRecords.forEach((kontiki) => {
+      const stepVerifications = kontiki.stepVerifications || [];
+      if (stepVerifications.length > 0) {
+        hasAnyReview = true;
+      }
+      if (isKontikiFullyReviewed(kontiki)) {
+        fullyReviewedCount++;
+      }
+    });
+
+    // No reviews at all - all submitted
+    if (!hasAnyReview) {
       return "SUBMITTED";
     }
 
-    // All reviewed (all verified or all rejected)
-    if (verifiedCount + rejectedCount === kontikiRecords.length) {
+    // All kontikis fully reviewed (all 5 steps reviewed for each)
+    if (fullyReviewedCount === kontikiRecords.length) {
       return "VERIFIED";
     }
 
-    // Partially reviewed (some reviewed, some pending)
+    // Some reviews done, but not all kontikis fully reviewed
     return "IN_PROGRESS";
   };
 
   // Helper function to get status subtext
   const getStatusSubtext = (record: BiocharProductionRecord) => {
     const kontikiRecords = getKontikiRecords(record);
-    const verifiedCount = kontikiRecords.filter(
-      (k) => k.status === "VERIFIED"
-    ).length;
-    const rejectedCount = kontikiRecords.filter(
-      (k) => k.status === "REJECTED"
-    ).length;
-    const submittedCount = kontikiRecords.filter(
-      (k) => k.status === "SUBMITTED"
-    ).length;
     const actualStatus = getActualStatus(record);
+
+    // Calculate total steps and reviewed steps
+    const totalSteps = kontikiRecords.length * 5; // 5 steps per kontiki
+    let reviewedSteps = 0;
+    let verifiedSteps = 0;
+    let rejectedSteps = 0;
+
+    kontikiRecords.forEach((kontiki) => {
+      const stepVerifications = kontiki.stepVerifications || [];
+      reviewedSteps += stepVerifications.length;
+      verifiedSteps += stepVerifications.filter((sv) => sv.status === "VERIFIED").length;
+      rejectedSteps += stepVerifications.filter((sv) => sv.status === "REJECTED").length;
+    });
 
     if (actualStatus === "SUBMITTED") {
       return "Start Review";
     }
 
     if (actualStatus === "VERIFIED") {
-      return `${verifiedCount} accepted, ${rejectedCount} rejected`;
+      return `${verifiedSteps} verified, ${rejectedSteps} rejected`;
     }
 
     if (actualStatus === "IN_PROGRESS") {
-      // If some are still submitted, show review progress.
-      if (submittedCount > 0) {
-        return `Reviewed ${verifiedCount + rejectedCount} / ${
-          kontikiRecords.length
-        }`;
-      }
-      return "Complete Review";
+      return `Reviewed ${reviewedSteps} / ${totalSteps} steps`;
     }
 
     return "";
@@ -361,22 +382,28 @@ export default function BiocharProduction() {
     setIsViewDialogOpen(true);
   };
 
-  const handleVerifyKontiki = (
+  const handleVerifyKontikiStep = (
     record: BiocharProductionRecord,
-    kontiki: KontikiData
+    kontiki: KontikiData,
+    stepNumber: number
   ) => {
     setSelectedRecord(record);
     setSelectedKontiki(kontiki);
+    setSelectedStepNumber(stepNumber);
+    refetch();
     setIsVerifyDialogOpen(true);
   };
 
-  const handleRejectKontiki = (
+  const handleRejectKontikiStep = (
     record: BiocharProductionRecord,
-    kontiki: KontikiData
+    kontiki: KontikiData,
+    stepNumber: number
   ) => {
     setSelectedRecord(record);
     setSelectedKontiki(kontiki);
+    setSelectedStepNumber(stepNumber);
     setRejectionNote("");
+     refetch();
     setIsRejectDialogOpen(true);
   };
 
@@ -416,20 +443,35 @@ export default function BiocharProduction() {
   // };
 
   const handleConfirmVerify = async () => {
-    if (!selectedKontiki) return;
+    if (!selectedKontiki || !selectedStepNumber || !selectedRecord) return;
 
     try {
       setIsVerifying(true);
 
-      await verifyKontikiMutation.mutateAsync(selectedKontiki.id);
+      await verifyKontikiStepMutation.mutateAsync({
+        kontikiRecordId: selectedKontiki.id,
+        stepNumber: selectedStepNumber
+      });
 
-      toast.success("Kontiki verified successfully!");
+      console.log(`✅ Step ${selectedStepNumber} verified successfully for kontiki ${selectedKontiki.id}`);
+      toast.success(`Step ${selectedStepNumber} verified successfully!`);
 
+      // Close confirm dialog and reset
       setIsVerifyDialogOpen(false);
-      setSelectedKontiki(null);
-      setIsViewDialogOpen(false);
+      setSelectedStepNumber(1);
+
+      // Wait for mutation to complete and data to refresh
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Find and update the selected record with fresh data
+      const updatedRecords = records;
+      const updatedRecord = updatedRecords.find(r => r.id === selectedRecord.id);
+      if (updatedRecord) {
+        setSelectedRecord(updatedRecord);
+      }
     } catch (error) {
-      toast.error("Failed to verify kontiki");
+      console.error("❌ Failed to verify step:", error);
+      toast.error("Failed to verify step");
     } finally {
       setIsVerifying(false);
     }
@@ -437,22 +479,36 @@ export default function BiocharProduction() {
 
 
   const handleConfirmReject = async () => {
-    if (!selectedRecord || !selectedKontiki || !rejectionNote.trim()) return;
+    if (!selectedKontiki || !selectedStepNumber || !rejectionNote.trim() || !selectedRecord) return;
 
     try {
       setIsRejecting(true);
-      await rejectKontikiMutation.mutateAsync({
+      await rejectKontikiStepMutation.mutateAsync({
         kontikiRecordId: selectedKontiki.id,
-        payload: { rejectionNote },
+        stepNumber: selectedStepNumber,
+        rejectionNote
       });
+
+      console.log(`✅ Step ${selectedStepNumber} rejected successfully for kontiki ${selectedKontiki.id}`);
+      toast.success(`Step ${selectedStepNumber} rejected successfully!`);
+
+      // Close confirm dialog and reset
       setIsRejectDialogOpen(false);
-      setSelectedKontiki(null);
+      setSelectedStepNumber(1);
       setRejectionNote("");
-      setIsViewDialogOpen(false);
-      toast.success("Kontiki rejected successfully!");
+
+      // Wait for mutation to complete and data to refresh
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Find and update the selected record with fresh data
+      const updatedRecords = records;
+      const updatedRecord = updatedRecords.find(r => r.id === selectedRecord.id);
+      if (updatedRecord) {
+        setSelectedRecord(updatedRecord);
+      }
     } catch (error) {
-      console.error("Error rejecting kontiki:", error);
-      toast.error("Failed to reject kontiki");
+      console.error("❌ Failed to reject step:", error);
+      toast.error("Failed to reject step");
     } finally {
       setIsRejecting(false);
     }
@@ -1034,69 +1090,18 @@ export default function BiocharProduction() {
                     key={kontiki.id ?? kontiki.kontikiId}
                     className="border border-gray-200 rounded-lg p-6 space-y-6"
                   >
-                    {/* Kontiki Header with Accept/Reject Buttons */}
+                    {/* Kontiki Header */}
                     <div className="flex items-center justify-between pb-4 border-b">
                       <h3 className="text-lg font-semibold text-[#295F58]">
                         {getKontikiName(kontiki)}
                       </h3>
-                      {kontiki.status === "SUBMITTED" && (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              handleVerifyKontiki(selectedRecord, kontiki)
-                            }
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                            disabled={isSupervisor}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Accept
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              handleRejectKontiki(selectedRecord, kontiki)
-                            }
-                            className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white transition-colors"
-                            disabled={isSupervisor}
-                          >
-                            <XCircle className="h-4 w-4 mr-2" />
-                            Reject
-                          </Button>
-                        </div>
-                      )}
-                      {kontiki.status === "VERIFIED" && (
-                        <Badge className="bg-green-100 text-green-800">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Accepted
-                        </Badge>
-                      )}
-                      {kontiki.status === "REJECTED" && (
-                        <Badge className="bg-red-100 text-red-800">
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Rejected
-                        </Badge>
-                      )}
                     </div>
-
-                    {/* Rejection Note */}
-                    {kontiki.status === "REJECTED" && kontiki.rejectionNote && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <Label className="text-xs text-red-800 font-medium">
-                          Rejection Note:
-                        </Label>
-                        <p className="text-sm text-red-700 mt-1">
-                          {kontiki.rejectionNote}
-                        </p>
-                      </div>
-                    )}
 
                     {/* Kontiki Production Process */}
                     <div className="space-y-4">
                       {/* 1. Moisture Photo & Percentage */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
                               1
@@ -1104,41 +1109,125 @@ export default function BiocharProduction() {
                             <Label className="text-sm font-medium">
                               Moisture Photo
                             </Label>
+                            {getStepStatus(kontiki, 1) === "VERIFIED" && (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                            {getStepStatus(kontiki, 1) === "REJECTED" && (
+                              <Badge className="bg-red-100 text-red-800 text-xs">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Rejected
+                              </Badge>
+                            )}
                           </div>
-                          {kontiki.moisturePhoto && (
-                            <div className="border rounded-lg overflow-hidden">
-                              <img
-                                src={kontiki.moisturePhoto}
-                                alt="Moisture meter"
-                                className="w-72 h-auto"
-                              />
+                          {getStepStatus(kontiki, 1) === "PENDING" && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleVerifyKontikiStep(selectedRecord, kontiki, 1)
+                                }
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                disabled={isSupervisor}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Accept
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleRejectKontikiStep(selectedRecord, kontiki, 1)
+                                }
+                                className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white"
+                                disabled={isSupervisor}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Reject
+                              </Button>
                             </div>
                           )}
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">
-                            Moisture Percentage
-                          </Label>
-                          {kontiki.moisturePercent && (
-                            <div className="flex items-center gap-2 mt-8">
-                              <Droplets className="h-5 w-5 text-blue-600" />
-                              <span className="text-lg font-semibold">
-                                {kontiki.moisturePercent}%
-                              </span>
-                            </div>
-                          )}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            {kontiki.moisturePhoto && (
+                              <div className="border rounded-lg overflow-hidden">
+                                <img
+                                  src={kontiki.moisturePhoto}
+                                  alt="Moisture meter"
+                                  className="w-72 h-auto"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">
+                              Moisture Percentage
+                            </Label>
+                            {kontiki.moisturePercent && (
+                              <div className="flex items-center gap-2 mt-8">
+                                <Droplets className="h-5 w-5 text-blue-600" />
+                                <span className="text-lg font-semibold">
+                                  {kontiki.moisturePercent}%
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
                       {/* 2. Start (25%) */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
-                            2
-                          </span>
-                          <Label className="text-sm font-medium">
-                            Start (25% fill)
-                          </Label>
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                              2
+                            </span>
+                            <Label className="text-sm font-medium">
+                              Start (25% fill)
+                            </Label>
+                            {getStepStatus(kontiki, 2) === "VERIFIED" && (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                            {getStepStatus(kontiki, 2) === "REJECTED" && (
+                              <Badge className="bg-red-100 text-red-800 text-xs">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Rejected
+                              </Badge>
+                            )}
+                          </div>
+                          {getStepStatus(kontiki, 2) === "PENDING" && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleVerifyKontikiStep(selectedRecord, kontiki, 2)
+                                }
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                disabled={isSupervisor}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Accept
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleRejectKontikiStep(selectedRecord, kontiki, 2)
+                                }
+                                className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white"
+                                disabled={isSupervisor}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         {kontiki.startPhoto && (
                           <div className="border rounded-lg overflow-hidden max-w-md">
@@ -1152,14 +1241,55 @@ export default function BiocharProduction() {
                       </div>
 
                       {/* 3. Middle (50%) */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
-                            3
-                          </span>
-                          <Label className="text-sm font-medium">
-                            Middle (50% fill)
-                          </Label>
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                              3
+                            </span>
+                            <Label className="text-sm font-medium">
+                              Middle (50% fill)
+                            </Label>
+                            {getStepStatus(kontiki, 3) === "VERIFIED" && (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                            {getStepStatus(kontiki, 3) === "REJECTED" && (
+                              <Badge className="bg-red-100 text-red-800 text-xs">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Rejected
+                              </Badge>
+                            )}
+                          </div>
+                          {getStepStatus(kontiki, 3) === "PENDING" && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleVerifyKontikiStep(selectedRecord, kontiki, 3)
+                                }
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                disabled={isSupervisor}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Accept
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleRejectKontikiStep(selectedRecord, kontiki, 3)
+                                }
+                                className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white"
+                                disabled={isSupervisor}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         {kontiki.middlePhoto && (
                           <div className="border rounded-lg overflow-hidden max-w-md">
@@ -1173,14 +1303,55 @@ export default function BiocharProduction() {
                       </div>
 
                       {/* 4. End (90%) */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
-                            4
-                          </span>
-                          <Label className="text-sm font-medium">
-                            End (90% fill)
-                          </Label>
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                              4
+                            </span>
+                            <Label className="text-sm font-medium">
+                              End (90% fill)
+                            </Label>
+                            {getStepStatus(kontiki, 4) === "VERIFIED" && (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                            {getStepStatus(kontiki, 4) === "REJECTED" && (
+                              <Badge className="bg-red-100 text-red-800 text-xs">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Rejected
+                              </Badge>
+                            )}
+                          </div>
+                          {getStepStatus(kontiki, 4) === "PENDING" && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleVerifyKontikiStep(selectedRecord, kontiki, 4)
+                                }
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                disabled={isSupervisor}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Accept
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleRejectKontikiStep(selectedRecord, kontiki, 4)
+                                }
+                                className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white"
+                                disabled={isSupervisor}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         {kontiki.endPhoto && (
                           <div className="border rounded-lg overflow-hidden max-w-md">
@@ -1194,17 +1365,58 @@ export default function BiocharProduction() {
                       </div>
 
                       {/* 5. Final Biochar with AI Estimate */}
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
-                            5
-                          </span>
-                          <Label className="text-sm font-medium">
-                            Final Biochar
-                          </Label>
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#295F58] text-white text-xs font-bold">
+                              5
+                            </span>
+                            <Label className="text-sm font-medium">
+                              Final Biochar
+                            </Label>
+                            {getStepStatus(kontiki, 5) === "VERIFIED" && (
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                            {getStepStatus(kontiki, 5) === "REJECTED" && (
+                              <Badge className="bg-red-100 text-red-800 text-xs">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Rejected
+                              </Badge>
+                            )}
+                          </div>
+                          {getStepStatus(kontiki, 5) === "PENDING" && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleVerifyKontikiStep(selectedRecord, kontiki, 5)
+                                }
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                disabled={isSupervisor}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Accept
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleRejectKontikiStep(selectedRecord, kontiki, 5)
+                                }
+                                className="border-orange-600 text-orange-600 hover:bg-orange-600 hover:text-white"
+                                disabled={isSupervisor}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         {kontiki.finalPhoto && (
-                          <div className="border rounded-lg overflow-hidden max-w-md">
+                          <div className="border rounded-lg overflow-hidden max-w-md mb-3">
                             <img
                               src={kontiki.finalPhoto}
                               alt="Final biochar"
@@ -1251,20 +1463,19 @@ export default function BiocharProduction() {
       </Dialog>
 
       {/* Verify Dialog */}
-      {/* Verify Dialog */}
       <AlertDialog
         open={isVerifyDialogOpen}
         onOpenChange={setIsVerifyDialogOpen}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Accept Kon-tiki</AlertDialogTitle>
+            <AlertDialogTitle>Accept Production Step</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to accept
+              Are you sure you want to accept Step {selectedStepNumber}
               {selectedKontiki
-                ? ` ${getKontikiName(selectedKontiki)}`
-                : " this Kon-tiki"}
-              ? This action will mark this Kon-tiki as verified.
+                ? ` for ${getKontikiName(selectedKontiki)}`
+                : ""}
+              ? This action will mark this production step as verified.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -1298,12 +1509,12 @@ export default function BiocharProduction() {
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Kon-tiki</DialogTitle>
+            <DialogTitle>Reject Production Step</DialogTitle>
             <DialogDescription>
-              Provide a reason for rejecting
+              Provide a reason for rejecting Step {selectedStepNumber}
               {selectedKontiki
-                ? ` ${getKontikiName(selectedKontiki)}`
-                : " this Kon-tiki"}
+                ? ` for ${getKontikiName(selectedKontiki)}`
+                : ""}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1313,7 +1524,7 @@ export default function BiocharProduction() {
                 id="rejectionNote"
                 value={rejectionNote}
                 onChange={(e) => setRejectionNote(e.target.value)}
-                placeholder="Explain why this Kon-tiki is being rejected..."
+                placeholder="Explain why this production step is being rejected..."
                 rows={4}
                 disabled={isRejecting}
               />

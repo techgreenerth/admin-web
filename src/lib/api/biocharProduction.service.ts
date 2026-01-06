@@ -2,8 +2,7 @@ import apiClient from "./axios";
 import {
   BiocharProductionRecord,
   BiocharProductionResponse,
-  VerifyKontikiPayload,
-  RejectKontikiPayload,
+
 } from "@/types/biocharProduction.types";
 
 export type ExportBiocharProductionCSVParams = {
@@ -38,21 +37,35 @@ export const biocharProductionService = {
     return response.data;
   },
 
-  async verifyKontiki(kontikiRecordId: string): Promise<void> {
-  await apiClient.patch(
-    `/v1/biochar-production/kontiki/${kontikiRecordId}/verify`
-  );
-},
-
-  // Reject a kontiki in a production record
-  async rejectKontiki(
+  // Verify a specific production step (1: Moisture, 2: Start, 3: Middle, 4: End, 5: Final)
+  async verifyKontikiStep(
     kontikiRecordId: string,
-    payload: RejectKontikiPayload
+    stepNumber: number
   ): Promise<void> {
-    await apiClient.patch(
-      `/v1/biochar-production/kontiki/${kontikiRecordId}/reject`,
-      payload
+    await apiClient.post(
+      `/v1/biochar-production/kontiki/${kontikiRecordId}/verify-step`,
+      { stepNumber }
     );
+  },
+
+  // Reject a specific production step with rejection note
+  async rejectKontikiStep(
+    kontikiRecordId: string,
+    stepNumber: number,
+    rejectionNote: string
+  ): Promise<void> {
+    await apiClient.post(
+      `/v1/biochar-production/kontiki/${kontikiRecordId}/reject-step`,
+      { stepNumber, rejectionNote }
+    );
+  },
+
+  // Get all step verifications for a kontiki record
+  async getStepVerifications(kontikiRecordId: string): Promise<any> {
+    const response = await apiClient.get(
+      `/v1/biochar-production/kontiki/${kontikiRecordId}/step-verifications`
+    );
+    return response.data;
   },
 
   
