@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
@@ -28,15 +28,7 @@ import HelpSupport from "./pages/admin/HelpSupport";
 // import Settings from "./pages/admin/Settings";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/admin/Profile";
-import { SitesProvider } from "./contexts/siteContext";
-import { KontikiProvider } from "./contexts/kontikisContext";
-import { BiomassSourcingProvider } from "./contexts/biomassSourcingContext";
-import { BiocharProductionProvider } from "./contexts/biocharProductionContext";
-import { BiocharActivationProvider } from "./contexts/biocharActivationContext";
-import { BiocharSamplingProvider } from "./contexts/biocharSamplingContext";
-import { BulkDensityProvider } from "./contexts/bulkDensityContext";
-import { ProfileProvider } from "./contexts/ProfileContext";
-import { DashboardProvider } from "./contexts/DashboardContext";
+import { DataProviders } from "@/components/DataProviders";
 
 import { ROLES } from "@/constrants/roles";
 import { RoleGate } from "./pages/auth/RoleGate";
@@ -60,129 +52,118 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <DashboardProvider>
-          <AuthProvider>
-            <ProfileProvider>
-              <SitesProvider>
-                <KontikiProvider>
-                  <BiomassSourcingProvider>
-                    <BiocharProductionProvider>
-                      <BiocharActivationProvider>
-                        <BiocharSamplingProvider>
-                          <BulkDensityProvider>
-                            <Routes>
-                              {/* Auth routes - No layout */}
-                              <Route path="/login" element={<Login />} />
-                              <Route
-                                path="/unauthorized"
-                                element={<Unauthorized />}
-                              />
+        <AuthProvider>
+          <Routes>
+            {/* Auth routes - No layout */}
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/unauthorized"
+              element={<Unauthorized />}
+            />
 
-                              {/* CSI Manager Route - No Sidebar */}
-                              <Route
-                                path="/csi"
-                                element={
-                                  <ProtectedRoute>
-                                    <RoleGate allow={[ROLES.CSI_MANAGER]}>
-                                      <AppLayout>
-                                        <CsiVerifiedRecords />
-                                      </AppLayout>
-                                    </RoleGate>
-                                  </ProtectedRoute>
-                                }
-                              />
-                              {/* Admin routes - With layout and protection */}
-                              <Route
-                                path="/*"
-                                element={
-                                  <ProtectedRoute>
-                                    <RoleGate allow={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPERVISOR]}>
-                                    <AppLayout >
-                                      <Routes>
-                                        <Route
-                                          path="/"
-                                          element={<AdminDashboard />}
-                                        />
-                                        <Route
-                                          path="users"
-                                          element={<Users />}
-                                        />
-                                        {/* SUPER ADMIN ONLY */}
-                                        <Route
-                                          path="admins"
-                                          element={
-                                            <RoleGate allow={[ROLES.SUPER_ADMIN]}>
-                                              <Admins />
-                                            </RoleGate>
-                                          }
-                                        />
+            {/* Protected Routes Wrapper */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <DataProviders>
+                    <Outlet />
+                  </DataProviders>
+                </ProtectedRoute>
+              }
+            >
+              {/* CSI Manager Route - No Sidebar */}
+              <Route
+                path="/csi"
+                element={
+                  <RoleGate allow={[ROLES.CSI_MANAGER]}>
+                    <AppLayout>
+                      <CsiVerifiedRecords />
+                    </AppLayout>
+                  </RoleGate>
+                }
+              />
+              {/* Admin routes - With layout and protection */}
+              <Route
+                path="/*"
+                element={
+                  <RoleGate allow={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPERVISOR]}>
+                    <AppLayout >
+                      <Routes>
+                        <Route
+                          path="/"
+                          element={<AdminDashboard />}
+                        />
+                        <Route
+                          path="users"
+                          element={<Users />}
+                        />
+                        {/* SUPER ADMIN ONLY */}
+                        <Route
+                          path="admins"
+                          element={
+                            <RoleGate allow={[ROLES.SUPER_ADMIN]}>
+                              <Admins />
+                            </RoleGate>
+                          }
+                        />
 
-                                        <Route
-                                          path="sites"
-                                          element={<Sites />}
-                                        />
-                                        <Route
-                                          path="sites/:id"
-                                          element={<SiteDetails />}
-                                        />
-                                        <Route
-                                          path="kontikis"
-                                          element={<Kontikis />}
-                                        />
-                                        <Route
-                                          path="shifts"
-                                          element={<Shifts />}
-                                        />
-                                        <Route
-                                          path="biomass-sourcing"
-                                          element={<BiomassSourcing />}
-                                        />
-                                        <Route
-                                          path="biochar-production"
-                                          element={<BiocharProduction />}
-                                        />
-                                        <Route
-                                          path="biochar-activation"
-                                          element={<BiocharActivation />}
-                                        />
-                                        <Route
-                                          path="biochar-sampling"
-                                          element={<BiocharSampling />}
-                                        />
-                                        <Route
-                                          path="bulk-density"
-                                          element={<BulkDensity />}
-                                        />
-                                        <Route
-                                          path="help"
-                                          element={<HelpSupport />}
-                                        />
-                                        {/* <Route path="settings" element={<Settings />} /> */}
-                                        <Route
-                                          path="profile"
-                                          element={<Profile />}
-                                        />
-                                        <Route
-                                          path="*"
-                                          element={<NotFound />}
-                                        />
-                                      </Routes>
-                                    </AppLayout>
-                                    </RoleGate>
-                                  </ProtectedRoute>
-                                }
-                              />
-                            </Routes>
-                          </BulkDensityProvider>
-                        </BiocharSamplingProvider>
-                      </BiocharActivationProvider>
-                    </BiocharProductionProvider>
-                  </BiomassSourcingProvider>
-                </KontikiProvider>
-              </SitesProvider>
-            </ProfileProvider>
-          </AuthProvider>
-        </DashboardProvider>
+                        <Route
+                          path="sites"
+                          element={<Sites />}
+                        />
+                        <Route
+                          path="sites/:id"
+                          element={<SiteDetails />}
+                        />
+                        <Route
+                          path="kontikis"
+                          element={<Kontikis />}
+                        />
+                        <Route
+                          path="shifts"
+                          element={<Shifts />}
+                        />
+                        <Route
+                          path="biomass-sourcing"
+                          element={<BiomassSourcing />}
+                        />
+                        <Route
+                          path="biochar-production"
+                          element={<BiocharProduction />}
+                        />
+                        <Route
+                          path="biochar-activation"
+                          element={<BiocharActivation />}
+                        />
+                        <Route
+                          path="biochar-sampling"
+                          element={<BiocharSampling />}
+                        />
+                        <Route
+                          path="bulk-density"
+                          element={<BulkDensity />}
+                        />
+                        <Route
+                          path="help"
+                          element={<HelpSupport />}
+                        />
+                        {/* <Route path="settings" element={<Settings />} /> */}
+                        <Route
+                          path="profile"
+                          element={<Profile />}
+                        />
+                        <Route
+                          path="*"
+                          element={<NotFound />}
+                        />
+                      </Routes>
+                    </AppLayout>
+                  </RoleGate>
+                }
+              />
+            </Route>
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
