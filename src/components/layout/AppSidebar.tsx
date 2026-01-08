@@ -1,4 +1,3 @@
-
 import {
   Home,
   Users,
@@ -102,7 +101,7 @@ export function AppSidebar() {
                     activeClassName="bg-white/20 font-medium"
                   >
                     <FlaskConical className="h-8 w-8" />
-                    <span className="text-lg">Biochar Activation</span>
+                    <span className="text-lg">Biochar Mixing</span>
                   </SidebarNavItem>
                 </SidebarMenuButton>
               </SidebarMenuItem>

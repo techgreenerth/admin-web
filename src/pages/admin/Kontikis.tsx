@@ -418,13 +418,13 @@ export default function Kontikis() {
                             Edit
                           </DropdownMenuItem>
 
-                          {/* <DropdownMenuItem
+                          <DropdownMenuItem
                             className="text-red-600"
                             onClick={() => handleDeleteKontiki(kontiki)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
-                          </DropdownMenuItem> */}
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

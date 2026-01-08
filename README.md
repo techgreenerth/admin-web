@@ -62,7 +62,7 @@ This is the **unified web portal** for the **Tech Greenerth Biochar Platform** e
 - **Photo verification** at each production stage
 - **Production capacity** vs. actual output analysis
 
-#### Biochar Activation
+#### Biochar Mixing
 
 - **Bio-agent tracking** with volume records
 - **Video verification** of activation process
