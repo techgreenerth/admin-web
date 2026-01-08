@@ -29,6 +29,7 @@ import HelpSupport from "./pages/admin/HelpSupport";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/admin/Profile";
 import { DataProviders } from "@/components/DataProviders";
+import { GlobalLoader } from "@/components/GlobalLoader";
 
 import { ROLES } from "@/constrants/roles";
 import { RoleGate } from "./pages/auth/RoleGate";
@@ -66,7 +67,9 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <DataProviders>
-                    <Outlet />
+                    <GlobalLoader>
+                      <Outlet />
+                    </GlobalLoader>
                   </DataProviders>
                 </ProtectedRoute>
               }
