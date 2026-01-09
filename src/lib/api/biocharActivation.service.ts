@@ -13,7 +13,7 @@ export type ExportBiocharActivationCSVParams = {
 };
 
 export const biocharActivationService = {
-  // Get all biochar activation records
+  // Get all Biochar Mixing records
   async getAllRecords(
     page = 1,
     limit = 20
@@ -27,7 +27,7 @@ export const biocharActivationService = {
     return response.data;
   },
 
-  // Get biochar activation record by ID
+  // Get Biochar Mixing record by ID
   async getRecordById(id: string): Promise<BiocharActivationRecord> {
     const response = await apiClient.get<BiocharActivationRecord>(
       `/v1/biochar-activation/${id}`
@@ -35,7 +35,7 @@ export const biocharActivationService = {
     return response.data;
   },
 
-  // Export biochar activation records to CSV
+  // Export Biochar Mixing records to CSV
   async exportToCSV(
     params?: ExportBiocharActivationCSVParams
   ): Promise<Blob> {

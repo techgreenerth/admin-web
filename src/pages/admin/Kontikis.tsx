@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Plus,
   Search,
@@ -238,31 +239,43 @@ export default function Kontikis() {
     }
   };
 
+  /* New Loading State */
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleConfirmDelete = async () => {
     if (!selectedKontiki) return;
 
+    setIsDeleting(true);
     try {
       await deleteKontiki(selectedKontiki.id);
-
+      toast.success("Kontiki deleted successfully");
       setIsDeleteDialogOpen(false);
       setSelectedKontiki(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to delete kontiki", error);
+      const errorMessage = error.message || "Failed to delete kontiki";
+      toast.error(errorMessage);
+      setIsDeleteDialogOpen(false);
+      setSelectedKontiki(null);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-    if (isLoading || !kontikis) {
-      return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
-            <p className="text-muted-foreground text-sm">
-              Loading Kontikis ...
-            </p>
-          </div>
+
+
+  if (isLoading || !kontikis) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">
+            Loading Kontikis ...
+          </p>
         </div>
-      );
-    }
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -418,13 +431,13 @@ export default function Kontikis() {
                             Edit
                           </DropdownMenuItem>
 
-                          {/* <DropdownMenuItem
+                          <DropdownMenuItem
                             className="text-red-600"
                             onClick={() => handleDeleteKontiki(kontiki)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
-                          </DropdownMenuItem> */}
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -541,10 +554,14 @@ export default function Kontikis() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleConfirmDelete}
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmDelete();
+              }}
+              disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             >
-              Delete Kontiki
+              {isDeleting ? "Deleting..." : "Delete Kontiki"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

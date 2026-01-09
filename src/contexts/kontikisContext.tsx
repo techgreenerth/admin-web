@@ -45,7 +45,7 @@ export function KontikiProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       const response = await kontikiService.getAll();
       setKontikis(response.data);
-     
+
     } finally {
       setIsLoading(false);
     }
@@ -54,11 +54,10 @@ export function KontikiProvider({ children }: { children: ReactNode }) {
   // Create kontiki
   const createKontiki = async (payload: CreateKontikiPayload) => {
     try {
-      setIsLoading(true);
       await kontikiService.create(payload);
       await fetchKontikis();
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      throw error;
     }
   };
 
@@ -68,22 +67,20 @@ export function KontikiProvider({ children }: { children: ReactNode }) {
     payload: UpdateKontikiPayload
   ) => {
     try {
-      setIsLoading(true);
       await kontikiService.update(id, payload);
       await fetchKontikis();
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      throw error;
     }
   };
 
   // Delete kontiki
   const deleteKontiki = async (id: string) => {
     try {
-      setIsLoading(true);
       await kontikiService.delete(id);
       await fetchKontikis();
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      throw error;
     }
   };
 

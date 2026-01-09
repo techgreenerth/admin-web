@@ -44,7 +44,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { BiocharActivationRecord } from "@/types/biocharActivation.types";
 import { useMutation } from "@tanstack/react-query";
-import { normalizeDateForSearch, parseDDMMYYYY, toSearchString } from "@/lib/utils/utils";
+import {
+  normalizeDateForSearch,
+  parseDDMMYYYY,
+  toSearchString,
+} from "@/lib/utils/utils";
 // import { formatDate, formatTime } from "@/lib/utils/date";
 
 export default function BiocharActivation() {
@@ -81,7 +85,11 @@ export default function BiocharActivation() {
     const loadUsers = async () => {
       try {
         setIsUsersLoading(true);
-        const resp = await userService.getAll({ page: 1, limit: 200, status: "ACTIVE" });
+        const resp = await userService.getAll({
+          page: 1,
+          limit: 200,
+          status: "ACTIVE",
+        });
         setUsers(resp.data);
       } catch (error) {
         console.error("Failed to fetch users for filter dropdown:", error);
@@ -92,9 +100,9 @@ export default function BiocharActivation() {
 
     loadUsers();
   }, []);
-    useEffect(() => {
-      refetch(); // force fresh data whenever page is opened
-    }, [refetch]);
+  useEffect(() => {
+    refetch(); // force fresh data whenever page is opened
+  }, [refetch]);
 
   // const getShiftNumber = (shiftName?: string) => {
   //   if (!shiftName) return 1;
@@ -129,7 +137,6 @@ export default function BiocharActivation() {
 
   const hasAnyMixingVideo = (record: BiocharActivationRecord) =>
     getKontikiRecords(record).some((k) => !!k.mixingVideo);
-
 
   // Filter records
   const filteredRecords = records.filter((record) => {
@@ -176,7 +183,7 @@ export default function BiocharActivation() {
     // Date range filter (inclusive)
     let matchesDateRange = true;
     if (startDate && endDate) {
-     const recordDate = parseDDMMYYYY(record.recordDate);
+      const recordDate = parseDDMMYYYY(record.recordDate);
 
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -188,7 +195,6 @@ export default function BiocharActivation() {
 
     return matchesSearch && matchesSite && matchesUser && matchesDateRange;
   });
-
 
   // Pagination
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
@@ -202,55 +208,57 @@ export default function BiocharActivation() {
     setIsViewDialogOpen(true);
   };
 
-const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>({
-  mutationFn: () =>
-    biocharActivationService.exportToCSV({
-      userId: userFilter !== "all" ? userFilter : undefined,
-      siteId: siteFilter !== "all" ? siteFilter : undefined,
-      // status: statusFilter !== "all" ? (statusFilter as any) : undefined,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-    }),
+  const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<
+    Blob,
+    Error
+  >({
+    mutationFn: () =>
+      biocharActivationService.exportToCSV({
+        userId: userFilter !== "all" ? userFilter : undefined,
+        siteId: siteFilter !== "all" ? siteFilter : undefined,
+        // status: statusFilter !== "all" ? (statusFilter as any) : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      }),
 
-  onSuccess: (blob) => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `biochar-activation-${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
+    onSuccess: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `biochar-activation-${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
 
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
 
-    toast.success("CSV exported successfully!");
-  },
+      toast.success("CSV exported successfully!");
+    },
 
-  onError: (error) => {
-    toast.error(error.message || "Failed to export CSV");
-  },
-});
+    onError: (error) => {
+      toast.error(error.message || "Failed to export CSV");
+    },
+  });
 
-
-    if (isUsersLoading || !records) {
-      return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
-            <p className="text-muted-foreground text-sm">Loading details...</p>
-          </div>
+  if (isUsersLoading || !records) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#295F58] border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading details...</p>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl  font-bold text-[#295F58]">
-            Biochar Activation
+            Biochar Mixing
           </h1>
           <p className=" text-sm text-muted-foreground mt-1">
             Track and verify biochar mixing and activation records
@@ -381,7 +389,7 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                     <TableCell colSpan={5} className="text-center py-12">
                       <div className="flex items-center justify-center gap-2 text-muted-foreground">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        <span>Loading biochar activation records...</span>
+                        <span>Loading Biochar Mixing records...</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -422,7 +430,6 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                        
                           <div className="text-sm text-muted-foreground">
                             Shift_No. {record.shift?.shiftNumber}
                           </div>
@@ -605,7 +612,7 @@ const { mutate: exportCSV, isPending: isExportingCSV } = useMutation<Blob,Error>
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Biochar Activation Details</DialogTitle>
+            <DialogTitle>Biochar Mixing Details</DialogTitle>
           </DialogHeader>
           {selectedRecord && (
             <div className="space-y-6 py-4">
