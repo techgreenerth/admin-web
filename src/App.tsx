@@ -50,17 +50,14 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
+      <Toaster/>
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
           <Routes>
             {/* Auth routes - No layout */}
             <Route path="/login" element={<Login />} />
-            <Route
-              path="/unauthorized"
-              element={<Unauthorized />}
-            />
+            <Route path="/unauthorized" element={<Unauthorized />} />
 
             {/* Protected Routes Wrapper */}
             <Route
@@ -89,17 +86,13 @@ const App = () => (
               <Route
                 path="/*"
                 element={
-                  <RoleGate allow={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPERVISOR]}>
-                    <AppLayout >
+                  <RoleGate
+                    allow={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.SUPERVISOR]}
+                  >
+                    <AppLayout>
                       <Routes>
-                        <Route
-                          path="/"
-                          element={<AdminDashboard />}
-                        />
-                        <Route
-                          path="users"
-                          element={<Users />}
-                        />
+                        <Route path="/" element={<AdminDashboard />} />
+                        <Route path="users" element={<Users />} />
                         {/* SUPER ADMIN ONLY */}
                         <Route
                           path="admins"
@@ -110,22 +103,10 @@ const App = () => (
                           }
                         />
 
-                        <Route
-                          path="sites"
-                          element={<Sites />}
-                        />
-                        <Route
-                          path="sites/:id"
-                          element={<SiteDetails />}
-                        />
-                        <Route
-                          path="kontikis"
-                          element={<Kontikis />}
-                        />
-                        <Route
-                          path="shifts"
-                          element={<Shifts />}
-                        />
+                        <Route path="sites" element={<Sites />} />
+                        <Route path="sites/:id" element={<SiteDetails />} />
+                        <Route path="kontikis" element={<Kontikis />} />
+                        <Route path="shifts" element={<Shifts />} />
                         <Route
                           path="biomass-sourcing"
                           element={<BiomassSourcing />}
@@ -142,23 +123,11 @@ const App = () => (
                           path="biochar-sampling"
                           element={<BiocharSampling />}
                         />
-                        <Route
-                          path="bulk-density"
-                          element={<BulkDensity />}
-                        />
-                        <Route
-                          path="help"
-                          element={<HelpSupport />}
-                        />
+                        <Route path="bulk-density" element={<BulkDensity />} />
+                        <Route path="help" element={<HelpSupport />} />
                         {/* <Route path="settings" element={<Settings />} /> */}
-                        <Route
-                          path="profile"
-                          element={<Profile />}
-                        />
-                        <Route
-                          path="*"
-                          element={<NotFound />}
-                        />
+                        <Route path="profile" element={<Profile />} />
+                        <Route path="*" element={<NotFound />} />
                       </Routes>
                     </AppLayout>
                   </RoleGate>
