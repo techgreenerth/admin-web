@@ -11,6 +11,10 @@ import Unauthorized from "./pages/Unauthorized";
 // Auth pages
 import Login from "./pages/auth/Login";
 
+// Public legal pages
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
+
 // Admin pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Users from "./pages/admin/Users";
@@ -55,9 +59,11 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Auth routes - No layout */}
+            {/* Public routes - No authentication required */}
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
 
             {/* Protected Routes Wrapper */}
             <Route

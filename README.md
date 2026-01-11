@@ -1,359 +1,178 @@
-# Tech Greenerth - Admin & Partner Portal
+# Greenerth - Admin & Partner Portal
 
-**Tech Greenerth Admin & Partner Portal** is a comprehensive React-based web application that provides powerful management, verification, and analytics tools for the biochar carbon credit platform. Built with modern web technologies, it offers real-time monitoring, batch verification, partner management, and compliance oversight features for Carbon Standards International (CSI) Global C-Sink Standards.
+**Greenerth Admin & Partner Portal** is a comprehensive React-based web application that provides powerful management, verification, and tracking tools for the biochar carbon credit platform. Built with modern web technologies, it offers real-time monitoring, production workflow management, and analytics features for biochar production operations.
 
 ## 🚀 Project Overview
 
-This is the **unified web portal** for the **Tech Greenerth Biochar Platform** ecosystem which serves:
+This is the **unified web portal** for the **Greenerth Biochar Platform** ecosystem which serves:
 
-- **Admin Dashboard** - Complete platform management, verification, and oversight
-- **Partner Portal** - Multi-site management, training, and production tracking
-- **Verifier Tools** - VVB (Validation and Verification Body) access and tools
-- **Analytics & Reporting** - Real-time insights and CSI-compliant reporting
+- **Admin Dashboard** - Complete platform management, production oversight, and analytics
+- **Supervisor Portal** (Implementation Partners) - Site management and production tracking
+- **CSI Manager Tools** - Access to verified records and compliance data
+- **Production Workflow** - End-to-end biochar production tracking from biomass to bulk density
 
 ## ✨ Key Features
 
 ### 🔐 Role-Based Access Control
 
-- **Admin Users** - Full platform access, verification, and configuration
-- **Partner Organizations** - Multi-site management and production oversight
-- **Verifier (VVB)** - Batch verification and CSI compliance validation
-- **Site Managers** - Individual site-level management
-- **Auditors** - Read-only access for compliance audits
+- **Super Admin** - Full platform access and admin user management
+- **Admin** - Platform management, verification, and configuration
+- **Supervisor** (Implementation Partners) - Site-level management and production oversight
+- **CSI Manager** - Access to verified records and compliance data
 
 ### 👥 User & Entity Management
 
 #### Admin Functions
 
-- **Artisan Pro profiles** with proficiency test tracking and certification
-- **C-Sink Cook profiles** with field GPS coordinates and harvest data
-- **Partner organization management** with multi-site hierarchies
-- **Kiln inventory** and assignment tracking
-- **Biomass profile management** with lab reports and carbon content
-- **Technology profiles** with methane emission factors
-- **User activity monitoring** and comprehensive audit trails
+- **User management** - Create and manage users with role-based access
+- **Admin management** - Super admin can create and manage admin users
+- **Site management** - Create, edit, and monitor production sites
+- **Kontiki (Kiln) inventory** - Track and manage kilns across sites
+- **User assignment** - Assign and revoke user access to specific sites
+- **Profile management** - User profile and account settings
 
-#### Partner Functions
+#### Supervisor Functions
 
-- **Multi-site dashboard** with production overview
-- **Artisan Pro management** within partner organization
-- **Kiln assignment** and tracking per site
-- **Site boundary mapping** with GPS coordinates
-- **Training module access** and completion tracking
-- **Document repository** (videos, labor lists, payment records)
+- **Site oversight** - Monitor assigned production sites
+- **Production tracking** - Track biochar production workflow
+- **Shift management** - Manage work shifts and schedules
+- **User coordination** - Work with assigned site users
 
-### 🌾 Production Management
+### 🌾 Production Workflow Management
 
-#### Biomass Sourcing
+The platform tracks the complete biochar production workflow across five key stages:
 
-- **Trip-by-trip tracking** with GPS-tagged photos
-- **Delivery log** with tractor identification
-- **GPS verification** with map view
-- **Photo evidence gallery** with metadata
+#### 1. Biomass Sourcing
+- **Delivery tracking** - Record biomass deliveries with timestamps
+- **Photo documentation** - Visual evidence of biomass materials
+- **Quantity logging** - Track biomass volumes and weights
+- **Source tracking** - Record biomass source information
 
-#### Biochar Production Dashboard
+#### 2. Biochar Production
+- **Production batches** - Create and track production batches
+- **Kontiki assignment** - Assign kilns to production batches
+- **Production monitoring** - Track production progress and status
+- **Photo verification** - Document production stages visually
+- **Data logging** - Record production parameters and metrics
 
-- **Batch tracking** with unique identifiers
-- **5-step production workflow** visualization
-- **Multi-kiln production** support per batch
-- **Production timeline** with milestone tracking
-- **AI volume estimation** display and validation
-- **Moisture reading** logs per kiln
-- **Photo verification** at each production stage
-- **Production capacity** vs. actual output analysis
+#### 3. Biochar Activation
+- **Activation records** - Track biochar activation process
+- **Bio-agent tracking** - Record activation agents used
+- **Process documentation** - Photo and data evidence
+- **Batch linkage** - Connect activation to production batches
 
-#### Biochar Mixing
+#### 4. Biochar Sampling
+- **Sample collection** - Record biochar samples taken
+- **Sample documentation** - Photo evidence and metadata
+- **Lab submission tracking** - Track samples sent for analysis
+- **Quality verification** - Document quality control measures
 
-- **Bio-agent tracking** with volume records
-- **Video verification** of activation process
-- **Batch quantity** documentation
-- **Agent inventory management**
+#### 5. Bulk Density Measurement
+- **Density calculations** - Calculate and record bulk density
+- **Measurement tracking** - Track density measurements over time
+- **Photo verification** - Visual documentation of measurements
+- **Data validation** - Ensure measurement accuracy
 
-#### Quality Control
-
-- **Weekly sampling** documentation
-- **Retention sample** photo gallery
-- **Lab report management** and uploads
-- **Quality metrics** dashboard (carbon content, H/C ratio)
-
-#### Bulk Density Measurements
-
-- **Sample tracking** with calculated density
-- **Weight measurement** video verification
-- **Density calculation** display with formulas
-- **Historical measurements** and trends
-
-### 🔍 Batch Verification & Approval
-
-#### Admin Verification Workflow
-
-- **Comprehensive batch dashboard** with filters (pending, approved, rejected)
-- **Individual batch detail view** with complete evidence trail
-- **Visual verification timeline** showing all 5 production steps
-- **Evidence review interface** with photo/video viewer
-- **AI estimation review** with confidence scores and manual override
-- **Data validation** against CSI standards (GPS precision, carbon content, H/C ratio)
-- **Admin approval workflow** with rejection reason documentation
-- **Immutable audit trail** after approval
-- **Batch status tracking** (Draft → Pending → Verified → Submitted to CSI)
-
-#### Verifier (VVB) Tools
-
-- **Dedicated verifier dashboard** with pending verification queue
-- **Deeplink access** to batch details from dMRV
-- **Evidence package review** (photos, videos, calculations)
-- **Compliance checklist** against CSI standards
-- **Batch bundling validation** for C-Sink Units
-- **Verification report generation** with digital signatures
-- **Direct submission** to CSI Global C-Sink Tool
-
-### 📊 Carbon Credit Management
-
-#### Carbon Credit Ledger
-
-- **Immutable credit log** with blockchain-style tracking
-- **Stock ID management** and assignment
-- **C-Sink Unit bundling** per CSI requirements
-- **Credit lifecycle tracking** (Stock → Sink → Issued → Retired)
-- **Advanced search and filtering** by date, project, producer, matrix
-- **Credit portfolio** visualization by project and partner
-- **Automated calculations** :
-- Biochar volume from AI estimates
-- Biochar weight from bulk density
-- Carbon content validation
-- Emissions deductions
-- Net carbon credits (tCO2e)
-
-#### CSI Integration Dashboard
-
-- **Real-time CSI Tool sync** status
-- **STOCK transaction** submission tracking
-- **SINK transaction** submission tracking
-- **Excel bulk upload** generation for CSI
-- **Monitoring report** generation (PDF with annexes)
-- **Certificate management** (Artisan C-Sink Manager, C-Sink Potential Attestation)
-- **Deeplink URL generation** for VVB access
-
-### 🗺️ Geospatial Management
-
-- **Interactive site mapping** with satellite imagery
-- **Field boundary visualization** with GPS polygons
-- **Production site plotting** on global map
-- **GPS coordinate validation** (5 decimal precision enforcement)
-- **Distance calculations** for transportation emissions
-- **Matrix classification** visualization by region
-- **Crop rotation tracking** per field
-- **Biomass sourcing** radius analysis
-
-### 📈 Analytics & Reporting
-
-#### Admin Analytics
-
-- **KPI widgets** (carbon credits generated, biochar produced, biomass processed)
-- **Global statistics** dashboard
-- **Production trends** (daily, weekly, monthly)
-- **Partner performance** comparison
-- **Artisan Pro productivity** rankings
-- **Quality control metrics** and anomaly detection
-- **Emissions portfolio** visualization
-- **Revenue projections** and carbon credit forecasting
-- **AI model performance** tracking (accuracy, confidence scores)
-
-#### Partner Analytics
-
-- **Multi-site production overview** with aggregate metrics
-- **Site-level performance** dashboards
-- **Artisan Pro productivity** per site
-- **Production volume** by time period
-- **Carbon credit allocation** by site
-- **Training completion rates**
-- **Quality control compliance** scores
-
-#### Reporting & Exports
-
-- **Flexible data selection** with custom date ranges
-- **CSV export** for raw data analysis
-- **PDF report generation** with branding
-- **Excel bulk uploads** for CSI submission
-- **Audit-ready formatting** with complete evidence packages
-- **Monitoring reports** (CSI-compliant PDF with annexes)
-- **Automated report scheduling** and email delivery
-
-### 🎯 Partner Management Portal
-
-#### Onboarding & Configuration
-
-- **Partner onboarding system** with document verification
-- **Organization hierarchy** setup (partner → sites → artisans)
-- **Access control** and user role assignment
-- **Kiln inventory** allocation per site
-- **Training module** assignment and tracking
+### 📊 Site & Shift Management
 
 #### Site Management
+- **Site creation** - Create and configure production sites
+- **Site details** - View comprehensive site information
+- **User assignment** - Assign and manage users per site
+- **Kontiki tracking** - Track kilns assigned to each site
+- **Site folders** - Organize site-related documents and files
+- **Status monitoring** - Track site operational status
 
-- **Multi-site dashboard** with production visualization
-- **Individual site detail pages** with GPS mapping
-- **Artisan Pro assignment** and performance tracking
-- **Kiln assignment** and utilization rates
-- **Site-level analytics** and reporting
+#### Shift Management
+- **Shift scheduling** - Create and manage work shifts
+- **User assignment** - Assign users to shifts
+- **Time tracking** - Monitor shift start and end times
+- **Production linkage** - Connect shifts to production activities
+- **Historical records** - View past shift data and performance
 
-#### Training & Compliance
+### 📈 Dashboard & Analytics
 
-- **Training module library** (video content, PDFs, quizzes)
-- **Progress tracking** per artisan and site
-- **Certification management** and expiry tracking
-- **Proficiency test** administration and results
-- **Compliance monitoring** against CSI standards
+#### Admin Dashboard
+- **Overview metrics** - Key performance indicators at a glance
+- **Production statistics** - Track biochar production across all sites
+- **Site overview** - Monitor all production sites and their status
+- **User activity** - Track user engagement and activity
+- **Recent activities** - View latest system activities and updates
+- **Quick actions** - Access frequently used features quickly
 
-#### Document Management
+### 🔧 Additional Features
 
-- **Document upload system** (site videos, training materials, labor lists)
-- **Payment record management**
-- **Contract document** storage and versioning
-- **Lab report repository**
-- **Certificate archive**
+#### CSI Verified Records (CSI Manager)
+- **Verified data access** - View verified biochar production records
+- **Compliance tracking** - Monitor compliance with CSI standards
+- **Data export** - Export verified records for reporting
 
-#### Invoice & Payment Management
-
-- **Invoice generation** with customizable templates
-- **Payment tracking** and reconciliation
-- **Financial analytics** by partner and site
-- **Automated payment reminders**
-- **Transaction history** with detailed records
-
-### 🔧 Platform Administration
-
-#### System Configuration
-
-- **Emission factors table** with sources and CSI approval status
-- **Calculation formulas** (admin-configurable)
-- **Margin of security** settings per project
-- **Matrix list** management (permissible matrices)
-- **Default values** configuration (bulk density, carbon content)
-- **Feature toggles** for gradual rollout
-
-#### Content Management
-
-- **Training content** upload and organization
-- **App notifications** configuration
-- **Email templates** management
-- **SMS templates** for field workers
-- **Announcement system** for partners and artisans
-
-#### AI/ML Model Management
-
-- **Model version tracking** and deployment
-- **Accuracy monitoring** and performance metrics
-- **Confidence threshold** configuration
-- **Manual override** tracking and analysis
-- **Model retraining** scheduling and data preparation
-
-#### API & Integration Monitoring
-
-- **CSI Global C-Sink Tool** connection status
-- **ML service** health checks
-- **Mobile app sync** queue monitoring
-- **Database performance** metrics
-- **Error logs** and debugging tools
-
-### 📱 Real-Time Features
-
-- **Production notifications** (batch completion, verification needed)
-- **Sync status updates** for offline mobile data
-- **AI estimation completion** alerts
-- **Verification approval** notifications
-- **CSI submission** status updates
-- **Admin alerts** for anomalies or compliance issues
+#### Profile & Settings
+- **User profile** - Manage personal account information
+- **Settings** - Configure user preferences and account settings
+- **Help & Support** - Access help documentation and support resources
 
 ## 🛠 Tech Stack
 
 ### Core Framework
 
-- **React** `^18.2.0` - Modern React with hooks and concurrent features
-- **TypeScript** `^5.3.3` - Type-safe JavaScript development
-- **Vite** `^4.2.0` - Fast build tool and development server
+- **React** `^18.3.1` - Modern React with hooks and concurrent features
+- **TypeScript** `^5.8.3` - Type-safe JavaScript development
+- **Vite** `^5.4.19` - Fast build tool and development server
 
 ### UI & Design System
 
 - **Radix UI** - Headless, accessible UI components
-  - `@radix-ui/react-dialog: ^1.1.13` - Modal dialogs
-  - `@radix-ui/react-dropdown-menu: ^2.1.4` - Dropdown menus
-  - `@radix-ui/react-tabs: ^1.1.2` - Tab navigation
-  - `@radix-ui/react-select: ^2.1.4` - Select components
-  - `@radix-ui/react-accordion: ^1.2.3` - Accordion components
-  - `@radix-ui/react-tooltip: ^1.1.8` - Tooltips
-- **Tailwind CSS** `^3.3.1` - Utility-first CSS framework
-- **Lucide React** (`lucide-react: ^0.277.0`) - Modern icon library
-- **Class Variance Authority** (`class-variance-authority: ^0.7.0`) - CSS-in-JS utilities
-- **Brand Colors** : #295F58, #E1EFEE, #D0F07B, #D6E5AB, #FFFDF0 (per brand guidelines)
+  - `@radix-ui/react-dialog: ^1.1.14` - Modal dialogs
+  - `@radix-ui/react-dropdown-menu: ^2.1.15` - Dropdown menus
+  - `@radix-ui/react-tabs: ^1.1.12` - Tab navigation
+  - `@radix-ui/react-select: ^2.2.5` - Select components
+  - `@radix-ui/react-accordion: ^1.2.11` - Accordion components
+  - `@radix-ui/react-tooltip: ^1.2.7` - Tooltips
+  - `@radix-ui/react-toast: ^1.2.14` - Toast notifications
+  - Plus 15+ other Radix UI components
+- **Tailwind CSS** `^3.4.17` - Utility-first CSS framework
+- **Lucide React** (`lucide-react: ^0.462.0`) - Modern icon library
+- **Class Variance Authority** (`class-variance-authority: ^0.7.1`) - Component variants
+- **Shadcn/ui** - Re-usable component library built on Radix UI
 
 ### State Management
 
-- **Redux Toolkit** (`@reduxjs/toolkit: ^2.8.2`) - Modern Redux state management
+- **Redux Toolkit** (`@reduxjs/toolkit: ^2.11.2`) - Modern Redux state management
 - **React Redux** (`react-redux: ^9.2.0`) - React bindings for Redux
-- **Redux Persist** (`redux-persist: ^6.0.0`) - State persistence
+- **React Context API** - Context providers for feature-specific state
 
 ### Data Fetching & API
 
-- **TanStack Query** (`@tanstack/react-query: ^4.29.3`) - Server state management
-- **Axios** (`axios: ^1.7.9`) - HTTP client for API requests
-- **React Hook Form** (`react-hook-form: ^7.54.2`) - Form management
-- **Hookform Resolvers** (`@hookform/resolvers: ^3.9.1`) - Form validation
-- **Zod** (`zod: ^3.24.1`) - TypeScript-first schema validation
+- **TanStack Query** (`@tanstack/react-query: ^5.83.0`) - Server state management and caching
+- **Axios** (`axios: ^1.13.2`) - HTTP client for API requests with interceptors
+- **React Hook Form** (`react-hook-form: ^7.61.1`) - Performant form management
+- **Hookform Resolvers** (`@hookform/resolvers: ^3.10.0`) - Form validation integration
+- **Zod** (`zod: ^3.25.76`) - TypeScript-first schema validation
 
 ### Routing & Navigation
 
-- **React Router DOM** (`react-router-dom: ^6.10.0`) - Client-side routing
-- **Loadable Component** (`@loadable/component: ^5.15.3`) - Code splitting
+- **React Router DOM** (`react-router-dom: ^6.30.1`) - Client-side routing with role-based guards
 
 ### Data Visualization & Charts
 
-- **Recharts** (`recharts: ^2.15.0`) - React charting library for analytics
-- **React Charts** - Production trends and carbon credit visualization
-- **ApexCharts** (`apexcharts: ^3.45.0`) - Advanced interactive charts
-- **D3.js** (`d3: ^7.8.5`) - Custom data visualizations
-
-### Mapping & Geospatial
-
-- **Mapbox GL** (`mapbox-gl: ^3.0.1`) - Interactive maps with satellite imagery
-- **React Map GL** (`react-map-gl: ^7.1.6`) - React wrapper for Mapbox
-- **Turf.js** (`@turf/turf: ^7.2.0`) - Geospatial analysis and calculations
-
-### Document Processing
-
-- **React PDF** (`@react-pdf/renderer: ^3.1.14`) - PDF generation
-- **XLSX** (`xlsx: ^0.18.5`) - Excel file processing and bulk uploads
-- **PapaParse** (`papaparse: ^5.5.2`) - CSV parsing and export
-- **jsPDF** (`jspdf: ^2.5.2`) - Additional PDF generation
-
-### Media & File Handling
-
-- **React Dropzone** (`react-dropzone: ^14.2.3`) - File upload interface
-- **React Image Gallery** (`react-image-gallery: ^1.3.0`) - Photo evidence viewer
-- **React Player** (`react-player: ^2.13.0`) - Video player for verification
-
-### Internationalization
-
-- **i18next** (`i18next: ^23.5.1`) - Internationalization framework
-- **React i18next** (`react-i18next: ^13.2.2`) - React bindings for i18next
-- **i18next Browser Language Detector** - Automatic language detection
+- **Recharts** (`recharts: ^2.15.4`) - React charting library for dashboard analytics
 
 ### Development Tools
 
-- **ESLint** (`eslint: ^8.38.0`) - Code linting
-- **Prettier** (`prettier: ^2.8.8`) - Code formatting
-- **TypeScript ESLint** - TypeScript-specific linting rules
-- **Stylelint** (`stylelint: ^15.4.0`) - CSS linting
-- **Husky** (`husky: ^8.0.3`) - Git hooks
-- **Lint Staged** (`lint-staged: ^13.2.1`) - Pre-commit linting
+- **ESLint** (`eslint: ^9.32.0`) - Code linting with modern flat config
+- **TypeScript ESLint** (`typescript-eslint: ^8.38.0`) - TypeScript-specific linting rules
+- **Vite Plugin React SWC** (`@vitejs/plugin-react-swc: ^3.11.0`) - Fast refresh with SWC
+- **Tailwind Typography** (`@tailwindcss/typography: ^0.5.16`) - Typography plugin
 
 ### Utilities
 
-- **Date-fns** (`date-fns: ^4.1.0`) - Date manipulation library
-- **clsx** (`clsx: ^2.0.0`) - Conditional CSS classes
-- **Lodash** (`lodash: ^4.17.21`) - Utility functions
-- **React Hot Toast** (`react-hot-toast: ^2.4.1`) - Toast notifications
-- **React Markdown** (`react-markdown: ^9.0.1`) - Markdown rendering
+- **Date-fns** (`date-fns: ^3.6.0`) - Modern date manipulation library
+- **clsx** (`clsx: ^2.1.1`) - Conditional CSS class composition
+- **Tailwind Merge** (`tailwind-merge: ^2.6.0`) - Merge Tailwind classes intelligently
+- **React Hot Toast** (`react-hot-toast: ^2.6.0`) - Toast notifications
+- **Sonner** (`sonner: ^1.7.4`) - Toast component library
+- **Next Themes** (`next-themes: ^0.3.0`) - Theme management (dark/light mode)
 
 ## 🔧 Installation & Setup
 
@@ -367,66 +186,38 @@ This is the **unified web portal** for the **Tech Greenerth Biochar Platform** e
 
 ```bash
 git clone <repository-url>
-cd tech-greenerth/admin-web
+cd admin-web
 ```
 
 ### 2. Install Dependencies
 
 ```bash
-# Using yarn (recommended)
-yarn install
-
-# Using npm
+# Using npm (recommended)
 npm install
+
+# Using yarn
+yarn install
 
 # Using pnpm
 pnpm install
+
+# Using bun
+bun install
 ```
 
 ### 3. Environment Configuration
 
-Create `.env` file with required variables:
+Create `.env.local` file with required variables:
 
 ```bash
 # API Configuration
 VITE_API_BASE_URL="http://localhost:3000/api"
-VITE_ML_API_URL="http://localhost:8000"
 VITE_APP_ENV="development"
 
-# Authentication
-VITE_JWT_SECRET="your-jwt-secret"
-
-# Firebase Configuration
-VITE_FIREBASE_API_KEY="your-firebase-api-key"
-VITE_FIREBASE_AUTH_DOMAIN="your-firebase-auth-domain"
-VITE_FIREBASE_PROJECT_ID="your-firebase-project-id"
-VITE_FIREBASE_STORAGE_BUCKET="your-storage-bucket"
-
-# Mapbox Configuration
-VITE_MAPBOX_ACCESS_TOKEN="your-mapbox-token"
-
-# CSI Integration
-VITE_CSI_API_URL="https://api.carbon-standards.com"
-VITE_CSI_STAG_URL="https://stag.carbon-standards.com"
-VITE_CSI_PROD_URL="https://prod.carbon-standards.com"
-
-# AWS S3 Configuration (for media access)
-VITE_AWS_S3_BUCKET_URL="https://tech-greenerth-media.s3.amazonaws.com"
-
-# Analytics
-VITE_GOOGLE_ANALYTICS_ID="your-ga-id"
-VITE_SENTRY_DSN="your-sentry-dsn"
-
-# Feature Flags
-VITE_ENABLE_AI_OVERRIDE="true"
-VITE_ENABLE_BLOCKCHAIN="false"
-VITE_ENABLE_ADVANCED_ANALYTICS="true"
-
-# CSI Compliance Settings
-VITE_MIN_GPS_PRECISION=5
-VITE_MIN_C_SINK_UNIT=1
-VITE_MARGIN_OF_SECURITY=0.1
+# Add other environment variables as needed for your backend API
 ```
+
+**Note:** The project uses `.env.local` for local development. Never commit this file to version control.
 
 ### 4. Run the Application
 
@@ -434,8 +225,6 @@ VITE_MARGIN_OF_SECURITY=0.1
 
 ```bash
 # Start development server
-yarn dev
-# or
 npm run dev
 
 # Runs on http://localhost:5173
@@ -445,67 +234,26 @@ npm run dev
 
 ```bash
 # Build the application
-yarn build
-# or
 npm run build
+
+# Build for development mode
+npm run build:dev
 ```
 
 #### Preview Production Build
 
 ```bash
 # Preview production build locally
-yarn preview
-# or
 npm run preview
 ```
 
 ### 5. Development Tools
 
-#### Type Checking
-
-```bash
-# Run TypeScript type checking
-yarn typecheck
-# or
-npm run typecheck
-
-# Watch mode for continuous type checking
-yarn typecheck:watch
-# or
-npm run typecheck:watch
-```
-
 #### Code Quality
 
 ```bash
 # Run linting
-yarn lint
-# or
 npm run lint
-
-# Fix linting issues
-yarn lint:fix
-# or
-npm run lint:fix
-
-# Format code with Prettier
-yarn format
-# or
-npm run format
-```
-
-#### Testing
-
-```bash
-# Run unit tests
-yarn test
-# or
-npm run test
-
-# Run tests with coverage
-yarn test:coverage
-# or
-npm run test:coverage
 ```
 
 ## 📁 Project Architecture
@@ -514,285 +262,178 @@ The web portal follows **feature-based architecture** with **component-driven de
 
 ```text
 src/
-├── app.tsx                          # Main App component
+├── App.tsx                          # Main App component with routing
+├── App.css                          # App-specific styles
 ├── main.tsx                         # Application entry point
+├── index.css                        # Global styles and Tailwind imports
 ├── vite-env.d.ts                    # Vite environment types
 │
-├── assets/                          # Static assets
-│   ├── logo.png                     # Application logo (per brand guidelines)
-│   ├── icons/                       # Custom SVG icons
-│   └── images/                      # Static images
-│
 ├── components/                      # Reusable UI components
-│   ├── ui/                          # Base UI components (Radix wrappers)
+│   ├── ui/                          # Shadcn/ui components (50+ components)
 │   │   ├── button.tsx               # Button component
 │   │   ├── dialog.tsx               # Modal dialog
-│   │   ├── dropdown.tsx             # Dropdown menu
+│   │   ├── dropdown-menu.tsx        # Dropdown menu
 │   │   ├── tabs.tsx                 # Tab navigation
 │   │   ├── select.tsx               # Select component
-│   │   ├── input.tsx                # Input field
 │   │   ├── card.tsx                 # Card container
-│   │   └── tooltip.tsx              # Tooltip component
+│   │   ├── toast.tsx                # Toast notifications
+│   │   ├── sidebar.tsx              # Sidebar component
+│   │   └── ...                      # And many more
 │   ├── layout/                      # Layout components
-│   │   ├── header.tsx               # Application header
-│   │   ├── sidebar.tsx              # Navigation sidebar
-│   │   ├── footer.tsx               # Application footer
-│   │   └── page-layout.tsx          # Page wrapper
-│   ├── charts/                      # Chart components
-│   │   ├── production-chart.tsx     # Production trends
-│   │   ├── carbon-credit-chart.tsx  # Carbon credit visualization
-│   │   └── emissions-chart.tsx      # Emissions portfolio
-│   ├── maps/                        # Map components
-│   │   ├── site-map.tsx             # Interactive site map
-│   │   ├── field-boundary-map.tsx   # Field boundaries
-│   │   └── global-map.tsx           # Global production sites
-│   └── shared/                      # Shared components
-│       ├── loading-spinner.tsx      # Loading states
-│       ├── error-boundary.tsx       # Error handling
-│       ├── data-table.tsx           # Reusable data tables
-│       ├── photo-viewer.tsx         # Photo evidence viewer
-│       ├── video-player.tsx         # Video verification player
-│       └── gps-display.tsx          # GPS coordinate display
+│   │   ├── AppLayout.tsx            # Main application layout
+│   │   ├── AppSidebar.tsx           # Navigation sidebar
+│   │   ├── Header.tsx               # Application header
+│   │   └── SidebarNavItem.tsx       # Sidebar navigation items
+│   ├── auth/                        # Authentication components
+│   │   ├── ProtectedRoute.tsx       # Route protection wrapper
+│   │   └── ...
+│   ├── kontikis/                    # Kontiki (kiln) components
+│   │   ├── CreateKontikiDialog.tsx  # Create kiln dialog
+│   │   ├── EditKontikiDialog.tsx    # Edit kiln dialog
+│   │   └── ViewKontikiDialog.tsx    # View kiln details
+│   ├── sites/                       # Site management components
+│   │   ├── CreateSiteDialog.tsx     # Create site dialog
+│   │   ├── EditSiteDialog.tsx       # Edit site dialog
+│   │   ├── ViewSiteDetailsDialog.tsx # View site details
+│   │   ├── AssignUserDialog.tsx     # Assign user to site
+│   │   ├── RevokeUserDialog.tsx     # Revoke user access
+│   │   ├── FolderDialog.tsx         # Site folder management
+│   │   └── ViewFileDialog.tsx       # View site files
+│   ├── DataProviders.tsx            # Data context providers wrapper
+│   ├── GlobalLoader.tsx             # Global loading state
+│   └── NavLink.tsx                  # Navigation link component
 │
-├── contexts/                        # React contexts
-│   ├── auth-context.tsx             # Authentication context
-│   ├── theme-context.tsx            # Theme provider
-│   └── user-context.tsx             # User role and permissions
+├── contexts/                        # React context providers
+│   ├── AuthContext.tsx              # Authentication state & methods
+│   ├── DashboardContext.tsx         # Dashboard data context
+│   ├── siteContext.tsx              # Site management context
+│   ├── kontikisContext.tsx          # Kontiki management context
+│   ├── biomassSourcingContext.tsx   # Biomass sourcing context
+│   ├── biocharProductionContext.tsx # Biochar production context
+│   ├── biocharActivationContext.tsx # Biochar activation context
+│   ├── biocharSamplingContext.tsx   # Biochar sampling context
+│   ├── bulkDensityContext.tsx       # Bulk density context
+│   └── ProfileContext.tsx           # User profile context
 │
 ├── hooks/                           # Custom React hooks
-│   ├── auth/                        # Authentication hooks
-│   │   ├── use-auth.tsx             # Auth state and actions
-│   │   └── use-permissions.tsx      # Role-based permissions
-│   ├── admin/                       # Admin-specific hooks
-│   │   ├── use-batch-verification.tsx
-│   │   ├── use-carbon-ledger.tsx
-│   │   ├── use-artisan-management.tsx
-│   │   └── use-csi-integration.tsx
-│   ├── partner/                     # Partner-specific hooks
-│   │   ├── use-partner-dashboard.tsx
-│   │   ├── use-site-management.tsx
-│   │   ├── use-training-modules.tsx
-│   │   └── use-invoice-management.tsx
-│   ├── production/                  # Production data hooks
-│   │   ├── use-biomass-sourcing.tsx
-│   │   ├── use-biochar-production.tsx
-│   │   ├── use-activation.tsx
-│   │   ├── use-sampling.tsx
-│   │   └── use-bulk-density.tsx
-│   ├── analytics/                   # Analytics hooks
-│   │   ├── use-dashboard-analytics.tsx
-│   │   ├── use-production-metrics.tsx
-│   │   └── use-carbon-credit-analytics.tsx
-│   ├── geospatial/                  # Geospatial hooks
-│   │   ├── use-site-mapping.tsx
-│   │   └── use-gps-validation.tsx
-│   └── common/                      # Common utility hooks
-│       ├── use-toast.tsx            # Toast notifications
-│       ├── use-debounce.tsx         # Input debouncing
-│       └── use-pagination.tsx       # Pagination logic
+│   └── ...                          # Feature-specific hooks
 │
 ├── lib/                             # Utilities and services
-│   ├── api/                         # API client configuration
-│   │   ├── axios.ts                 # Axios instance
-│   │   ├── endpoints.ts             # API endpoints
-│   │   └── interceptors.ts          # Request/response interceptors
-│   ├── utils/                       # Utility functions
-│   │   ├── date-utils.ts            # Date formatting
-│   │   ├── gps-utils.ts             # GPS validation and formatting
-│   │   ├── calculation-utils.ts     # Carbon credit calculations
-│   │   ├── validation-utils.ts      # Data validation
-│   │   └── export-utils.ts          # CSV/Excel export
-│   ├── constants/                   # Application constants
-│   │   ├── csi-standards.ts         # CSI standard values
-│   │   ├── emission-factors.ts      # Emission factors table
-│   │   ├── routes.ts                # Route definitions
-│   │   └── colors.ts                # Brand color palette
-│   └── services/                    # Business logic services
-│       ├── csi-service.ts           # CSI integration
-│       ├── pdf-service.ts           # PDF generation
-│       └── excel-service.ts         # Excel bulk uploads
+│   ├── api/                         # API services
+│   │   ├── axios.ts                 # Axios instance with interceptors
+│   │   ├── auth.service.ts          # Authentication API calls
+│   │   ├── admin.service.ts         # Admin API calls
+│   │   ├── user.service.ts          # User management API
+│   │   ├── sites.service.ts         # Site management API
+│   │   ├── kontikis.service.ts      # Kontiki management API
+│   │   ├── biomassSourcing.service.ts
+│   │   ├── biocharProduction.service.ts
+│   │   ├── biocharActivation.service.ts
+│   │   ├── biocharSampling.service.ts
+│   │   ├── bulkDensity.service.ts
+│   │   ├── dashboard.service.ts     # Dashboard data API
+│   │   ├── profile.service.ts       # User profile API
+│   │   └── csi/                     # CSI-specific services
+│   └── utils/                       # Utility functions
+│       └── ...                      # Helper utilities
 │
 ├── pages/                           # Page components (route-based)
 │   ├── auth/                        # Authentication pages
-│   │   ├── login.tsx                # Login page
-│   │   ├── register.tsx             # Registration page
-│   │   └── forgot-password.tsx      # Password reset
+│   │   ├── Login.tsx                # Login page
+│   │   └── RoleGate.tsx             # Role-based access guard
 │   │
-│   ├── admin/                       # Admin pages
-│   │   ├── dashboard/               # Admin dashboard
-│   │   │   └── index.tsx            # Main dashboard with KPIs
-│   │   ├── verification/            # Batch verification
-│   │   │   ├── pending-batches.tsx  # Pending verification queue
-│   │   │   ├── batch-detail.tsx     # Individual batch review
-│   │   │   └── verification-history.tsx
-│   │   ├── carbon-ledger/           # Carbon credit management
-│   │   │   ├── index.tsx            # Credit ledger dashboard
-│   │   │   ├── stock-transactions.tsx
-│   │   │   └── sink-transactions.tsx
-│   │   ├── users/                   # User management
-│   │   │   ├── artisan-pros.tsx     # Artisan Pro management
-│   │   │   ├── partners.tsx         # Partner organizations
-│   │   │   ├── admins.tsx           # Admin users
-│   │   │   └── user-detail.tsx      # User profile view
-│   │   ├── entities/                # Entity management
-│   │   │   ├── kilns.tsx            # Kiln inventory
-│   │   │   ├── biomass-profiles.tsx # Biomass profiles
-│   │   │   ├── sites.tsx            # Site management
-│   │   │   └── fields.tsx           # Field mapping
-│   │   ├── production/              # Production oversight
-│   │   │   ├── biomass-deliveries.tsx
-│   │   │   ├── production-batches.tsx
-│   │   │   ├── activation-records.tsx
-│   │   │   ├── samples.tsx
-│   │   │   └── bulk-density.tsx
-│   │   ├── csi-integration/         # CSI tool integration
-│   │   │   ├── submission-queue.tsx # Pending CSI submissions
-│   │   │   ├── sync-status.tsx      # Sync status monitoring
-│   │   │   └── certificates.tsx     # Certificate management
-│   │   ├── analytics/               # Advanced analytics
-│   │   │   ├── production-analytics.tsx
-│   │   │   ├── quality-control.tsx
-│   │   │   ├── partner-performance.tsx
-│   │   │   └── ml-performance.tsx   # AI model analytics
-│   │   ├── reports/                 # Report generation
-│   │   │   ├── monitoring-reports.tsx
-│   │   │   ├── audit-reports.tsx
-│   │   │   └── custom-reports.tsx
-│   │   └── settings/                # System settings
-│   │       ├── emission-factors.tsx # Emission factors table
-│   │       ├── formulas.tsx         # Calculation formulas
-│   │       ├── matrix-list.tsx      # Matrix management
-│   │       └── feature-flags.tsx    # Feature toggles
+│   ├── admin/                       # Admin & Supervisor pages
+│   │   ├── AdminDashboard.tsx       # Dashboard with analytics
+│   │   ├── Users.tsx                # User management
+│   │   ├── Admins.tsx               # Admin user management (Super Admin only)
+│   │   ├── Sites.tsx                # Site management
+│   │   ├── SiteDetails.tsx          # Individual site details
+│   │   ├── Kontikis.tsx             # Kontiki (kiln) management
+│   │   ├── Shifts.tsx               # Shift management
+│   │   ├── BiomassSourcing.tsx      # Biomass sourcing tracking
+│   │   ├── BiocharProduction.tsx    # Biochar production tracking
+│   │   ├── BiocharActivation.tsx    # Biochar activation tracking
+│   │   ├── BiocharSampling.tsx      # Biochar sampling tracking
+│   │   ├── BulkDensity.tsx          # Bulk density measurements
+│   │   ├── Profile.tsx              # User profile & settings
+│   │   ├── HelpSupport.tsx          # Help & support page
+│   │   └── Settings.tsx             # Application settings
 │   │
-│   ├── partner/                     # Partner portal pages
-│   │   ├── dashboard/               # Partner dashboard
-│   │   │   └── index.tsx            # Multi-site overview
-│   │   ├── sites/                   # Site management
-│   │   │   ├── site-list.tsx        # All sites
-│   │   │   ├── site-detail.tsx      # Individual site
-│   │   │   └── site-analytics.tsx   # Site-level analytics
-│   │   ├── artisans/                # Artisan Pro management
-│   │   │   ├── artisan-list.tsx     # All artisans
-│   │   │   ├── artisan-detail.tsx   # Artisan profile
-│   │   │   └── performance.tsx      # Performance tracking
-│   │   ├── production/              # Production tracking
-│   │   │   ├── production-overview.tsx
-│   │   │   ├── batch-tracking.tsx
-│   │   │   └── quality-metrics.tsx
-│   │   ├── training/                # Training management
-│   │   │   ├── module-library.tsx   # Training modules
-│   │   │   ├── progress-tracking.tsx
-│   │   │   └── certificates.tsx     # Certification tracking
-│   │   ├── documents/               # Document management
-│   │   │   ├── document-repository.tsx
-│   │   │   ├── lab-reports.tsx
-│   │   │   └── contracts.tsx
-│   │   ├── invoices/                # Invoice management
-│   │   │   ├── invoice-list.tsx
-│   │   │   ├── create-invoice.tsx
-│   │   │   └── payment-tracking.tsx
-│   │   └── analytics/               # Partner analytics
-│   │       ├── production-metrics.tsx
-│   │       └── carbon-credits.tsx
+│   ├── Csi/                         # CSI Manager pages
+│   │   └── CsiVerifiedRecords.tsx   # Verified records view
 │   │
-│   ├── verifier/                    # Verifier (VVB) pages
-│   │   ├── dashboard.tsx            # Verifier dashboard
-│   │   ├── verification-queue.tsx   # Pending verifications
-│   │   ├── batch-review.tsx         # Detailed batch review
-│   │   └── compliance-checklist.tsx # CSI compliance check
-│   │
-│   └── shared/                      # Shared pages
-│       ├── profile.tsx              # User profile
-│       ├── notifications.tsx        # Notification center
-│       └── help.tsx                 # Help and documentation
+│   ├── NotFound.tsx                 # 404 page
+│   └── Unauthorized.tsx             # 403 unauthorized page
 │
-├── redux/                           # State management
-│   ├── store.ts                     # Redux store configuration
-│   ├── slices/                      # Redux slices
-│   │   ├── auth-slice.ts            # Authentication state
-│   │   ├── user-slice.ts            # User data
-│   │   ├── batch-slice.ts           # Batch data
-│   │   └── carbon-ledger-slice.ts   # Carbon credit state
-│   └── middleware/                  # Redux middleware
-│       └── api-middleware.ts        # API call middleware
+├── store/                           # Redux state management
+│   ├── kontikis/                    # Kontiki store slices
+│   └── ...                          # Other store modules
 │
-├── router.tsx                       # Application routing
-│   ├── admin-routes.tsx             # Admin route guards
-│   ├── partner-routes.tsx           # Partner route guards
-│   └── verifier-routes.tsx          # Verifier route guards
+├── types/                           # TypeScript type definitions
+│   ├── auth.types.ts                # Authentication & role types
+│   ├── site.types.ts                # Site types
+│   ├── kontikis.types.ts            # Kontiki types
+│   ├── biomassSourcing.types.ts     # Biomass sourcing types
+│   ├── biocharProduction.types.ts   # Production types
+│   ├── biocharActivation.types.ts   # Activation types
+│   ├── biocharSampling.types.ts     # Sampling types
+│   ├── bulkDensity.types.ts         # Bulk density types
+│   ├── dashboard.types.ts           # Dashboard types
+│   └── profile.types.ts             # Profile types
 │
-├── styles/                          # Global styles
-│   ├── globals.css                  # Global CSS
-│   ├── tailwind.css                 # Tailwind directives
-│   └── brand-colors.css             # Brand color variables
-│
-└── types/                           # TypeScript type definitions
-    ├── api.types.ts                 # API response types
-    ├── user.types.ts                # User and role types
-    ├── production.types.ts          # Production data types
-    ├── carbon-credit.types.ts       # Carbon credit types
-    ├── csi.types.ts                 # CSI integration types
-    └── geospatial.types.ts          # GPS and mapping types
+└── constrants/                      # Application constants
+    └── roles.ts                     # Role definitions
 ```
 
 ### Key Architecture Patterns
 
-- **Component-Based Architecture** : Modular, reusable UI components
-- **Feature-Based Organization** : Code organized by admin/partner domains
+- **Component-Based Architecture** : Modular, reusable UI components with Shadcn/ui
+- **Feature-Based Organization** : Code organized by production workflow modules
+- **Context API Pattern** : React Context for feature-specific state management
 - **Custom Hooks Pattern** : Business logic abstraction with React hooks
-- **Role-Based Routing** : Protected routes based on user permissions
-- **Context API** : Global state for auth and theme
-- **Redux Toolkit** : Complex state management for production data
-- **Type-Safe Development** : Comprehensive TypeScript integration
+- **Role-Based Routing** : Protected routes with RoleGate components
+- **Service Layer** : Dedicated API service files for each feature
+- **Redux Toolkit** : State management for complex features (e.g., Kontikis)
+- **Type-Safe Development** : Comprehensive TypeScript with strict typing
 
 ## 🎨 Design System
 
-### Brand Guidelines
-
-- **Font Family** : Arial (per brand guidelines)
-- **Color Palette** :
-- Primary: #295F58
-- Secondary: #E1EFEE
-- Accent 1: #D0F07B
-- Accent 2: #D6E5AB
-- Background: #FFFDF0
-
 ### Component Library
 
-- **Radix UI Primitives** : Headless, accessible components
-- **Custom Components** : Built on Radix with brand styling
-- **Consistent Styling** : Tailwind CSS with brand color palette
-- **Dark/Light Themes** : Optional theme switching
+- **Shadcn/ui** : Beautiful, accessible components built on Radix UI
+- **Radix UI Primitives** : Headless, accessible component primitives
+- **50+ UI Components** : Comprehensive component library
+- **Consistent Styling** : Tailwind CSS with utility-first approach
+- **Theme Support** : Dark/light mode with next-themes
 
 ### Styling Approach
 
-- **Tailwind CSS** : Utility-first styling approach
-- **Component Variants** : Consistent component styling with CVA
-- **Responsive Design** : Mobile-first responsive layouts (tablets and desktop)
-- **Accessibility** : WCAG 2.1 AA compliant components
+- **Tailwind CSS** : Utility-first CSS framework
+- **Component Variants** : CVA (Class Variance Authority) for component variations
+- **Responsive Design** : Mobile-first responsive layouts
+- **Accessibility** : WCAG-compliant components from Radix UI
 
 ## 🚦 Development Guidelines
 
 ### Getting Started for New Developers
 
-1. **Understand CSI Standards** : Review Global C-Sink Standards documentation
-2. **Study the 5 Modules** : Understand biochar production workflow
-3. **Review Component Library** : Examine existing UI components and patterns
-4. **Study API Integration** : Look at existing hooks and API client setup
-5. **Understand Role-Based Access** : Learn admin vs. partner permissions
+1. **Understand the Production Workflow** : Learn the 5-stage biochar production process
+2. **Study Role-Based Access** : Understand Super Admin, Admin, Supervisor, and CSI Manager roles
+3. **Review Component Library** : Examine Shadcn/ui components and patterns
+4. **Study API Integration** : Look at existing service files and context providers
+5. **Understand Context Pattern** : Learn how feature contexts manage state
 6. **Follow React Patterns** : Use hooks, context, and modern React patterns
-7. **Test GPS Features** : Understand 5 decimal precision requirements
+7. **Review Type Definitions** : Study TypeScript types for each module
 
 ### Code Style & Standards
 
-- **TypeScript** : Use strict typing and proper interfaces
-- **ESLint + Prettier** : Automated code formatting and linting
+- **TypeScript** : Use strict typing with proper interfaces and types
+- **ESLint** : Automated code linting with modern flat config
 - **Component Naming** : Use PascalCase for components, camelCase for functions
-- **File Organization** : Group related functionality in feature folders
-- **Accessibility** : Use semantic HTML and ARIA attributes
-- **Performance** : Implement lazy loading and code splitting
-- **GPS Precision** : Always validate 5 decimal places in displays
-- **Brand Colors** : Use brand color palette consistently
+- **File Organization** : Group related functionality in feature modules
+- **Accessibility** : Radix UI provides accessible components by default
+- **Context Pattern** : Use React Context for feature-specific state
+- **Service Layer** : Keep API calls in dedicated service files
 
 ### Development Workflow
 
@@ -806,113 +447,78 @@ src/
 
 ### Common Development Tasks
 
-#### Adding a New Admin Page
+#### Adding a New Page
 
-1. Create page component in `src/pages/admin/`
-2. Add route configuration in `router.tsx`
-3. Create necessary custom hooks in `src/hooks/admin/`
-4. Add navigation links in sidebar
-5. Update TypeScript types if required
-6. Add role-based access control
+1. Create page component in `src/pages/admin/` or appropriate directory
+2. Add route in `src/App.tsx` with proper role guard
+3. Create context provider in `src/contexts/` if needed
+4. Add navigation item in `src/components/layout/AppSidebar.tsx`
+5. Create types in `src/types/`
+6. Add API service in `src/lib/api/`
 
-#### Adding a New Partner Page
+#### Adding a New Feature Module
 
-1. Create page component in `src/pages/partner/`
-2. Add route with partner guard
-3. Create partner-specific hooks
-4. Add to partner navigation
-5. Test with multi-site scenarios
+1. Create context provider in `src/contexts/[feature]Context.tsx`
+2. Create API service in `src/lib/api/[feature].service.ts`
+3. Create types in `src/types/[feature].types.ts`
+4. Create page component in `src/pages/admin/[Feature].tsx`
+5. Create feature-specific dialog components in `src/components/[feature]/`
+6. Add DataProvider in `src/components/DataProviders.tsx`
 
-#### Creating a New Chart/Visualization
+#### Creating UI Components
 
-1. Create chart component in `src/components/charts/`
-2. Use Recharts or ApexCharts as base
-3. Apply brand color palette
-4. Add responsive behavior
-5. Include loading and error states
-6. Add TypeScript interfaces for data props
-
-#### Adding Map Features
-
-1. Create map component in `src/components/maps/`
-2. Use Mapbox GL with brand styling
-3. Validate GPS coordinates (5 decimal precision)
-4. Add satellite imagery option
-5. Include zoom and pan controls
-6. Handle edge cases (no GPS data)
+1. Use Shadcn/ui components from `src/components/ui/`
+2. Create feature-specific components in dedicated folders
+3. Follow existing dialog patterns for modals
+4. Use React Hook Form + Zod for forms
+5. Add TypeScript interfaces for props
+6. Handle loading and error states
 
 #### API Integration
 
-1. Add API endpoints to `src/lib/api/endpoints.ts`
-2. Create custom hooks in appropriate `src/hooks/` folder
-3. Use TanStack Query for server state management
-4. Handle loading and error states properly
+1. Create service file in `src/lib/api/[feature].service.ts`
+2. Use axios instance from `src/lib/api/axios.ts`
+3. Create context provider for state management
+4. Use TanStack Query in context for data fetching
 5. Add proper TypeScript types for API responses
-6. Implement optimistic updates where appropriate
+6. Handle authentication with existing interceptors
 
 ### Performance Optimization
 
-- **Code Splitting** : Use `@loadable/component` for route-based splitting
-- **Image Optimization** : Optimize satellite imagery and photos
-- **Bundle Analysis** : Monitor bundle size and optimize imports
-- **Caching** : Implement proper caching with TanStack Query
-- **Lazy Loading** : Load charts and maps on demand
-- **Virtual Scrolling** : Use for large data tables (batch lists)
-- **Memoization** : Memoize expensive calculations (carbon credits)
+- **Vite Build** : Fast builds with SWC for optimal performance
+- **Code Splitting** : Vite handles automatic code splitting
+- **Caching** : TanStack Query provides automatic caching
+- **React Query** : Efficient server state management
+- **Lazy Loading** : Load heavy components on demand
+- **Memoization** : Use React.memo and useMemo for expensive operations
 
-### CSI Compliance in UI
+## 📊 Dashboard Analytics
 
-- **GPS Display** : Always show 5 decimal places (e.g., 14.12345/8.12345)
-- **Timestamps** : Display in ISO format or localized format consistently
-- **Carbon Content** : Show percentage with 2 decimal places (e.g., 71.30%)
-- **H/C Ratio** : Display with validation indicators
-- **Immutability** : Show clear indicators for locked/approved batches
-- **Audit Trail** : Display complete history with timestamps and users
-- **Validation Errors** : Show CSI-specific validation messages
+The admin dashboard provides comprehensive analytics including:
 
-## 📊 Analytics & Monitoring
+- **Production Metrics** : Track biochar production across all sites
+- **Site Statistics** : Monitor site performance and status
+- **User Activity** : View user engagement and activity levels
+- **Recent Activities** : See latest system activities
+- **Workflow Progress** : Track progress through the 5-stage production workflow
+- **Data Visualization** : Charts powered by Recharts
 
-### User Analytics
-
-- **Google Analytics** : Page views and user behavior tracking
-- **Custom Events** : Business-specific event tracking (batch approvals, CSI submissions)
-- **Performance Monitoring** : Core Web Vitals and load times
-
-### Error Tracking
-
-- **Sentry Integration** : Production error monitoring
-- **Error Boundaries** : React error boundary implementation
-- **User Feedback** : Error reporting with context
-
-### Dashboard Metrics
-
-- **Production KPIs** : Batches verified, carbon credits generated
-- **Partner Performance** : Multi-site production comparisons
-- **AI Accuracy** : Volume estimation performance tracking
-- **CSI Sync Status** : Real-time integration monitoring
-
-## 🔐 Security Considerations
+## 🔐 Security Features
 
 ### Authentication & Authorization
 
-- **JWT Token Management** : Secure token storage and refresh
-- **Role-Based Access** : Proper permission checking (Admin/Partner/Verifier)
-- **Route Guards** : Protected routes based on user roles
-- **API Security** : Secure API communication with proper headers
+- **JWT Authentication** : Secure token-based authentication
+- **Role-Based Access Control** : Four role levels (Super Admin, Admin, Supervisor, CSI Manager)
+- **Protected Routes** : ProtectedRoute wrapper for authenticated pages
+- **RoleGate Component** : Fine-grained role-based access to specific features
+- **Axios Interceptors** : Automatic token injection and refresh handling
 
 ### Data Protection
 
-- **Input Validation** : Client-side and server-side validation
-- **XSS Prevention** : Proper data sanitization
-- **HTTPS** : All production traffic over HTTPS
-- **CSI API Keys** : Secure storage of integration credentials
-
-### Audit & Compliance
-
-- **Action Logging** : Track all admin actions (approvals, rejections)
-- **Immutability Display** : Show which records are locked
-- **Verification Trail** : Complete evidence package access
-- **Data Export Controls** : Limit sensitive data exports by role
+- **Input Validation** : Zod schema validation on all forms
+- **Type Safety** : TypeScript provides compile-time type checking
+- **API Security** : Axios interceptors for secure API communication
+- **Environment Variables** : Sensitive configuration via .env files
 
 ## 🚀 Deployment
 
@@ -948,15 +554,12 @@ yarn preview
 ### Pre-Deployment Checklist
 
 - [ ] All environment variables configured
-- [ ] CSI integration tested in STAG environment
-- [ ] GPS precision validation working (5 decimals)
-- [ ] Brand colors applied throughout
-- [ ] Map tiles and satellite imagery loading
-- [ ] PDF/Excel generation tested
+- [ ] API endpoints configured correctly
 - [ ] Role-based access control verified
+- [ ] All production workflows tested
 - [ ] Mobile responsiveness tested
-- [ ] Error tracking configured
-- [ ] Analytics configured
+- [ ] Build succeeds without errors
+- [ ] Type checking passes
 
 ## 🤝 Contributing
 
@@ -990,86 +593,70 @@ We welcome contributions! Please follow these steps:
 
 #### Admin Dashboard
 
-- [ ] KPI widgets display correct data
-- [ ] Charts and graphs render properly
-- [ ] Real-time updates work
-- [ ] Batch verification workflow functions
-- [ ] Carbon ledger calculations accurate
-- [ ] CSV/PDF exports work
-- [ ] Satellite maps load correctly
+- [ ] Dashboard loads with analytics
+- [ ] Charts render properly
+- [ ] User management functions
+- [ ] Admin management (Super Admin only)
+- [ ] Site management works
+- [ ] Kontiki management functional
 
-#### Partner Portal
+#### Production Workflow
 
-- [ ] Multi-site dashboard works
-- [ ] Site-level analytics display
-- [ ] Training modules accessible
-- [ ] Document uploads work
-- [ ] Invoice generation functions
-- [ ] Payment tracking accurate
+- [ ] Biomass sourcing tracking works
+- [ ] Biochar production tracking works
+- [ ] Biochar activation tracking works
+- [ ] Biochar sampling tracking works
+- [ ] Bulk density measurements work
+- [ ] Data persists correctly
 
-#### Verification Workflow
+#### User Management
 
-- [ ] Evidence viewer displays photos/videos
-- [ ] AI estimates show correctly
-- [ ] Approval workflow functions
-- [ ] Rejection reasons captured
-- [ ] Deeplinks work for VVB
-- [ ] CSI submission succeeds
+- [ ] Create users with roles
+- [ ] Edit user information
+- [ ] Assign users to sites
+- [ ] Revoke user access
+- [ ] Role-based permissions enforce correctly
 
-#### Geospatial Features
+#### Site Management
 
-- [ ] GPS coordinates validate (5 decimals)
-- [ ] Field boundaries display correctly
-- [ ] Satellite imagery loads
-- [ ] Map zoom and pan work
-- [ ] Site markers clickable
-- [ ] Distance calculations accurate
+- [ ] Create new sites
+- [ ] Edit site details
+- [ ] View site information
+- [ ] Assign users to sites
+- [ ] Manage site folders and files
 
 ## 📞 Support & Contact
 
 - **Technical Issues** : Create an issue in the repository
-- **CSI Compliance Questions** : contact@carbonstandardsinternational.org
-- **General Inquiries** : support@techgreenerth.com
+- **General Inquiries** : contact@greenerth.com
 - **Documentation** : Check README.md and inline code comments
 
-## 🎯 Roadmap
+## 🎯 Current Features
 
-### Phase 1 (Current - 60 Days)
+### Implemented ✅
 
-- ✅ Admin dashboard with batch verification
-- ✅ Partner portal with multi-site management
-- ✅ Carbon credit ledger
-- ✅ CSI integration and reporting
-- ✅ Geospatial mapping with satellite imagery
-- ✅ AI volume estimation display
-
-### Phase 2 (Future)
-
-- [ ] Advanced analytics dashboards with predictive insights
-- [ ] Mobile-responsive design optimization
-- [ ] Blockchain integration for immutability
-- [ ] Enhanced training module system with quizzes
-- [ ] Automated CSI sync scheduling
-- [ ] Multi-language support expansion
-- [ ] Enhanced audit trail visualization
-
-### Phase 3 (Future)
-
-- [ ] IoT sensor data integration dashboards
-- [ ] Drone imagery integration for field mapping
-- [ ] Weather data overlay on maps
-- [ ] Carbon credit marketplace integration
-- [ ] Advanced ML model performance analytics
-- [ ] Automated report scheduling and delivery
-- [ ] Mobile app for field verifiers
+- ✅ Admin dashboard with analytics
+- ✅ Role-based access control (4 roles)
+- ✅ User and admin management
+- ✅ Site management with file organization
+- ✅ Kontiki (kiln) inventory management
+- ✅ Shift management
+- ✅ Complete 5-stage production workflow tracking:
+  - Biomass Sourcing
+  - Biochar Production
+  - Biochar Activation
+  - Biochar Sampling
+  - Bulk Density Measurement
+- ✅ CSI verified records access
+- ✅ Profile and settings management
+- ✅ Help and support resources
 
 ## 🙏 Acknowledgments
 
-- **Carbon Standards International** for Global C-Sink Standards
 - **React Community** for excellent libraries and tools
-- **Mapbox** for satellite imagery and mapping capabilities
-- **Artisan Biochar Producers** for field testing and feedback
-- **CSI Verification Bodies** for compliance guidance
+- **Shadcn** for the beautiful component library
+- **Radix UI** for accessible component primitives
+- **Vercel** for Vite and modern build tools
 
 ## 📄 License
 
@@ -1077,4 +664,4 @@ This project is proprietary and confidential. All rights reserved. Unauthorized 
 
 ---
 
-**Tech Greenerth - Built with ❤️ for carbon removal and climate action**
+**Greenerth - Built with modern web technologies for biochar production management**
